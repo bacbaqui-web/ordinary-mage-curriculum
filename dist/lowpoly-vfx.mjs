@@ -47,6 +47,14 @@ export class LowPolyVFX {
   this.pulse(x,z,spec.radius*2.3,0xffe195,.4);
   for(let i=0;i<22+spec.rings*7;i++){const a=Math.random()*Math.PI*2,s=1+Math.random()*3;this.particle('shard',[x,.18,z],[Math.cos(a)*s,.5+Math.random()*3,Math.sin(a)*s],.035+Math.random()*.07,i%2?0xffd16d:0xfffbe5,.3+Math.random()*.35,{gravity:7,stretch:2});}
  }
+ fall(x,z,spec,color){
+  const g=new T.Group();g.position.set(x,spec.height,z);this.scene.add(g);
+  const cold=spec.kind==='i',force='wg'.includes(spec.kind);
+  const core=new T.Mesh(force?new T.TorusGeometry(.35,.07,5,12):cold?new T.OctahedronGeometry(.3,0):new T.IcosahedronGeometry(.32,1),new T.MeshBasicMaterial({color}));
+  if(force)core.rotation.x=Math.PI/2;else core.scale.y=cold?2.6:1.5;g.add(core);
+  for(let i=0;i<6;i++){const trail=new T.Mesh(new T.ConeGeometry(.08+(6-i)*.025,.5,5),new T.MeshBasicMaterial({color,transparent:true,opacity:.7-i*.08}));trail.position.set((Math.random()-.5)*.2,.4+i*.28,(Math.random()-.5)*.2);g.add(trail);}
+  this.transients.push({g,life:.28,max:.28,type:'fall',height:spec.height});
+ }
  pulse(x,z,r,color,life){
   const g=new T.Mesh(new T.RingGeometry(.86,1,12),new T.MeshBasicMaterial({color,side:T.DoubleSide,transparent:true,opacity:.7,depthWrite:false}));g.rotation.x=-Math.PI/2;g.position.set(x,.13,z);this.scene.add(g);this.transients.push({g,life,max:life,type:'pulse',r});
  }
@@ -88,6 +96,7 @@ export class LowPolyVFX {
   for(const [name,pool] of Object.entries(this.pools)){pool.count=counts[name];pool.instanceMatrix.needsUpdate=true;if(pool.instanceColor)pool.instanceColor.needsUpdate=true;}
   for(let i=this.transients.length-1;i>=0;i--){const t=this.transients[i];t.life-=dt;if(t.life<=0){this.disposeObject(t.g);this.transients.splice(i,1);continue;}const p=1-t.life/t.max;
    if(t.type==='pulse'){t.g.scale.setScalar(t.r*(.4+p*.6));t.g.material.opacity=(1-p)*.65;}
+   if(t.type==='fall'){t.g.position.y=.15+t.height*(1-p);t.g.rotation.y+=dt*4;}
    if(t.type==='bolt')t.g.visible=p<.45||p>.6;
    if(t.type==='wave'){const r=Math.max(.05,t.r*(t.pull?1-p:p));t.g.scale.set(r,1,r);for(const m of t.g.children)m.material.opacity=(1-p)*.55;}
   }

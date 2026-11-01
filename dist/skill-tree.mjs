@@ -1,8 +1,8 @@
-import {mountPreview} from './spell-preview.mjs';
-import {RUNES,DEFAULT_LOADOUT,validLoadout,spellName} from './loadout.mjs';
-import {elementalSpec} from './elements.mjs';
-import {forceSpec,wardSpec} from './forces.mjs';
-import {describeSpell} from './guide.mjs';
+import {mountPreview} from './spell-preview.mjs?v=growthfall1';
+import {RUNES,DEFAULT_LOADOUT,validLoadout,spellName} from './loadout.mjs?v=growthfall1';
+import {elementalSpec} from './elements.mjs?v=growthfall1';
+import {forceSpec,wardSpec} from './forces.mjs?v=growthfall1';
+import {describeSpell} from './guide.mjs?v=growthfall1';
 const $=id=>document.getElementById(id),ids=Object.keys(RUNES);
 let saved={...DEFAULT_LOADOUT};try{const v=JSON.parse(localStorage.getItem('mage-loadout-v1'));if(validLoadout(v))saved=v;}catch{}
 let disposePreview=()=>{};
@@ -12,9 +12,9 @@ function spec(seq){return elementalSpec(seq)||forceSpec(seq)||wardSpec(seq)}
 function pool(){return $('mine').checked?Object.values(saved):ids}
 function formula(seq){return [...seq].map(k=>`<span style="color:${RUNES[k].color}" title="${RUNES[k].name}">${RUNES[k].icon}</span>`).join('<i>→</i>')}
 function recipe(seq){return [...seq].map(k=>RUNES[k].name).join(' → ')}
-function attributes(seq){const s=spec(seq),out=[];if(s.burn)out.push('화상');if(s.slow)out.push('감속');if(s.echo)out.push('추가 방전');if(s.shock)out.push('주기적 낙뢰');if(s.force)out.push(s.force<0?'당김':'밀침');if(s.push)out.push('밀침');if(s.pull)out.push('당김');if(s.shield)out.push('보호막');if(seq[0]==='e')out.unshift('이동 차단');return out}
+function attributes(seq){const s=spec(seq),out=[];if(s.falling)out.push('머리 위 낙하');if(s.burn)out.push('화상');if(s.slow)out.push('감속');if(s.echo)out.push('추가 방전');if(s.shock)out.push('주기적 낙뢰');if(s.force)out.push(s.force<0?'당김':'밀침');if(s.push)out.push('밀침');if(s.pull)out.push('당김');if(s.shield)out.push('보호막');if(seq[0]==='e')out.unshift('이동 차단');return out}
 function stats(seq){const s=spec(seq);const out=[['충전 시간',(seq.length*1.2).toFixed(1)+'초'],[seq[0]==='e'?'설치 거리':'공격 범위',s.range.toFixed(1)+'m']];if(seq[0]==='e')out.push(['내구도',s.hp],['유지 시간',s.duration+'초']);else if(s.force)out.push(['이동시키는 거리',Math.abs(s.force).toFixed(1)+'m']);if(s.slow)out.push(['감속 시간',s.slow+'초']);if(s.burn)out.push(['화상 시간',s.burn+'초']);return out}
-function delta(seq){if(seq.length===1)return '첫 재료가 마법의 형태를 정합니다. 같은 재료를 더 넣거나 다른 재료를 섞을 수 있습니다.';const prev=seq.slice(0,-1),before=spec(prev),after=spec(seq),fresh=attributes(seq).filter(x=>!attributes(prev).includes(x));const changes=[];if(after.range>before.range)changes.push(`범위 ${before.range.toFixed(1)} → ${after.range.toFixed(1)}m`);if(after.hp)changes.push(`내구도 ${before.hp} → ${after.hp}`,`유지 ${before.duration} → ${after.duration}초`);if(after.force&&Math.abs(after.force)>Math.abs(before.force||0))changes.push(`이동시키는 거리 ${Math.abs(before.force||0).toFixed(1)} → ${Math.abs(after.force).toFixed(1)}m`);if(after.slow>before.slow&&before.slow)changes.push(`감속 ${before.slow} → ${after.slow}초`);if(fresh.length)changes.push(fresh.join(' · ')+' 추가');else changes.push('새로 추가되는 속성 효과는 없습니다.');return changes.join('<br>')}
+function delta(seq){if(seq.length===1)return '첫 재료가 기본 효과를 정합니다. 전격을 뒤에 넣으면 공격 마법이 머리 위로 떨어집니다. 장막은 낙뢰 장벽을 만듭니다.';const prev=seq.slice(0,-1),before=spec(prev),after=spec(seq),fresh=attributes(seq).filter(x=>!attributes(prev).includes(x));const changes=[];if(after.range>before.range)changes.push(`범위 ${before.range.toFixed(1)} → ${after.range.toFixed(1)}m`);if(after.hp)changes.push(`내구도 ${before.hp} → ${after.hp}`,`유지 ${before.duration} → ${after.duration}초`);if(after.force&&Math.abs(after.force)>Math.abs(before.force||0))changes.push(`이동시키는 거리 ${Math.abs(before.force||0).toFixed(1)} → ${Math.abs(after.force).toFixed(1)}m`);if(after.slow>before.slow&&before.slow)changes.push(`감속 ${before.slow} → ${after.slow}초`);if(fresh.length)changes.push(fresh.join(' · ')+' 추가');else changes.push('새로 추가되는 속성 효과는 없습니다.');return changes.join('<br>')}
 function node(seq,root=false){const active=selected===seq,path=selected.startsWith(seq);return `<button class="node ${root?'root-node':''} ${active?'selected':path?'on-path':''}" data-seq="${seq}" aria-pressed="${active}" aria-label="${recipe(seq)} 조합 보기">${root?`<span class="big-icon">${RUNES[seq].icon}</span><b>${spellName(seq)}</b><small>${RUNES[seq].hint}</small>`:`<span class="formula">${formula(seq)}</span><b>${recipe(seq)}</b>`}</button>`}
 function select(seq,write=true){if(!validSequence(seq))return;selected=seq;base=seq[0];branch=seq[1]||base;if($('mine').checked&&[...seq].some(k=>!pool().includes(k)))$('mine').checked=false;if(write)history.replaceState(null,'','#'+seq);render()}
 function render(){const allowed=pool();document.documentElement.style.setProperty('--accent',RUNES[base].color);

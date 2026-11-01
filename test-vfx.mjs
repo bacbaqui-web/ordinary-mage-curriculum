@@ -14,3 +14,6 @@ assert.equal(scene.children.length,2);
 vfx.burst({kind:'q',rings:3,halfAngle:.52,range:5.7},d,a,()=>true);assert.equal(vfx.stats().particles,0);
 vfx.bolt(0,0,{rings:1,height:3.4,radius:.38});vfx.clear();assert.equal(scene.children.length,2);
 console.log('PASS: particle cap, effect expiry, transient cleanup, blocked cone, reset');
+for(const [kind,color] of [['q','#ff9c45'],['i','#72dce8'],['w','#b4e676'],['g','#c49ff1']]){
+ vfx.fall(1,1,{kind,height:4.3},color);const fall=vfx.transients.at(-1);assert.equal(fall.g.children[0].material.color.getHexString(),color.slice(1));vfx.update(.14);assert(fall.g.position.y>0&&fall.g.position.y<4.3);vfx.update(.15);assert(!vfx.transients.includes(fall));
+}assert.equal(scene.children.length,2);console.log('PASS: all four falling effects preserve base color, descend and clean up');

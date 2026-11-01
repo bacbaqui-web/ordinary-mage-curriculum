@@ -1,6 +1,6 @@
-import {forceDescription} from './forces.mjs';
-import {elementalDescription} from './elements.mjs';
-import {composition} from './loadout.mjs';
+import {forceDescription} from './forces.mjs?v=growthfall1';
+import {elementalDescription} from './elements.mjs?v=growthfall1';
+import {composition} from './loadout.mjs?v=growthfall1';
 export function describeSpell(seq){
  const force=forceDescription(seq);if(force)return force;
  const elemental=elementalDescription(seq);if(elemental)return elemental;
