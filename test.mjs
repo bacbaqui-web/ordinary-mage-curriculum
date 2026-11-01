@@ -28,7 +28,17 @@ for(const a of Object.keys(RUNES))for(const b of Object.keys(RUNES))for(const d 
  for(const x of KEYS)for(const y of KEYS)for(const z of KEYS){const result=resolveSpell({parts:[x,y,z],progress:1,tap:false},config);assert.equal(result.sequence,config[x]+config[y]+config[z]);assert.ok(result.name&&!result.name.includes('undefined'));assert.equal(result.keys,x+y+z);const spec=composition(result.sequence,result.power);assert.ok(Number.isFinite(spec.damage));assert.ok(['shield','field','cone','projectile'].includes(spec.shape));checked++;}
 }
 assert.equal(checked,3240);
-assert.equal(resolveSpell({parts:['q'],progress:0,tap:true},{q:'i',w:'l',e:'g'}).name,'냉기탄');
+assert.equal(resolveSpell({parts:['q'],progress:0,tap:true},{q:'i',w:'l',e:'g'}).name,'빙결 분사');
 assert.notEqual(spellName('ig',NAMES),spellName('gi',NAMES));
 assert.ok(composition('i').slow>0);assert.ok(composition('g').force<0);assert.ok(composition('l').speed>composition('i').speed);
 console.log('PASS: distinct rune selection, slot swap, 120 loadouts / 3240 mapped combos, new spell roles');
+
+const {elementalSpec,inElementCone,lightningPoint}=await import('./dist/elements.mjs');
+for(const k of 'qil'){let previous=0;for(let n=1;n<=3;n++){const s=elementalSpec(k.repeat(n));assert.ok(s.range>previous);previous=s.range;}}
+assert.equal(elementalSpec('q').burn,2);assert.equal(elementalSpec('i').burn,0);assert.equal(elementalSpec('i').slow,1.5);
+assert.ok(inElementCone({x:0,z:0},{x:0,z:2},{x:0,z:1},elementalSpec('q')));
+assert.ok(!inElementCone({x:0,z:0},{x:0,z:-2},{x:0,z:1},elementalSpec('q')));
+assert.ok(!inElementCone({x:0,z:0},{x:0,z:3},{x:0,z:1},elementalSpec('q')));
+assert.equal(lightningPoint({x:0,z:0},{x:1,z:1},2.5).targeted,true);
+for(let n=0;n<100;n++){const p=lightningPoint({x:0,z:0},{x:10,z:10},2.5);assert.equal(p.targeted,false);assert.ok(Math.hypot(p.x,p.z)<=2.5);}
+console.log('PASS: elemental range growth, fire/ice payloads, cone direction and range, lightning target/fallback');

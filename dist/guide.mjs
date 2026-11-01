@@ -1,5 +1,7 @@
+import {elementalDescription} from './elements.mjs';
 import {composition} from './loadout.mjs';
 export function describeSpell(seq){
+ const elemental=elementalDescription(seq);if(elemental)return elemental;
  if(/[ilg]/.test(seq)){
  const s=composition(seq),multi=seq.length>1;
  const parts=[{shield:multi?'보호막을 두르고 주변에 피해 구역을 만듭니다.':'짧게 보호막을 두릅니다.',field:'조준한 곳에 지속 피해 구역을 만듭니다.',cone:'앞쪽 범위의 적을 타격합니다.',projectile:seq.startsWith('ll')?'전격탄 세 발을 펼쳐 쏩니다.':'조준한 방향으로 마법탄을 쏩니다.'}[s.shape]];
