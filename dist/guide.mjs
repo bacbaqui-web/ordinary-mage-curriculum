@@ -1,6 +1,8 @@
+import {forceDescription} from './forces.mjs';
 import {elementalDescription} from './elements.mjs';
 import {composition} from './loadout.mjs';
 export function describeSpell(seq){
+ const force=forceDescription(seq);if(force)return force;
  const elemental=elementalDescription(seq);if(elemental)return elemental;
  if(/[ilg]/.test(seq)){
  const s=composition(seq),multi=seq.length>1;

@@ -42,3 +42,11 @@ assert.ok(!inElementCone({x:0,z:0},{x:0,z:3},{x:0,z:1},elementalSpec('q')));
 assert.equal(lightningPoint({x:0,z:0},{x:1,z:1},2.5).targeted,true);
 for(let n=0;n<100;n++){const p=lightningPoint({x:0,z:0},{x:10,z:10},2.5);assert.equal(p.targeted,false);assert.ok(Math.hypot(p.x,p.z)<=2.5);}
 console.log('PASS: elemental range growth, fire/ice payloads, cone direction and range, lightning target/fallback');
+
+const {forceSpec,wardSpec,displacement,crossesWard}=await import('./dist/forces.mjs');
+for(const k of 'wg'){for(let n=1;n<3;n++){assert.ok(forceSpec(k.repeat(n+1)).range>forceSpec(k.repeat(n)).range);assert.ok(Math.abs(forceSpec(k.repeat(n+1)).force)>Math.abs(forceSpec(k.repeat(n)).force));}}
+assert.ok(forceSpec('w').force>0);assert.ok(forceSpec('g').force<0);assert.equal(displacement(-3,.5),0);assert.equal(displacement(-3,2),-1.1);
+assert.ok(wardSpec('eee').hp>wardSpec('ee').hp);assert.ok(wardSpec('ee').duration>wardSpec('e').duration);
+const wall={x:0,z:0,nx:0,nz:1,width:3};
+assert.ok(crossesWard({x:0,z:2},{x:0,z:-2},wall));assert.ok(!crossesWard({x:3,z:2},{x:3,z:-2},wall));assert.ok(!crossesWard({x:0,z:3},{x:0,z:2},wall));
+console.log('PASS: push/pull scaling, pull stopping distance, ward durability/duration, swept projectile blocking');
