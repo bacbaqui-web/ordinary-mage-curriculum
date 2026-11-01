@@ -63,3 +63,7 @@ for(const a of KEYS)for(const b of ['',...KEYS])for(const c of (b?['',...KEYS]:[
 }
 const staged=new OpponentCharge();staged.start(['q','w','e']);staged.tick(.6,DEFAULT_LOADOUT);assert.deepEqual(staged.charge.parts,['q']);assert.ok(Math.abs(staged.charge.progress-.5)<1e-8);staged.tick(.61,DEFAULT_LOADOUT);assert.deepEqual(staged.charge.parts,['q','w']);staged.clear();assert.equal(staged.active,false);assert.equal(staged.tick(5,DEFAULT_LOADOUT),null);
 console.log('PASS: opponent loadouts, all 39 plans, 1.2 seconds per ring, ordered colors, three-ring cap, cancel');
+
+const {lightningHits}=await import('./dist/elements.mjs');
+const lockedPoint={x:2,z:3};assert.equal(lightningHits(lockedPoint,{x:2,z:3},.88),true);assert.equal(lightningHits(lockedPoint,{x:4,z:3},.88),false);assert.equal(lightningHits(lockedPoint,{x:2,z:3.5},.38),false);assert.equal(lightningHits(lockedPoint,{x:2,z:3.5},.88),true);assert.deepEqual(lockedPoint,{x:2,z:3});
+console.log('PASS: lightning uses the marked ground radius; leaving the locked point avoids damage');

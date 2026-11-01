@@ -13,3 +13,5 @@ export function inElementCone(origin,target,dir,spec){const x=target.x-origin.x,
 export function lightningPoint(origin,target,range,random=Math.random){if(Math.hypot(target.x-origin.x,target.z-origin.z)<=range)return {x:target.x,z:target.z,targeted:true};const angle=random()*Math.PI*2,r=Math.sqrt(random())*range;return{x:origin.x+Math.cos(angle)*r,z:origin.z+Math.sin(angle)*r,targeted:false};}
 export function elementalDescription(seq){const s=elementalSpec(seq);if(!s)return null;let text=s.kind==='q'?`전방 ${s.range}m에 화염을 뿜습니다. 직접 피해는 낮고, 2초 동안 화상 피해를 줍니다. 화상 중에는 몸이 붉어집니다.`:s.kind==='i'?`전방 ${s.range}m에 얼음을 뿜습니다. ${s.slow}초 동안 이동 속도가 45% 줄고 몸이 푸르게 변합니다. 지속 피해는 없습니다.`:`${s.range}m 안의 적에게 벼락을 떨어뜨립니다. 적이 없으면 범위 안의 임의 지점에 떨어집니다. 원이 늘수록 벼락도 커집니다.`;
  if(s.force)text+=s.force<0?' 맞은 적을 끌어당깁니다.':' 맞은 적을 밀칩니다.';if(s.shield)text+=' 보호막을 얻습니다.';if(s.echo)text+=' 잠시 뒤 추가 피해를 줍니다.';return text;}
+
+export function lightningHits(point,target,radius){return Math.hypot(target.x-point.x,target.z-point.z)<=radius;}
