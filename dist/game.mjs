@@ -40,6 +40,9 @@ const aimLine=new T.Line(new T.BufferGeometry(),new T.LineBasicMaterial({color:0
 const enemyAimLine=new T.Line(new T.BufferGeometry(),new T.LineBasicMaterial({color:0xffa58a,transparent:true,opacity:.65}));scene.add(enemyAimLine);
 const attackTell=new T.Mesh(new T.BufferGeometry(),new T.MeshBasicMaterial({color:0xff9c45,side:T.DoubleSide,transparent:true,opacity:.23,depthWrite:false}));attackTell.position.y=.14;attackTell.visible=false;scene.add(attackTell);
 const tellBorder=new T.Line(new T.BufferGeometry(),new T.LineBasicMaterial({color:0xffd293,transparent:true,opacity:.95,depthTest:false}));tellBorder.position.y=.15;tellBorder.visible=false;scene.add(tellBorder);
+const playerTell=attackTell.clone();playerTell.geometry=new T.BufferGeometry();playerTell.material=attackTell.material.clone();scene.add(playerTell);
+const playerBorder=tellBorder.clone();playerBorder.geometry=new T.BufferGeometry();playerBorder.material=tellBorder.material.clone();scene.add(playerBorder);
+
 
 const marker=mesh(new T.RingGeometry(.23,.29,24),new T.MeshBasicMaterial({color:0xc2e3c3,transparent:true,opacity:.75,side:T.DoubleSide}),0,.07,0);marker.rotation.x=-Math.PI/2;marker.visible=false;marker.castShadow=false;
 function tint(k){return new T.Color(ELEMENTS[k]?.color||'#9adfff')}
@@ -60,10 +63,10 @@ function elementalBurst(spec,dir,caster){spellVfx.burst(spec,dir,caster,collides
 function boltEffect(x,z,spec){spellVfx.bolt(x,z,spec);}
 function castElemental(s,dir,caster){const victim=caster===player?enemy:player;const spec=elementalSpec(s.sequence,s.power);
  if(spec.kind==='l'){
-  let point=caster===enemy&&enemy.strikePoint?{...enemy.strikePoint}:lightningPoint(caster,victim,spec.range,rand);
-  if(!(caster===enemy&&enemy.strikePoint)&&!point.targeted){for(let i=0;i<24&&collides(point.x,point.z,.05);i++)point=lightningPoint(caster,victim,spec.range,rand);if(collides(point.x,point.z,.05))point={x:caster.x,z:caster.z,targeted:false};}
+  let point=caster.strikePoint?{...caster.strikePoint}:lightningPoint(caster,victim,spec.range,rand);
+  if(!caster.strikePoint&&!point.targeted){for(let i=0;i<24&&collides(point.x,point.z,.05);i++)point=lightningPoint(caster,victim,spec.range,rand);if(collides(point.x,point.z,.05))point={x:caster.x,z:caster.z,targeted:false};}
   boltEffect(point.x,point.z,spec);
-  if(caster===enemy?lightningHits(point,victim,spec.radius):point.targeted){const delta=new T.Vector3(victim.x-caster.x,0,victim.z-caster.z).normalize();if(hit(victim,spec.damage,delta,spec.force))applyPayload(victim,spec);}
+  if(caster.strikePoint?lightningHits(point,victim,spec.radius):point.targeted){const delta=new T.Vector3(victim.x-caster.x,0,victim.z-caster.z).normalize();if(hit(victim,spec.damage,delta,spec.force))applyPayload(victim,spec);}
  }else{
   elementalBurst(spec,dir,caster);
   if(inElementCone(caster,victim,dir,spec)){
@@ -145,16 +148,25 @@ const rolling=roll.active;const beforeX=player.x,beforeZ=player.z;if(rolling){co
  if(toastTimer>0){toastTimer-=dt;if(toastTimer<=0)$('toast').classList.remove('show')}
 }
 function label(el,a){const pos=new T.Vector3(a.x,2.65,a.z).project(camera);el.style.left=((pos.x+1)*innerWidth/2)+'px';el.style.top=((-pos.y+1)*innerHeight/2)+'px'}
-function renderAttackTell(){
- const active=bot&&running&&!finished&&enemyCharge.active;
- attackTell.visible=false;tellBorder.visible=false;if(!active)return;
- const seq=mapSequence(enemyCharge.plan,enemyLoadout),spec=elementalSpec(seq);if(!spec)return;
+function drawTell(caster,seq,attackTell,tellBorder,urgent=false){const spec=elementalSpec(seq);if(!spec)return;
  const outline=[],color=RUNES[seq[0]].color;
- if(spec.kind==='l'){if(!enemy.strikePoint)return;const point=enemy.strikePoint;for(let i=0;i<=64;i++){const angle=i/64*Math.PI*2;outline.push(new T.Vector3(point.x+Math.cos(angle)*spec.radius,0,point.z+Math.sin(angle)*spec.radius));}}
- else{outline.push(new T.Vector3(enemy.x,0,enemy.z));for(let i=0;i<=48;i++){const angle=-spec.halfAngle+i/48*spec.halfAngle*2,d=enemy.dir.clone().applyAxisAngle(new T.Vector3(0,1,0),angle);let reach=spec.range;for(let t=.1;t<=spec.range;t+=.1)if(collides(enemy.x+d.x*t,enemy.z+d.z*t,.02)){reach=Math.max(0,t-.1);break;}outline.push(new T.Vector3(enemy.x+d.x*reach,0,enemy.z+d.z*reach));}outline.push(new T.Vector3(enemy.x,0,enemy.z));}
- const center=spec.kind==='l'?new T.Vector3(enemy.strikePoint.x,0,enemy.strikePoint.z):outline[0],vertices=[];for(let i=0;i<outline.length-1;i++)vertices.push(center.x,0,center.z,outline[i].x,0,outline[i].z,outline[i+1].x,0,outline[i+1].z);
- attackTell.geometry.dispose();attackTell.geometry=new T.BufferGeometry();attackTell.geometry.setAttribute('position',new T.Float32BufferAttribute(vertices,3));attackTell.material.color.set(color);attackTell.material.opacity=enemyCharge.remaining<.55?.38:.21;attackTell.visible=true;
- tellBorder.geometry.dispose();tellBorder.geometry=new T.BufferGeometry().setFromPoints(outline);tellBorder.material.color.set(enemyCharge.remaining<.55?0xffffff:color);tellBorder.visible=true;
+ if(spec.kind==='l'){if(!caster.strikePoint)return;const point=caster.strikePoint;for(let i=0;i<=64;i++){const angle=i/64*Math.PI*2;outline.push(new T.Vector3(point.x+Math.cos(angle)*spec.radius,0,point.z+Math.sin(angle)*spec.radius));}}
+ else{outline.push(new T.Vector3(caster.x,0,caster.z));for(let i=0;i<=48;i++){const angle=-spec.halfAngle+i/48*spec.halfAngle*2,d=caster.dir.clone().applyAxisAngle(new T.Vector3(0,1,0),angle);let reach=spec.range;for(let t=.1;t<=spec.range;t+=.1)if(collides(caster.x+d.x*t,caster.z+d.z*t,.02)){reach=Math.max(0,t-.1);break;}outline.push(new T.Vector3(caster.x+d.x*reach,0,caster.z+d.z*reach));}outline.push(new T.Vector3(caster.x,0,caster.z));}
+ const center=spec.kind==='l'?new T.Vector3(caster.strikePoint.x,0,caster.strikePoint.z):outline[0],vertices=[];for(let i=0;i<outline.length-1;i++)vertices.push(center.x,0,center.z,outline[i].x,0,outline[i].z,outline[i+1].x,0,outline[i+1].z);
+ attackTell.geometry.dispose();attackTell.geometry=new T.BufferGeometry();attackTell.geometry.setAttribute('position',new T.Float32BufferAttribute(vertices,3));attackTell.material.color.set(color);attackTell.material.opacity=urgent?.38:.21;attackTell.visible=true;
+ tellBorder.geometry.dispose();tellBorder.geometry=new T.BufferGeometry().setFromPoints(outline);tellBorder.material.color.set(urgent?0xffffff:color);tellBorder.visible=true;
+}
+function renderAttackTell(){
+ attackTell.visible=false;tellBorder.visible=false;playerTell.visible=false;playerBorder.visible=false;
+ if(bot&&running&&!finished&&enemyCharge.active)drawTell(enemy,mapSequence(enemyCharge.plan,enemyLoadout),attackTell,tellBorder,enemyCharge.remaining<.55);
+ if(!running||finished||!charge.active){player.strikePoint=null;return;}
+ const spell=resolveSpell({parts:[...charge.parts],progress:charge.progress,tap:charge.elapsed<.15},loadout),spec=elementalSpec(spell.sequence);if(!spec){player.strikePoint=null;return;}
+ if(spec.kind==='l'){
+  if(Math.hypot(enemy.x-player.x,enemy.z-player.z)<=spec.range)player.strikePoint={x:enemy.x,z:enemy.z,targeted:true};
+  else if(!player.strikePoint||player.strikePoint.targeted||player.previewRange!==spec.range||Math.hypot(player.strikePoint.x-player.x,player.strikePoint.z-player.z)>spec.range){player.strikePoint=lightningPoint(player,enemy,spec.range,rand);for(let i=0;i<20&&collides(player.strikePoint.x,player.strikePoint.z,.05);i++)player.strikePoint=lightningPoint(player,enemy,spec.range,rand);if(collides(player.strikePoint.x,player.strikePoint.z,.05))player.strikePoint={x:player.x,z:player.z,targeted:false};}
+  player.previewRange=spec.range;
+ }else player.strikePoint=null;
+ drawTell(player,spell.sequence,playerTell,playerBorder);
 }
 function ui(){renderAttackTell();for(const a of[player,enemy]){const burning=a.burn>0,chilled=a.slow>0,tinted=burning||chilled;const c=new T.Color(burning&&(!chilled||Math.floor(clock*4)%2===0)?0xff543e:0x479eff);for(const entry of a.g.userData.palette){entry.material.color.copy(entry.color);if(tinted)entry.material.color.lerp(c,.48);}a.g.position.set(a.x,0,a.z);a.g.rotation.y=Math.atan2(a.dir.x,a.dir.z);const shield=shields.get(a);shield.position.set(a.x,1,a.z);shield.visible=a.shield>0;shield.rotation.y=clock*.6}label($('playerLabel'),player);label($('enemyLabel'),enemy);$('playerHp').style.width=player.hp+'%';$('enemyHp').style.width=enemy.hp+'%';$('manaBar').style.width=player.mana+'%';$('manaText').textContent=Math.floor(player.mana);$('enemyCast').textContent=!bot?'연습 상대':enemyCharge.active?spellName(mapSequence(enemyCharge.charge.parts,enemyLoadout),NAMES)+' · 충전':enemy.lastSpellTime>0?enemy.lastSpell+' · 발사':enemy.slow>0?'감속 중':enemy.burn>0?'화상 중':'상대 마법사';$('time').textContent=String(Math.floor(clock/60)).padStart(2,'0')+':'+String(Math.floor(clock%60)).padStart(2,'0');
  const ec=enemyCharge.charge,enemyCharging=bot&&running&&!finished&&ec.active;
