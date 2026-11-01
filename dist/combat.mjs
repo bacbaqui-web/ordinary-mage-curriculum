@@ -9,3 +9,6 @@ export class Roll {
 }
 // Evaluate only visible projectile position and travel direction, not player input.
 export function incomingThreat(px,pz,dx,dz,speed,ex,ez){const x=ex-px,z=ez-pz,along=x*dx+z*dz,lateral=Math.abs(x*dz-z*dx);return along>0&&along/speed<.65&&lateral<1.15}
+
+// The AI currently charges one ice spell per attack, rather than combining runes.
+export function enemyChargeProgress(remaining,duration){return remaining>0&&duration>0?Math.max(0,Math.min(1,1-remaining/duration)):null;}

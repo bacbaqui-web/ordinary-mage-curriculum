@@ -50,3 +50,7 @@ assert.ok(wardSpec('eee').hp>wardSpec('ee').hp);assert.ok(wardSpec('ee').duratio
 const wall={x:0,z:0,nx:0,nz:1,width:3};
 assert.ok(crossesWard({x:0,z:2},{x:0,z:-2},wall));assert.ok(!crossesWard({x:3,z:2},{x:3,z:-2},wall));assert.ok(!crossesWard({x:0,z:3},{x:0,z:2},wall));
 console.log('PASS: push/pull scaling, pull stopping distance, ward durability/duration, swept projectile blocking');
+
+const {enemyChargeProgress}=await import('./dist/combat.mjs');
+assert.equal(enemyChargeProgress(.65,.65),0);assert.equal(enemyChargeProgress(.325,.65),.5);assert.equal(enemyChargeProgress(0,.65),null);assert.equal(enemyChargeProgress(-.1,.65),null);assert.equal(enemyChargeProgress(.2,0),null);
+console.log('PASS: enemy charge progress and inactive state');

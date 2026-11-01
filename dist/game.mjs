@@ -3,7 +3,7 @@ import {elementalSpec,inElementCone,lightningPoint} from './elements.mjs';
 import {describeSpell} from './guide.mjs';
 import * as T from './three.module.js';
 import {Charge,ELEMENTS,NAMES,resolveSpell} from './spells.mjs';
-import {Roll,ROLL_DURATION,incomingThreat} from './combat.mjs';
+import {Roll,ROLL_DURATION,incomingThreat,enemyChargeProgress} from './combat.mjs?v=7';
 import {RUNES,KEYS,DEFAULT_LOADOUT,validLoadout,assignRune,mapSequence,spellName,composition} from './loadout.mjs';
 let loadout={...DEFAULT_LOADOUT};try{const saved=JSON.parse(localStorage.getItem('mage-loadout-v1'));if(validLoadout(saved))loadout=saved}catch{}
 let draft={...loadout},activeSlot='q',selectionReturn=false;
@@ -135,7 +135,7 @@ function ai(dt){
   else {const spread=enemy.attackType==='fan'?[-.17,0,.17]:[0];for(const angle of spread)projectile(enemy,enemy.aim.clone().applyAxisAngle(new T.Vector3(0,1,0),angle),{color:0xa8e6ff,damage:spread.length>1?10:14,speed:10.5,life:1.8,radius:.17})}
   enemy.cool=1.05+rand()*.45;
  }return}
- if(enemy.cool<=0&&dist<15){enemy.attackCount=(enemy.attackCount||0)+1;enemy.attackType=dist<3?'nova':enemy.attackCount%3===0?'fan':'bolt';enemy.wind=enemy.attackType==='nova'?.75:.65;
+ if(enemy.cool<=0&&dist<15){enemy.attackCount=(enemy.attackCount||0)+1;enemy.attackType=dist<3?'nova':enemy.attackCount%3===0?'fan':'bolt';enemy.wind=enemy.attackType==='nova'?.75:.65;enemy.chargeDuration=enemy.wind;
  const lead=(player.velocity||new T.Vector3()).clone().multiplyScalar(Math.min(.45,dist/10.5)*.6);enemy.aim=new T.Vector3(player.x-enemy.x,0,player.z-enemy.z).add(lead).normalize();ring(enemy.x,enemy.z,0xbeeaff,enemy.attackType==='nova'?3.1:.9,enemy.wind);
  }
 }
@@ -155,6 +155,9 @@ function update(dt){clock+=dt;const rolling=roll.active;const beforeX=player.x,b
 }
 function label(el,a){const pos=new T.Vector3(a.x,2.65,a.z).project(camera);el.style.left=((pos.x+1)*innerWidth/2)+'px';el.style.top=((-pos.y+1)*innerHeight/2)+'px'}
 function ui(){for(const a of[player,enemy]){const burning=a.burn>0,chilled=a.slow>0,tinted=burning||chilled;const c=new T.Color(burning&&(!chilled||Math.floor(clock*4)%2===0)?0xff543e:0x479eff);for(const entry of a.g.userData.palette){entry.material.color.copy(entry.color);if(tinted)entry.material.color.lerp(c,.48);}a.g.position.set(a.x,0,a.z);a.g.rotation.y=Math.atan2(a.dir.x,a.dir.z);const shield=shields.get(a);shield.position.set(a.x,1,a.z);shield.visible=a.shield>0;shield.rotation.y=clock*.6}label($('playerLabel'),player);label($('enemyLabel'),enemy);$('playerHp').style.width=player.hp+'%';$('enemyHp').style.width=enemy.hp+'%';$('manaBar').style.width=player.mana+'%';$('manaText').textContent=Math.floor(player.mana);$('enemyCast').textContent=!bot?'연습 상대':enemy.wind>0?(enemy.attackType==='nova'?'❄ 냉기 폭발':enemy.attackType==='fan'?'❄ 삼중 냉기':'❄ 냉기 충전'):(enemy.slow>0?'❄ 감속 중':enemy.burn>0?'✦ 화상 중':'냉기술사 · 숙련');$('time').textContent=String(Math.floor(clock/60)).padStart(2,'0')+':'+String(Math.floor(clock%60)).padStart(2,'0');
+ const enemyProgress=bot&&running&&!finished?enemyChargeProgress(enemy.wind,enemy.chargeDuration):null;
+ $('enemyOrbs').innerHTML=enemyProgress===null?'':`<div class="orb" style="--c:${RUNES.i.color};--p:${enemyProgress*100}%"><span>${RUNES.i.icon}</span></div>`;
+ $('enemyOrbs').classList.toggle('charging',enemyProgress!==null);
  $('rollStatus').textContent=roll.active?'구르는 중':roll.cooldown>0?'구르기 '+roll.cooldown.toFixed(1)+'초':'Space 구르기 · 준비';$('rollStatus').classList.toggle('ready',roll.cooldown<=0);
  const body=player.g.userData.body;if(body){body.rotation.x=roll.active?(1-roll.remaining/ROLL_DURATION)*Math.PI*2:0;}
  for(const k of['q','w','e'])$('key-'+k).classList.toggle('active',charge.held.includes(k));
