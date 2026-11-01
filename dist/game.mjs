@@ -1,3 +1,4 @@
+import {createProgress,awardKill,requiredXP,learn,mastery,MAX_LEVEL,MAX_RANK} from './progression.mjs';
 import {ForcedMotion} from './motion.mjs';
 import {LowPolyVFX} from './lowpoly-vfx.mjs';
 import {chooseLoadout,choosePlan,OpponentCharge} from './opponent.mjs?v=8';
@@ -9,22 +10,23 @@ import {Charge,ELEMENTS,NAMES,resolveSpell} from './spells.mjs';
 import {Roll,ROLL_DURATION,incomingThreat,enemyChargeProgress} from './combat.mjs?v=7';
 import {RUNES,KEYS,DEFAULT_LOADOUT,validLoadout,assignRune,mapSequence,spellName,composition} from './loadout.mjs';
 let loadout={...DEFAULT_LOADOUT};try{const saved=JSON.parse(localStorage.getItem('mage-loadout-v1'));if(validLoadout(saved))loadout=saved}catch{}
+let progress=createProgress(loadout),monsters=[],spawnTimer=0,monsterId=0;
 let draft={...loadout},activeSlot='q',selectionReturn=false;
 const $=id=>document.getElementById(id),canvas=$('arena');
 const renderer=new T.WebGLRenderer({canvas,antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFSoftShadowMap;renderer.outputColorSpace=T.SRGBColorSpace;renderer.setClearColor(0x2c3940);
-const scene=new T.Scene();scene.fog=new T.Fog(0x586367,35,70);const camera=new T.PerspectiveCamera(38,1,.1,100);camera.position.set(18,23,22);camera.lookAt(0,0,0);
+const scene=new T.Scene();scene.fog=new T.Fog(0x586367,55,100);const camera=new T.PerspectiveCamera(38,1,.1,100);camera.position.set(18,23,22);camera.lookAt(0,0,0);
 const spellVfx=new LowPolyVFX(scene);
-scene.add(new T.HemisphereLight(0xe2efff,0x5a614c,2.3));const sun=new T.DirectionalLight(0xffe4ba,3.2);sun.position.set(-8,18,9);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-18,right:18,top:18,bottom:-18});sun.shadow.normalBias=.04;scene.add(sun);
+scene.add(new T.HemisphereLight(0xe2efff,0x5a614c,2.3));const sun=new T.DirectionalLight(0xffe4ba,3.2);sun.position.set(-8,18,9);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-30,right:30,top:30,bottom:-30});sun.shadow.normalBias=.04;scene.add(sun);
 const mat=(color,extra={})=>new T.MeshStandardMaterial({color,roughness:.87,flatShading:true,...extra});const stoneMats=[mat(0x8a928a),mat(0x93988f),mat(0x858d86),mat(0x9a9e94)];
 function mesh(geo,material,x=0,y=0,z=0,parent=scene){const m=new T.Mesh(geo,material);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m}
 function box(x,y,z,w,h,d,material,parent=scene){return mesh(new T.BoxGeometry(w,h,d),material,x,y,z,parent)}
 let seed=139;function rand(){seed=(seed*16807)%2147483647;return(seed-1)/2147483646}
-box(0,-.55,0,26,1,23,mat(0x586052));
-for(let x=-12;x<=12;x+=1.5)for(let z=-10.5;z<=10.5;z+=1.5){const m=box(x,-.035+rand()*.025,z,1.46,.12,1.46,stoneMats[Math.floor(rand()*4)]);m.castShadow=false;}
+box(0,-.55,0,50,1,46,mat(0x586052));
+for(let x=-24;x<=24;x+=1.5)for(let z=-22.5;z<=22.5;z+=1.5){const m=box(x,-.035+rand()*.025,z,1.46,.12,1.46,stoneMats[Math.floor(rand()*4)]);m.castShadow=false;}
 const wallMat=mat(0x77817a),capMat=mat(0x9da49a);
-for(let x=-12;x<=12;x+=2){box(x,.62,-11.5,1.96,1.35,.8,wallMat);box(x,1.35,-11.5,2.05,.18,.98,capMat)}
-for(let z=-10;z<=10;z+=2){box(-13,.62,z,.8,1.35,1.96,wallMat);box(-13,1.35,z,.98,.18,2.05,capMat)}
-const obstacles=[{x:-4,z:-2,w:3,h:1.1},{x:4,z:2,w:3,h:1.1},{x:1,z:-6,w:1.8,h:1.8},{x:-1,z:6,w:1.8,h:1.8}];
+for(let x=-24;x<=24;x+=2){box(x,.62,-23,1.96,1.35,.8,wallMat);box(x,1.35,-23,2.05,.18,.98,capMat)}
+for(let z=-22;z<=22;z+=2){box(-25,.62,z,.8,1.35,1.96,wallMat);box(-25,1.35,z,.98,.18,2.05,capMat)}
+const obstacles=[{x:-4,z:-2,w:3,h:1.1},{x:4,z:2,w:3,h:1.1},{x:1,z:-6,w:1.8,h:1.8},{x:-1,z:6,w:1.8,h:1.8},{x:-13,z:-9,w:4,h:2},{x:12,z:10,w:4,h:2},{x:13,z:-9,w:2,h:4},{x:-12,z:12,w:2,h:4}];
 for(const o of obstacles){box(o.x,.55,o.z,o.w,1.1,o.h,wallMat);box(o.x,1.16,o.z,o.w+.13,.16,o.h+.13,capMat);for(let i=0;i<3;i++){const x=o.x+(rand()-.5)*o.w;box(x,1.32,o.z,.45,.2,o.h+.18,stoneMats[2]);}}
 const grass=mat(0x667955);for(let i=0;i<95;i++){let x=(rand()-.5)*25,z=(rand()-.5)*22;if(Math.abs(x)<10&&Math.abs(z)<9)continue;mesh(new T.ConeGeometry(.08+rand()*.07,.2+rand()*.25,3),grass,x,.12,z)}
 for(const x of[-9,8]){box(x,1.8,-11, .13,3.6,.13,mat(0x514838));const flag=box(x+.52,2.8,-11,1,.95,.05,mat(0x37596b));flag.rotation.z=-.08;}
@@ -53,46 +55,48 @@ function flash(text){$('toast').textContent=text;$('toast').classList.add('show'
 function ring(x,z,color,r=1,life=.4){const m=mesh(new T.RingGeometry(.92,1,40),new T.MeshBasicMaterial({color,transparent:true,opacity:.8,side:T.DoubleSide}),x,.12,z);m.rotation.x=-Math.PI/2;m.castShadow=false;fx.push({m,life,max:life,r,ring:true});}
 function spark(x,z,color,count=10){for(let i=0;i<count;i++){const m=mesh(new T.IcosahedronGeometry(.07+rand()*.07,0),new T.MeshBasicMaterial({color}),x,.65,z);m.castShadow=false;fx.push({m,life:.25+rand()*.35,max:.6,v:new T.Vector3((rand()-.5)*5,rand()*4,(rand()-.5)*5)});}}
 function remove(m){scene.remove(m);m.traverse(o=>{o.geometry?.dispose();if(Array.isArray(o.material))o.material.forEach(x=>x.dispose());else o.material?.dispose()})}
-function collides(x,z,r=.45){return Math.abs(x)>11.6||Math.abs(z)>10||obstacles.some(o=>Math.abs(x-o.x)<o.w/2+r&&Math.abs(z-o.z)<o.h/2+r)}
+function collides(x,z,r=.45){return Math.abs(x)>23.6||Math.abs(z)>21.6||obstacles.some(o=>Math.abs(x-o.x)<o.w/2+r&&Math.abs(z-o.z)<o.h/2+r)}
 function wallBlocks(from,to){return wards.some(w=>w.hp>0&&w.life>0&&crossesWard(from,to,w,.5)&&distanceToWard(to,w)<=distanceToWard(from,w)+.001);}
 function move(a,dx,dz){if(!collides(a.x+dx,a.z)&&!wallBlocks(a,{x:a.x+dx,z:a.z}))a.x+=dx;if(!collides(a.x,a.z+dz)&&!wallBlocks(a,{x:a.x,z:a.z+dz}))a.z+=dz}
-function hit(a,damage,dir,force=0){if(finished||(a===player&&roll.invulnerable))return false;let block=Math.min(a.shield,damage);a.shield-=block;damage-=block;if(block){ring(a.x,a.z,0xafdfff,.8,.2);if(a.shieldHeat){const other=a===player?enemy:player;if(Math.hypot(other.x-a.x,other.z-a.z)<3)other.hp=Math.max(0,other.hp-block*.32)}}a.hp=Math.max(0,a.hp-damage);if(damage) spark(a.x,a.z,a===player?0xffca8f:0xb8ddff,5);if(force)a.motion.start(dir.x,dir.z,force);if(a===player&&damage)flash('피격 −'+Math.round(damage));if(a.hp<=0)endRound(a===enemy);return true}
+function hit(a,damage,dir,force=0,source=null){if(finished||a.dead||(a===player&&roll.invulnerable))return false;if(a.monster&&source===player)a.aggro=true;let block=Math.min(a.shield,damage);a.shield-=block;damage-=block;if(block){ring(a.x,a.z,0xafdfff,.8,.2);if(a.shieldHeat){const other=a===player?enemy:player;if(Math.hypot(other.x-a.x,other.z-a.z)<3)other.hp=Math.max(0,other.hp-block*.32)}}a.hp=Math.max(0,a.hp-damage);if(damage) spark(a.x,a.z,a===player?0xffca8f:0xb8ddff,5);if(force)a.motion.start(dir.x,dir.z,force);if(a===player&&damage)flash('피격 −'+Math.round(damage));if(a.hp<=0){if(a.monster)killMonster(a,source);else endRound(a===enemy)};return true}
 function projectile(a,dir,opt={}){const color=opt.color||0xffa044;const m=mesh(new T.IcosahedronGeometry(opt.radius||.19,1),new T.MeshBasicMaterial({color}),a.x+dir.x*.7,.9,a.z+dir.z*.7);m.castShadow=false;const light=new T.PointLight(color,1.7,3);m.add(light);shots.push({m,owner:a,dir:dir.clone(),speed:opt.speed||10,life:opt.life||1.3,damage:opt.damage||10,force:opt.force||0,pierce:!!opt.pierce,hit:false,blast:opt.blast||0,field:opt.field||false,trail:0,color,payload:opt.payload||null});}
-function area(a,x,z,r,damage,color,force=0,dir=null,payload=null){ring(x,z,color,r,.45);const target=a===player?enemy:player;const delta=new T.Vector3(target.x-x,0,target.z-z),dist=delta.length();if(dist<r+.4){delta.normalize();if(!dir||delta.dot(dir)>.3){if(hit(target,damage,delta,force))applyPayload(target,payload)}}}
+function area(a,x,z,r,damage,color,force=0,dir=null,payload=null){ring(x,z,color,r,.45);for(const target of targets(a)){const delta=new T.Vector3(target.x-x,0,target.z-z),dist=delta.length();if(dist<r+.4){delta.normalize();if(!dir||delta.dot(dir)>.3){if(hit(target,damage,delta,force,a))applyPayload(target,payload,a)}}}}
 function field(a,x,z,r,damage,color,life=3,force=0,payload=null){const m=mesh(new T.CircleGeometry(r,48),new T.MeshBasicMaterial({color,transparent:true,opacity:.16,side:T.DoubleSide}),x,.085,z);m.rotation.x=-Math.PI/2;m.castShadow=false;fields.push({m,owner:a,x,z,r,damage,color,life,tick:.1,force,payload});ring(x,z,color,r,.6)}
 const shields=new Map();for(const a of[player,enemy]){const m=mesh(new T.SphereGeometry(.85,20,12),new T.MeshBasicMaterial({color:0x9edbff,wireframe:true,transparent:true,opacity:.22}),a.x,1,a.z);m.visible=false;m.castShadow=false;shields.set(a,m)}
-function applyPayload(a,payload){if(!payload||finished)return;if(payload.slow)a.slow=Math.max(a.slow||0,payload.slow);if(payload.burn){if(!(a.burn>0))a.burnTick=.5;a.burn=Math.max(a.burn||0,payload.burn);}if(payload.echo&&!a.echo)a.echo={time:.25,damage:payload.echo};}
-function updateStatuses(dt){for(const a of[player,enemy]){a.slow=Math.max(0,(a.slow||0)-dt);if(a.burn>0){a.burn-=dt;a.burnTick=(a.burnTick||0)-dt;if(a.burnTick<=0){a.burnTick=.5;hit(a,2,new T.Vector3());spark(a.x,a.z,0xff9c45,3)}}if(a.echo){a.echo.time-=dt;if(a.echo.time<=0){const damage=a.echo.damage;a.echo=null;hit(a,damage,new T.Vector3());ring(a.x,a.z,0xf3d56b,.75,.25)}}}}
+function applyPayload(a,payload,source=null){if(!payload||finished||a.dead)return;if(payload.slow)a.slow=Math.max(a.slow||0,payload.slow);if(payload.burn){if(!(a.burn>0))a.burnTick=.5;a.burn=Math.max(a.burn||0,payload.burn);a.burnOwner=source;}if(payload.echo&&!a.echo)a.echo={time:.25,damage:payload.echo,owner:source};}
+function updateStatuses(dt){for(const a of[player,enemy,...monsters.filter(m=>!m.dead)]){a.slow=Math.max(0,(a.slow||0)-dt);if(a.burn>0){a.burn-=dt;a.burnTick=(a.burnTick||0)-dt;if(a.burnTick<=0){a.burnTick=.5;hit(a,2,new T.Vector3(),0,a.burnOwner);spark(a.x,a.z,0xff9c45,3)}}if(a.echo){a.echo.time-=dt;if(a.echo.time<=0){const {damage,owner}=a.echo;a.echo=null;hit(a,damage,new T.Vector3(),0,owner);ring(a.x,a.z,0xf3d56b,.75,.25)}}}}
 function elementalBurst(spec,dir,caster){spellVfx.burst(spec,dir,caster,collides);}
 function boltEffect(x,z,spec){spellVfx.bolt(x,z,spec);}
-function castElemental(s,dir,caster){const victim=caster===player?enemy:player;const spec=elementalSpec(s.sequence,s.power);
+function targets(caster){return [caster===player?enemy:player,...monsters.filter(m=>!m.dead)];}
+function castElemental(s,dir,caster){const victims=targets(caster),spec=elementalSpec(s.sequence,s.power);
  if(spec.kind==='l'){
-  let point=lightningPoint(caster,victim,spec.range,rand);
-  if(!point.targeted){for(let i=0;i<24&&collides(point.x,point.z,.05);i++)point=lightningPoint(caster,victim,spec.range,rand);if(collides(point.x,point.z,.05))point={x:caster.x,z:caster.z,targeted:false};}
-  boltEffect(point.x,point.z,spec);
-  if(point.targeted){const delta=new T.Vector3(victim.x-caster.x,0,victim.z-caster.z).normalize();if(hit(victim,spec.damage,delta,spec.force))applyPayload(victim,spec);}
+  // Player lightning chooses the target nearest the cursor within cast range.
+  const inside=victims.filter(v=>Math.hypot(v.x-caster.x,v.z-caster.z)<=spec.range);
+  const reference=caster===player?aim:player;
+  inside.sort((a,b)=>Math.hypot(a.x-reference.x,a.z-reference.z)-Math.hypot(b.x-reference.x,b.z-reference.z));
+  const victim=inside[0];let point=lightningPoint(caster,victim||{x:1e6,z:1e6},spec.range,rand);if(!victim){for(let n=0;n<24&&collides(point.x,point.z,.05);n++)point=lightningPoint(caster,{x:1e6,z:1e6},spec.range,rand);if(collides(point.x,point.z,.05))point={x:caster.x,z:caster.z};}boltEffect(point.x,point.z,spec);
+  if(victim){const d=new T.Vector3(victim.x-caster.x,0,victim.z-caster.z).normalize();if(hit(victim,spec.damage,d,spec.force,caster))applyPayload(victim,spec,caster);}
  }else{
   elementalBurst(spec,dir,caster);
-  if(inElementCone(caster,victim,dir,spec)){
-   const d=new T.Vector3(victim.x-caster.x,0,victim.z-caster.z),length=d.length();d.normalize();let blocked=false;for(let step=.25;step<length;step+=.25)if(collides(caster.x+d.x*step,caster.z+d.z*step,.02)){blocked=true;break;}
-   if(!blocked&&hit(victim,spec.damage,d,spec.force))applyPayload(victim,spec);
+  for(const victim of victims)if(inElementCone(caster,victim,dir,spec)&&clearPath(caster,victim)){
+   const d=new T.Vector3(victim.x-caster.x,0,victim.z-caster.z).normalize();if(hit(victim,spec.damage,d,spec.force,caster))applyPayload(victim,spec,caster);
   }
  }
  if(spec.shield){caster.shield=Math.max(caster.shield,spec.shield);caster.shieldTime=2;}
 }
 function clearPath(a,b){const d=new T.Vector3(b.x-a.x,0,b.z-a.z),length=d.length();d.normalize();for(let t=.2;t<length;t+=.2)if(collides(a.x+d.x*t,a.z+d.z*t,.02))return false;return true;}
-function castForce(s,dir,caster){const spec=forceSpec(s.sequence),color=spec.force<0?0xc49ff1:0xb4e676;spellVfx.force(spec,dir,caster);
+function castForce(s,dir,caster){const spec=forceSpec(s.sequence);spec.damage*=s.mastery||1;const color=spec.force<0?0xc49ff1:0xb4e676;spellVfx.force(spec,dir,caster);
  const m=mesh(new T.RingGeometry(.94,1,14,1,-spec.halfAngle,spec.halfAngle*2),new T.MeshBasicMaterial({color,side:T.DoubleSide,transparent:true,opacity:.8}),caster.x,.18,caster.z);m.rotation.set(-Math.PI/2,0,Math.atan2(-dir.z,dir.x));m.castShadow=false;
- waves.push({owner:caster,m,x:caster.x,z:caster.z,dir:dir.clone(),spec,radius:0,hit:false});
+ waves.push({owner:caster,m,x:caster.x,z:caster.z,dir:dir.clone(),spec,radius:0,hit:new Set()});
  if(spec.shield){caster.shield=Math.max(caster.shield,spec.shield);caster.shieldTime=2;}
 }
 function wardPlacement(caster,dir,aimPoint,spec){const offset=aimPoint.clone().sub(new T.Vector3(caster.x,0,caster.z));if(offset.length()<.8)offset.copy(dir).multiplyScalar(.8);if(offset.length()>spec.range)offset.setLength(spec.range);
  let point=new T.Vector3(caster.x,0,caster.z),length=offset.length(),d=offset.normalize();for(let t=.2;t<=length;t+=.2){if(collides(caster.x+d.x*t,caster.z+d.z*t,.1))break;point.set(caster.x+d.x*t,0,caster.z+d.z*t);}
  const wall={x:point.x,z:point.z,nx:dir.x,nz:dir.z,width:spec.width};
- for(let i=0;i<30&&[player,enemy].some(a=>distanceToWard(a,wall)<.55);i++){point.addScaledVector(d,-.2);wall.x=point.x;wall.z=point.z;}
+ for(let i=0;i<30&&[player,enemy,...monsters.filter(m=>!m.dead)].some(a=>distanceToWard(a,wall)<.55);i++){point.addScaledVector(d,-.2);wall.x=point.x;wall.z=point.z;}
  return point;
 }
-function castWard(s,dir,caster,aimPoint){const spec=wardSpec(s.sequence),point=wardPlacement(caster,dir,aimPoint,spec);
+function castWard(s,dir,caster,aimPoint){const spec=wardSpec(s.sequence);spec.hp=Math.round(spec.hp*(s.mastery||1));const point=wardPlacement(caster,dir,aimPoint,spec);
  // One placed wall per caster; replacing it prevents an unlimited wall stack.
  for(const w of wards.filter(w=>w.owner===caster))remove(w.m);wards=wards.filter(w=>w.owner!==caster);
  const m=mesh(new T.BoxGeometry(spec.width,2.3,.12),new T.MeshBasicMaterial({color:0x8ed8ff,transparent:true,opacity:.45,side:T.DoubleSide}),point.x,1.2,point.z);m.rotation.y=Math.atan2(dir.x,dir.z);m.castShadow=false;
@@ -102,33 +106,34 @@ function castWard(s,dir,caster,aimPoint){const spec=wardSpec(s.sequence),point=w
  wards.push({owner:caster,m,x:point.x,z:point.z,nx:dir.x,nz:dir.z,width:spec.width,hp:spec.hp,maxHp:spec.hp,life:spec.duration,spec,effectCooldown:0});ring(point.x,point.z,0xa8dcff,1,.35);if(caster===player)flash('장막 설치 · 내구도 '+spec.hp+' · '+spec.duration+'초');
 }
 function updateForces(dt){
- for(let i=waves.length-1;i>=0;i--){const w=waves[i],victim=w.owner===player?enemy:player,s=w.spec,old=w.radius;w.radius=Math.min(s.range,w.radius+s.speed*dt);w.m.scale.setScalar(Math.max(.1,s.force<0?s.range-w.radius+.1:w.radius));w.m.material.opacity=.8*(1-w.radius/s.range)+.15;
- const distance=Math.hypot(victim.x-w.x,victim.z-w.z),front=s.force<0?s.range-w.radius:w.radius,previous=s.force<0?s.range-old:old;
- if(!w.hit&&distance>=Math.min(front,previous)-.4&&distance<=Math.max(front,previous)+.4&&inElementCone(w,victim,w.dir,s)&&clearPath(w,victim)){
- w.hit=true;const d=new T.Vector3(victim.x-w.x,0,victim.z-w.z).normalize();if(hit(victim,s.damage,d)){applyPayload(victim,s);const amount=displacement(s.force,distance);victim.motion.start(d.x,d.z,amount);}}
- if(w.radius>=s.range){remove(w.m);waves.splice(i,1);}}
+ for(let i=waves.length-1;i>=0;i--){const w=waves[i],s=w.spec,old=w.radius;w.radius=Math.min(s.range,w.radius+s.speed*dt);w.m.scale.setScalar(Math.max(.1,s.force<0?s.range-w.radius+.1:w.radius));w.m.material.opacity=.8*(1-w.radius/s.range)+.15;
+ for(const victim of targets(w.owner)){const distance=Math.hypot(victim.x-w.x,victim.z-w.z),front=s.force<0?s.range-w.radius:w.radius,previous=s.force<0?s.range-old:old;
+ if(!w.hit.has(victim)&&distance>=Math.min(front,previous)-.4&&distance<=Math.max(front,previous)+.4&&inElementCone(w,victim,w.dir,s)&&clearPath(w,victim)){
+ w.hit.add(victim);const d=new T.Vector3(victim.x-w.x,0,victim.z-w.z).normalize();if(hit(victim,s.damage,d,0,w.owner)){applyPayload(victim,s,w.owner);const amount=displacement(s.force,distance);victim.motion.start(d.x,d.z,amount);}}
+ }if(w.radius>=s.range){remove(w.m);waves.splice(i,1);}}
  for(let i=wards.length-1;i>=0;i--){const w=wards[i];w.life-=dt;w.effectCooldown-=dt;
- const victim=w.owner===player?enemy:player;if(w.hp>0&&w.life>0&&w.effectCooldown<=0&&distanceToWard(victim,w)<1){w.effectCooldown=.8;const payload=w.spec;
+ if(w.hp>0&&w.life>0&&w.effectCooldown<=0){w.effectCooldown=.8;for(const victim of targets(w.owner).filter(v=>distanceToWard(v,w)<1)){const payload=w.spec;
  const side=(victim.x-w.x)*w.nx+(victim.z-w.z)*w.nz>=0?1:-1,away=new T.Vector3(w.nx*side,0,w.nz*side);
- if(payload.burn||payload.slow||payload.shock||payload.push||payload.pull){if(hit(victim,payload.shock,away)){applyPayload(victim,payload);if(payload.push)victim.motion.start(away.x,away.z,payload.push);else if(payload.pull)victim.motion.start(away.x,away.z,-payload.pull);}if(payload.shock)boltEffect(victim.x,victim.z,elementalSpec('l'));else ring(victim.x,victim.z,payload.burn?0xff9c45:payload.slow?0x72dce8:0xb4e676,.7,.3);}}
- w.m.material.opacity=.15+.35*w.hp/w.maxHp;if(w.life<=0||w.hp<=0){spellVfx.shatter(w.x,w.z,w.width);remove(w.m);wards.splice(i,1);}}
+ if(payload.burn||payload.slow||payload.shock||payload.push||payload.pull){if(hit(victim,payload.shock,away,0,w.owner)){applyPayload(victim,payload,w.owner);if(payload.push)victim.motion.start(away.x,away.z,payload.push);else if(payload.pull)victim.motion.start(away.x,away.z,-payload.pull);}if(payload.shock)boltEffect(victim.x,victim.z,elementalSpec('l'));else ring(victim.x,victim.z,payload.burn?0xff9c45:payload.slow?0x72dce8:0xb4e676,.7,.3);}}
+ }w.m.material.opacity=.15+.35*w.hp/w.maxHp;if(w.life<=0||w.hp<=0){spellVfx.shatter(w.x,w.z,w.width);remove(w.m);wards.splice(i,1);}}
 }
 function dispatchSpell(s,caster,dir,aimPoint){if(elementalSpec(s.sequence))castElemental(s,dir,caster);else if(forceSpec(s.sequence))castForce(s,dir,caster);else castWard(s,dir,caster,aimPoint);}
-function cast(result){if(!running||paused||finished)return;const s=resolveSpell(result,loadout);if(player.cool>0){flash('잠깐 기다려 주세요');return}if(bot&&player.mana<s.cost){flash('마력이 부족합니다. 잠시 쉬면 회복됩니다.');return}if(bot)player.mana-=s.cost;player.cool=s.tap?.16:.38;const seq=s.sequence,base=seq.slice(0,2),p=s.power,dir=player.dir.clone(),target=aim.clone();target.sub(new T.Vector3(player.x,0,player.z));if(target.length()>6)target.setLength(6);target.add(new T.Vector3(player.x,0,player.z));const third=seq[2];
+function cast(result){if(!running||paused||finished)return;const s=resolveSpell(result,loadout);if(s.parts.some(k=>!progress.ranks[k]))return;s.mastery=mastery(progress,s.parts[0]);s.power*=s.mastery;if(player.cool>0){flash('잠깐 기다려 주세요');return}if(bot&&player.mana<s.cost){flash('마력이 부족합니다. 잠시 쉬면 회복됩니다.');return}if(bot)player.mana-=s.cost;player.cool=s.tap?.16:.38;const seq=s.sequence,base=seq.slice(0,2),p=s.power,dir=player.dir.clone(),target=aim.clone();target.sub(new T.Vector3(player.x,0,player.z));if(target.length()>6)target.setLength(6);target.add(new T.Vector3(player.x,0,player.z));const third=seq[2];
  dispatchSpell(s,player,dir,aim);
  history.unshift({name:s.name,seq:s.keys.toUpperCase(),tier:seq.length===1?'1륜':seq.length+'중 2륜'});history=history.slice(0,4);$('history').innerHTML=history.map(h=>`<div class="history-item">${h.name}<small>${h.seq.split('').join(' → ')} · ${h.tier}</small></div>`).join('');$('spellName').textContent=s.name;$('queue').textContent=s.keys.toUpperCase().split('').join(' → ')+' / 발사 완료';$('tier').textContent=seq.length===1?'1륜 · 발동':seq.length+'중 2륜 · 발동';
 }
-function endRound(win){if(!bot){enemy.hp=100;enemy.shield=0;enemy.burn=0;enemy.slow=0;enemy.echo=null;flash('연습 상대의 체력을 회복했습니다');return}finished=true;charge.clear();enemyCharge.clear();moveTarget=null;if(win)wins++;else losses++;$('wins').textContent=wins;$('losses').textContent=losses;$('resultTitle').textContent=win?'승리':'패배';$('resultText').textContent=win?'주문을 조합해 상대 마법사를 제압했습니다.':'충전 중에는 이동하거나 장막으로 공격을 막아 보세요.';$('result').classList.remove('hidden')}
-function reset(){spellVfx.clear();enemy.strikePoint=null;enemy.strikeLocked=false;enemyCharge.clear();enemyLoadout=chooseLoadout();enemy.lastSpell="";enemy.lastSpellTime=0;for(const a of[player,enemy]){a.motion.clear();a.slow=0;a.burn=0;a.echo=null;a.burnTick=0;a.shieldHeat=false;}roll.reset();player.velocity=new T.Vector3();enemy.dodge=0;enemy.dodgeCool=0;enemy.defendCool=0;enemy.attackCount=0;enemy.sidestep=1;for(const s of shots)remove(s.m);for(const f of fields)remove(f.m);for(const f of fx)remove(f.m);for(const w of [...waves,...wards])remove(w.m);waves=[];wards=[];shots=[];fields=[];fx=[];Object.assign(player,{x:-5,z:4,hp:100,mana:100,shield:0,shieldTime:0,cool:0});Object.assign(enemy,{x:5,z:-4,hp:100,mana:100,shield:0,shieldTime:0,cool:2,wind:0});charge.clear();moveTarget=null;finished=false;paused=false;clock=0;history=[];$('history').textContent='짧게 눌러 첫 마법을 써보세요.';$('result').classList.add('hidden');$('paused').classList.add('hidden');$('pause').textContent='일시정지';$('spellName').textContent='Q · W · E';$('tier').textContent='1륜 · 준비';$('queue').textContent='길게 누르면 원이 차례로 쌓입니다'}
+function endRound(win){if(!bot){const a=win?enemy:player;a.hp=100;a.shield=0;a.burn=0;a.slow=0;a.echo=null;flash(win?'연습 상대의 체력을 회복했습니다':'연습 모드 · 체력을 회복했습니다');return}finished=true;charge.clear();enemyCharge.clear();moveTarget=null;if(win)wins++;else losses++;$('wins').textContent=wins;$('losses').textContent=losses;$('resultTitle').textContent=win?'승리':'패배';$('resultText').textContent=win?'주문을 조합해 상대 마법사를 제압했습니다.':'몬스터의 공격을 피하며 사냥하세요. 새 대결은 레벨 1부터 시작합니다.';$('result').classList.remove('hidden')}
+function reset(){resetHunt();spellVfx.clear();enemy.strikePoint=null;enemy.strikeLocked=false;enemyCharge.clear();enemyLoadout=chooseLoadout();enemy.lastSpell="";enemy.lastSpellTime=0;for(const a of[player,enemy]){a.motion.clear();a.slow=0;a.burn=0;a.echo=null;a.burnTick=0;a.shieldHeat=false;}roll.reset();player.velocity=new T.Vector3();enemy.dodge=0;enemy.dodgeCool=0;enemy.defendCool=0;enemy.attackCount=0;enemy.sidestep=1;for(const s of shots)remove(s.m);for(const f of fields)remove(f.m);for(const f of fx)remove(f.m);for(const w of [...waves,...wards])remove(w.m);waves=[];wards=[];shots=[];fields=[];fx=[];Object.assign(player,{x:-5,z:4,hp:100,mana:100,shield:0,shieldTime:0,cool:0});Object.assign(enemy,{x:16,z:-14,hp:100,mana:100,shield:0,shieldTime:0,cool:2,wind:0});charge.clear();moveTarget=null;finished=false;paused=false;clock=0;history=[];$('history').textContent='짧게 눌러 첫 마법을 써보세요.';$('result').classList.add('hidden');$('paused').classList.add('hidden');$('pause').textContent='일시정지';$('spellName').textContent='Q · W · E';$('tier').textContent='1륜 · 준비';$('queue').textContent='길게 누르면 원이 차례로 쌓입니다'}
 function pause(value=!paused){if(!running||finished)return;paused=value;charge.clear();moveTarget=null;$('paused').classList.toggle('hidden',!paused);$('pause').textContent=paused?'계속하기':'일시정지'}
 function point(e){const rect=canvas.getBoundingClientRect();pointer.set((e.clientX-rect.left)/rect.width*2-1,-(e.clientY-rect.top)/rect.height*2+1);ray.setFromCamera(pointer,camera);const pos=new T.Vector3();if(ray.ray.intersectPlane(ground,pos)){aim.copy(pos);const d=pos.clone().sub(new T.Vector3(player.x,0,player.z));if(d.length()>.1)player.dir.copy(d.normalize());}return pos}
 canvas.addEventListener('pointermove',e=>{point(e);if(e.buttons===2&&running&&!paused)moveTarget=aim.clone()});canvas.addEventListener('contextmenu',e=>e.preventDefault());canvas.addEventListener('pointerdown',e=>{point(e);if(e.button===2&&running&&!paused&&!finished){moveTarget=aim.clone();marker.position.set(aim.x,.07,aim.z);marker.visible=true}});
-window.addEventListener('keydown',e=>{if(!$('selection').classList.contains('hidden')){const slot={KeyQ:'q',KeyW:'w',KeyE:'e'}[e.code];if(slot){e.preventDefault();activeSlot=slot;renderSelection()}if(e.code==='Escape'&&selectionReturn){cancelSelection()}return;}if(!$('intro').classList.contains('hidden'))return;if(e.code==='Space'){e.preventDefault();if(!e.repeat&&running&&!paused&&!finished){const d=aim.clone().sub(new T.Vector3(player.x,0,player.z));if(d.length()<.1)d.copy(player.dir);if(roll.start(d.x,d.z)){player.motion.clear();moveTarget=null;marker.visible=false;ring(player.x,player.z,0xe6d5a2,.9,.3);flash('구르기 · 주문 유지')}else flash('구르기 재사용 '+roll.cooldown.toFixed(1)+'초')}return;}if(e.code==='KeyP'&&!e.repeat){pause();return}if(e.code==='Escape'){charge.clear();flash('주문 취소');return}const key={KeyQ:'q',KeyW:'w',KeyE:'e'}[e.code];if(key){e.preventDefault();if(running&&!paused&&!finished)charge.down(key)}});
+window.addEventListener('keydown',e=>{if(!$('selection').classList.contains('hidden')){const slot={KeyQ:'q',KeyW:'w',KeyE:'e'}[e.code];if(slot){e.preventDefault();activeSlot=slot;renderSelection()}if(e.code==='Escape'&&selectionReturn){cancelSelection()}return;}if(!$('intro').classList.contains('hidden'))return;if(e.code==='Space'){e.preventDefault();if(!e.repeat&&running&&!paused&&!finished){const d=aim.clone().sub(new T.Vector3(player.x,0,player.z));if(d.length()<.1)d.copy(player.dir);if(roll.start(d.x,d.z)){player.motion.clear();moveTarget=null;marker.visible=false;ring(player.x,player.z,0xe6d5a2,.9,.3);flash('구르기 · 주문 유지')}else flash('구르기 재사용 '+roll.cooldown.toFixed(1)+'초')}return;}if(e.code==='KeyP'&&!e.repeat){pause();return}if(e.code==='Escape'){charge.clear();flash('주문 취소');return}const key={KeyQ:'q',KeyW:'w',KeyE:'e'}[e.code];if(key){e.preventDefault();if(running&&!paused&&!finished){if(progress.ranks[key])charge.down(key);else if(!e.repeat)flash('아직 배우지 않은 1륜입니다. 몬스터를 사냥하고 스킬 포인트로 배우세요.');}}});
 window.addEventListener('keyup',e=>{const key={KeyQ:'q',KeyW:'w',KeyE:'e'}[e.code];if(key){e.preventDefault();const r=charge.up(key);if(r)cast(r)}});
 window.addEventListener('blur',()=>pause(true));document.addEventListener('visibilitychange',()=>{if(document.hidden)pause(true)});
 $('start').onclick=()=>{$('intro').classList.add('hidden');pause(false)};$('help').onclick=()=>{if(!running)return;pause(true);$('helpLoadout').textContent=KEYS.map(k=>k.toUpperCase()+' '+RUNES[loadout[k]].name).join(' · ');$('helpCombo').textContent=spellName(mapSequence(['q','w'],loadout),NAMES);$('intro').classList.remove('hidden');$('start').innerHTML='계속하기 <span>↗</span>'};$('pause').onclick=()=>pause();$('reset').onclick=()=>{if(!running)return;reset();running=true;$('intro').classList.add('hidden')};$('again').onclick=()=>{reset();running=true};$('botToggle').onclick=()=>{bot=!bot;reset();$('botToggle').textContent=bot?'대결 모드':'연습 모드';$('botToggle').title=bot?'연습 모드로 전환':'대결 모드로 전환';$('botToggle').classList.toggle('practice',!bot);$('modeNote').textContent=bot?'대결 모드 · 누르면 연습 모드로 전환':'연습 모드 · 상대 정지 · 마력 무제한';flash(bot?'대결 모드 · 새 대결 시작':'연습 모드 · 승패 없이 조합을 연습하세요');};
 function ai(dt){
  if(!bot)return;
+ if(Math.hypot(player.x-enemy.x,player.z-enemy.z)>12&&!enemyCharge.active)return;
  enemy.cool=Math.max(0,enemy.cool-dt);enemy.mana=Math.min(100,enemy.mana+dt*(enemyCharge.active?3:10));enemy.lastSpellTime=Math.max(0,(enemy.lastSpellTime||0)-dt);
  const delta=new T.Vector3(player.x-enemy.x,0,player.z-enemy.z),dist=delta.length();delta.normalize();
  // Stop tracking the player during the last .35 seconds so a visible cast can be dodged.
@@ -145,8 +150,8 @@ function ai(dt){
  const spell=enemyCharge.tick(dt,enemyLoadout);if(spell){if(enemy.mana>=spell.cost){enemy.mana-=spell.cost;const point=new T.Vector3(enemy.x,0,enemy.z).addScaledVector(enemy.dir,Math.min(2,dist*.5));dispatchSpell(spell,enemy,enemy.dir.clone(),point);enemy.lastSpell=spell.name;enemy.lastSpellTime=.8;}enemy.cool=.65+rand()*.4;}return;}
  if(enemy.cool<=0&&dist<10&&enemy.mana>=25){const plan=choosePlan(enemyLoadout,enemy.attackCount||0,enemy.hp,dist);enemy.attackCount=(enemy.attackCount||0)+1;enemy.strikePoint=null;enemy.strikeLocked=false;enemyCharge.start(plan);}
 }
-function update(dt){clock+=dt;
- for(const a of[player,enemy]){if(a.motion.active){const step=a.motion.tick(dt),count=Math.max(1,Math.ceil(Math.hypot(step.x,step.z)/.08));for(let i=0;i<count;i++){const dx=step.x/count,dz=step.z/count;if(collides(a.x+dx,a.z+dz)||wallBlocks(a,{x:a.x+dx,z:a.z+dz})){a.motion.clear();break;}a.x+=dx;a.z+=dz;}}}
+function update(dt){clock+=dt;updateHunt(dt);
+ for(const a of[player,enemy,...monsters.filter(m=>!m.dead)]){if(a.motion.active){const step=a.motion.tick(dt),count=Math.max(1,Math.ceil(Math.hypot(step.x,step.z)/.08));for(let i=0;i<count;i++){const dx=step.x/count,dz=step.z/count;if(collides(a.x+dx,a.z+dz)||wallBlocks(a,{x:a.x+dx,z:a.z+dz})){a.motion.clear();break;}a.x+=dx;a.z+=dz;}}}
 const rolling=roll.active;const beforeX=player.x,beforeZ=player.z;if(rolling){const step=roll.tick(dt);for(let i=0;i<4;i++)move(player,step.x/4,step.z/4)}else{roll.tick(dt);charge.tick(dt)}player.cool=Math.max(0,player.cool-dt);player.mana=bot?Math.min(100,player.mana+dt*(charge.active?3:10)):100;
  if(moveTarget&&!rolling&&!player.motion.active){const d=moveTarget.clone().sub(new T.Vector3(player.x,0,player.z));if(d.length()<.15){moveTarget=null;marker.visible=false}else{d.normalize();const speed=(charge.active?2.8:4.4)*(player.slow>0?.55:1);const ox=player.x,oz=player.z;move(player,d.x*dt*speed,d.z*dt*speed);if(Math.abs(ox-player.x)+Math.abs(oz-player.z)<.001){moveTarget=null;marker.visible=false}}}
  player.velocity=new T.Vector3((player.x-beforeX)/dt,0,(player.z-beforeZ)/dt);
@@ -155,13 +160,13 @@ const rolling=roll.active;const beforeX=player.x,beforeZ=player.z;if(rolling){co
  updateForces(dt);if(finished)return;ai(dt);
  for(const a of[player,enemy]){a.shieldTime=Math.max(0,a.shieldTime-dt);if(a.shieldTime<=0)a.shield=0}
  for(let i=shots.length-1;i>=0;i--){const s=shots[i],previous=s.m.position.clone();s.life-=dt;s.m.position.addScaledVector(s.dir,s.speed*dt);{const wall=wards.find(w=>w.owner!==s.owner&&w.hp>0&&crossesWard(previous,s.m.position,w));if(wall){wall.hp=Math.max(0,wall.hp-s.damage);spark(s.m.position.x,s.m.position.z,0xb9eaff,8);remove(s.m);shots.splice(i,1);continue;}}s.m.rotation.x+=dt*5;s.m.rotation.y+=dt*4;s.trail-=dt;if(s.trail<0){s.trail=.05;const trail=mesh(new T.IcosahedronGeometry(.09,0),new T.MeshBasicMaterial({color:s.color,transparent:true,opacity:.5}),s.m.position.x,.9,s.m.position.z);trail.castShadow=false;fx.push({m:trail,life:.2,max:.2})}
- const target=s.owner===player?enemy:player;let impact=false;if(!s.hit&&Math.hypot(s.m.position.x-target.x,s.m.position.z-target.z)<.65){if(hit(target,s.damage,s.dir,s.force))applyPayload(target,s.payload);s.hit=true;impact=!s.pierce}if(collides(s.m.position.x,s.m.position.z,.12))impact=true;
+ let impact=false;for(const target of targets(s.owner))if(!s.hit&&Math.hypot(s.m.position.x-target.x,s.m.position.z-target.z)<.65){if(hit(target,s.damage,s.dir,s.force,s.owner))applyPayload(target,s.payload,s.owner);s.hit=true;impact=!s.pierce}if(collides(s.m.position.x,s.m.position.z,.12))impact=true;
  if(s.life<=0||impact){const x=s.m.position.x,z=s.m.position.z;spark(x,z,s.color,9);if(s.blast)area(s.owner,x,z,s.blast,s.damage*.55,s.color,.4,null,s.payload);if(s.field)field(s.owner,x,z,1.65,7,s.color,3,s.payload?.force||0,s.payload);remove(s.m);shots.splice(i,1)}
  }
  for(let i=fields.length-1;i>=0;i--){const f=fields[i];f.life-=dt;f.tick-=dt;f.m.material.opacity=.12+Math.sin(clock*5)*.04;if(f.tick<=0){f.tick=.5;area(f.owner,f.x,f.z,f.r,f.damage*.5,f.color,f.force,null,f.payload)}if(f.life<=0){remove(f.m);fields.splice(i,1)}}
  if(toastTimer>0){toastTimer-=dt;if(toastTimer<=0)$('toast').classList.remove('show')}
 }
-function label(el,a){const pos=new T.Vector3(a.x,2.65,a.z).project(camera);el.style.left=((pos.x+1)*innerWidth/2)+'px';el.style.top=((-pos.y+1)*innerHeight/2)+'px'}
+function label(el,a){const pos=new T.Vector3(a.x,2.65,a.z).project(camera);el.style.display=Math.abs(pos.x)>1||Math.abs(pos.y)>1?'none':'';el.style.left=((pos.x+1)*innerWidth/2)+'px';el.style.top=((-pos.y+1)*innerHeight/2)+'px'}
 function drawTell(caster,seq,attackTell,tellBorder,urgent=false){const spec=elementalSpec(seq)||forceSpec(seq);if(!spec)return;
  const outline=[],color=RUNES[seq[0]].color;
  if(spec.kind==='l'){const point=caster;for(let i=0;i<=64;i++){const angle=i/64*Math.PI*2;outline.push(new T.Vector3(point.x+Math.cos(angle)*spec.range,0,point.z+Math.sin(angle)*spec.range));}}
@@ -178,7 +183,7 @@ function renderAttackTell(){
  player.strikePoint=null;
  drawTell(player,spell.sequence,playerTell,playerBorder);
 }
-function ui(){renderAttackTell();for(const a of[player,enemy]){const burning=a.burn>0,chilled=a.slow>0,tinted=burning||chilled;const c=new T.Color(burning&&(!chilled||Math.floor(clock*4)%2===0)?0xff543e:0x479eff);for(const entry of a.g.userData.palette){entry.material.color.copy(entry.color);if(tinted)entry.material.color.lerp(c,.48);}a.g.position.set(a.x,0,a.z);a.g.rotation.y=Math.atan2(a.dir.x,a.dir.z);const shield=shields.get(a);shield.position.set(a.x,1,a.z);shield.visible=a.shield>0;shield.rotation.y=clock*.6}label($('playerLabel'),player);label($('enemyLabel'),enemy);$('playerHp').style.width=player.hp+'%';$('enemyHp').style.width=enemy.hp+'%';$('manaBar').style.width=player.mana+'%';$('manaText').textContent=Math.floor(player.mana);$('enemyCast').textContent=!bot?'연습 상대':enemyCharge.active?spellName(mapSequence(enemyCharge.charge.parts,enemyLoadout),NAMES)+' · 충전':enemy.lastSpellTime>0?enemy.lastSpell+' · 발사':enemy.slow>0?'감속 중':enemy.burn>0?'화상 중':'상대 마법사';$('time').textContent=String(Math.floor(clock/60)).padStart(2,'0')+':'+String(Math.floor(clock%60)).padStart(2,'0');
+function ui(){updateCamera();renderHunt();renderAttackTell();for(const a of[player,enemy]){const burning=a.burn>0,chilled=a.slow>0,tinted=burning||chilled;const c=new T.Color(burning&&(!chilled||Math.floor(clock*4)%2===0)?0xff543e:0x479eff);for(const entry of a.g.userData.palette){entry.material.color.copy(entry.color);if(tinted)entry.material.color.lerp(c,.48);}a.g.position.set(a.x,0,a.z);a.g.rotation.y=Math.atan2(a.dir.x,a.dir.z);const shield=shields.get(a);shield.position.set(a.x,1,a.z);shield.visible=a.shield>0;shield.rotation.y=clock*.6}label($('playerLabel'),player);label($('enemyLabel'),enemy);$('playerHp').style.width=player.hp+'%';$('enemyHp').style.width=enemy.hp+'%';$('manaBar').style.width=player.mana+'%';$('manaText').textContent=Math.floor(player.mana);$('enemyCast').textContent=!bot?'연습 상대':enemyCharge.active?spellName(mapSequence(enemyCharge.charge.parts,enemyLoadout),NAMES)+' · 충전':enemy.lastSpellTime>0?enemy.lastSpell+' · 발사':enemy.slow>0?'감속 중':enemy.burn>0?'화상 중':'상대 마법사';$('time').textContent=String(Math.floor(clock/60)).padStart(2,'0')+':'+String(Math.floor(clock%60)).padStart(2,'0');
  const ec=enemyCharge.charge,enemyCharging=bot&&running&&!finished&&ec.active;
  $('enemyOrbs').innerHTML=enemyCharging?ec.parts.map((key,i)=>{const rune=RUNES[enemyLoadout[key]];return `<div class="orb" title="${rune.name}" style="--c:${rune.color};--p:${i<ec.parts.length-1?100:ec.progress*100}%"><span>${rune.icon}</span></div>`}).join(''):'';
  $('enemyOrbs').classList.toggle('charging',enemyCharging);
@@ -204,10 +209,35 @@ function openSelection(){selectionReturn=running&&!finished;pause(true);charge.c
 function cancelSelection(){$('selection').classList.add('hidden');if(selectionReturn)pause(false)}
  $('slotPicker').onclick=e=>{const b=e.target.closest('[data-slot]');if(b){activeSlot=b.dataset.slot;renderSelection()}};
  $('runePicker').onclick=e=>{const b=e.target.closest('[data-rune]');if(b){draft=assignRune(draft,activeSlot,b.dataset.rune);renderSelection()}};
- $('confirmSelection').onclick=()=>{if(!validLoadout(draft))return;loadout={...draft};try{localStorage.setItem('mage-loadout-v1',JSON.stringify(loadout))}catch{}syncLoadout();reset();running=true;$('selection').classList.add('hidden');flash(KEYS.map(k=>k.toUpperCase()+' '+RUNES[loadout[k]].name).join(' · '));};
+ $('confirmSelection').onclick=()=>{if(!validLoadout(draft))return;loadout={...draft};try{localStorage.setItem('mage-loadout-v1',JSON.stringify(loadout))}catch{}syncLoadout();reset();running=true;$('selection').classList.add('hidden');const first=KEYS.find(k=>progress.ranks[k]);flash(first.toUpperCase()+' '+RUNES[loadout[first]].name+' 습득 · 몬스터를 처치해 나머지 마법을 배우세요.');};
  $('cancelSelection').onclick=cancelSelection;$('choose').onclick=openSelection;$('resultChoose').onclick=openSelection;
- syncLoadout();renderSelection();
-function resize(){renderer.setSize(innerWidth,innerHeight);camera.aspect=innerWidth/innerHeight;camera.fov=38;const fit=Math.max(1,1.4/camera.aspect);camera.position.set(18*fit,23*fit,22*fit);camera.far=100*fit;camera.lookAt(0,0,0);camera.updateProjectionMatrix()}window.addEventListener('resize',resize);resize();
+
+function spawnMonster(near=null){if(monsters.filter(m=>!m.dead).length>=12)return;
+ let x,z,valid=false;for(let n=0;n<80;n++){x=near?near.x+(Math.random()-.5)*4:(Math.random()-.5)*44;z=near?near.z+(Math.random()-.5)*4:(Math.random()-.5)*40;
+ if(!collides(x,z,.8)&&!wards.some(w=>distanceToWard({x,z},w)<1)&&Math.hypot(x-player.x,z-player.z)>2.5&&Math.hypot(x-enemy.x,z-enemy.z)>2.5&&!monsters.some(m=>!m.dead&&Math.hypot(m.x-x,m.z-z)<1.6)){valid=true;break;}}
+ if(!valid)return;const type=Math.floor(Math.random()*3),colors=[0x9cc96e,0xd5aa68,0x9ba8da],hp=[22,30,38][type],g=new T.Group();scene.add(g);const body=mesh(new T.IcosahedronGeometry(.5+type*.06,1),mat(colors[type]),0,.65,0,g);body.scale.y=.8;for(const dx of[-.17,.17])mesh(new T.SphereGeometry(.08,6,4),mat(0x172328),dx,.76,.4,g);
+ const back=box(0,1.35,0,.85,.07,.07,mat(0x242d32),g),bar=box(0,1.36,.01,.82,.055,.08,mat(0x9ae36d),g);
+ monsters.push({id:++monsterId,monster:true,g,body,bar,color:new T.Color(colors[type]),x,z,homeX:x,homeZ:z,hp,maxHp:hp,xp:[20,25,30][type],shield:0,motion:new ForcedMotion(),dir:new T.Vector3(0,0,1),cool:1,wind:0,type,dead:false});ring(x,z,0xb7d38b,.8,.5);
+}
+function resetHunt(){for(const m of monsters)remove(m.g);monsters=[];progress=createProgress(loadout);spawnTimer=0;renderProgress();}
+function killMonster(m,source){if(m.dead)return;m.dead=true;ring(m.x,m.z,0xe9cb73,1,.5);remove(m.g);
+ if(source===player){const levels=awardKill(progress,m.xp);player.mana=Math.min(100,player.mana+10);if(levels){player.hp=Math.min(100,player.hp+20);flash('레벨 '+progress.level+' · 스킬 포인트 +'+levels);ring(player.x,player.z,0xffdf83,2,.8);}else flash('몬스터 처치 · 경험치 +'+m.xp);renderProgress();}}
+function updateHunt(dt){spawnTimer-=dt;if(spawnTimer<=0){spawnTimer=5;if(!monsters.length){for(const p of[{x:-10,z:3},{x:-7,z:10},{x:-15,z:-3},{x:8,z:6}])spawnMonster(p);}spawnMonster();}
+ for(const m of monsters){if(m.dead)continue;m.cool=Math.max(0,m.cool-dt);const dx=player.x-m.x,dz=player.z-m.z,d=Math.hypot(dx,dz),speed=(m.slow>0?.55:1)*1.45;
+ if(d<(m.aggro?6.5:3.2)){m.dir.set(dx,0,dz).normalize();if(m.wind>0){m.wind-=dt;if(m.wind<=0){if(d<1.5)hit(player,2+m.type,m.dir,0,m);m.cool=2;}}else if(d<1.2&&m.cool<=0){m.wind=.5;}else if(d>1&&!m.motion.active)move(m,m.dir.x*speed*dt,m.dir.z*speed*dt);}
+ else {m.wind=0;const hx=m.homeX-m.x,hz=m.homeZ-m.z,hd=Math.hypot(hx,hz);if(hd>.5&&!m.motion.active)move(m,hx/hd*dt,hz/hd*dt);}
+ m.g.position.set(m.x,0,m.z);m.g.rotation.y=Math.atan2(m.dir.x,m.dir.z);m.body.position.y=.65+Math.sin(clock*5+m.id)*.06;m.body.material.color.copy(m.color);if(m.wind>0)m.body.material.color.set(0xff6655);else if(m.burn>0)m.body.material.color.lerp(new T.Color(0xff543e),.6);else if(m.slow>0)m.body.material.color.lerp(new T.Color(0x479eff),.6);m.bar.scale.x=m.hp/m.maxHp;
+ }monsters=monsters.filter(m=>!m.dead);
+}
+function renderProgress(){if(!$('growth'))return;$('growthLevel').textContent='레벨 '+progress.level;$('skillPoints').textContent='스킬 포인트 '+progress.points;
+ for(const k of KEYS){const n=progress.ranks[k],r=RUNES[loadout[k]],el=$('learn-'+k);el.disabled=progress.points<1||n>=MAX_RANK;el.textContent=n===0?r.name+' 배우기':n<MAX_RANK?r.name+' 강화 '+(n+1):r.name+' 숙련 완료';$('key-'+k).classList.toggle('unlearned',n===0);$('key-'+k).querySelector('small').textContent=n?'숙련 '+n+' / 3 · '+(n===1?'기본 위력':(loadout[k]==='e'?'내구도':'직접 피해')+' +'+((n-1)*15)+'%'):'미습득 · 스킬 포인트 필요';}
+}
+function updateCamera(){const fit=Math.max(1,1.1/camera.aspect);camera.position.set(player.x+12*fit,17*fit,player.z+15*fit);camera.lookAt(player.x,0,player.z);camera.updateMatrixWorld();}
+function renderHunt(){const need=requiredXP(progress.level);$('xpText').textContent=progress.level===MAX_LEVEL?'최대 레벨 · 사냥 '+progress.kills:progress.xp+' / '+need+' XP · 사냥 '+progress.kills;$('xpBar').style.width=(progress.level===MAX_LEVEL?100:progress.xp/need*100)+'%';
+ const c=$('minimap').getContext('2d');c.fillStyle='#17242b';c.fillRect(0,0,180,160);const p=a=>({x:(a.x+25)/50*180,y:(a.z+23)/46*160});for(const o of obstacles){const q=p(o);c.fillStyle='#637272';c.fillRect(q.x-o.w*1.8,q.y-o.h*1.74,o.w*3.6,o.h*3.48);}for(const a of [...monsters,enemy,player]){if(a.dead)continue;const q=p(a);c.fillStyle=a===player?'#e9d393':a===enemy?'#ff837b':'#a7d878';c.beginPath();c.arc(q.x,q.y,a.monster?2.5:3.5,0,7);c.fill();}}
+for(const k of KEYS){$('learn-'+k).onclick=()=>{if(!running||paused||finished)return;if(learn(progress,k)){charge.clear();renderProgress();flash(RUNES[loadout[k]].name+(progress.ranks[k]===1?' 습득 · '+k.toUpperCase()+'로 사용':' 숙련도 상승'));}};}
+ syncLoadout();renderProgress();renderSelection();
+function resize(){renderer.setSize(innerWidth,innerHeight);camera.aspect=innerWidth/innerHeight;camera.fov=38;const fit=Math.max(1,1.4/camera.aspect);camera.position.set(player.x+12*fit,17*fit,player.z+15*fit);camera.far=140*fit;camera.lookAt(player.x,0,player.z);camera.updateProjectionMatrix()}window.addEventListener('resize',resize);resize();
 let prev=performance.now();function frame(now){requestAnimationFrame(frame);const dt=Math.min(.04,(now-prev)/1000);prev=now;if(running&&!paused&&!finished)update(dt);if(!paused)for(let i=fx.length-1;i>=0;i--){const f=fx[i];f.life-=dt;if(f.ring){f.m.scale.setScalar(f.r*(.55+.45*(1-f.life/f.max)));f.m.material.opacity=Math.max(0,f.life/f.max*.65)}else if(f.v){f.m.position.addScaledVector(f.v,dt);f.v.y-=dt*8}else if(f.m.material.transparent)f.m.material.opacity=Math.max(0,f.life/f.max*.5);if(f.life<=0){remove(f.m);fx.splice(i,1)}}if(!paused)spellVfx.update(dt);ui();renderer.render(scene,camera)}requestAnimationFrame(frame);
 // Read-only diagnostics for input and rendering verification.
-window.mageDebug=()=>({loadout:{...loadout},running,paused,bot,finished,charge:{parts:[...charge.parts],held:[...charge.held],progress:charge.progress},history:[...history],roll:{active:roll.active,cooldown:roll.cooldown,invulnerable:roll.invulnerable},player:{x:player.x,z:player.z,hp:player.hp,mana:player.mana},enemy:{x:enemy.x,z:enemy.z,hp:enemy.hp,mana:enemy.mana,loadout:{...enemyLoadout},charge:{parts:[...enemyCharge.charge.parts],progress:enemyCharge.charge.progress,remaining:enemyCharge.remaining},lastSpell:enemy.lastSpell},vfx:spellVfx.stats(),objects:scene.children.length});
+window.mageDebug=()=>({loadout:{...loadout},running,paused,bot,finished,charge:{parts:[...charge.parts],held:[...charge.held],progress:charge.progress},history:[...history],roll:{active:roll.active,cooldown:roll.cooldown,invulnerable:roll.invulnerable},progress:structuredClone(progress),monsters:monsters.filter(m=>!m.dead).map(m=>({id:m.id,x:m.x,z:m.z,hp:m.hp})),player:{x:player.x,z:player.z,hp:player.hp,mana:player.mana},enemy:{x:enemy.x,z:enemy.z,hp:enemy.hp,mana:enemy.mana,loadout:{...enemyLoadout},charge:{parts:[...enemyCharge.charge.parts],progress:enemyCharge.charge.progress,remaining:enemyCharge.remaining},lastSpell:enemy.lastSpell},vfx:spellVfx.stats(),objects:scene.children.length});
