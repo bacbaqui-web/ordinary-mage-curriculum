@@ -16,3 +16,19 @@ const roll=new Roll();assert.equal(roll.start(3,4),true);assert.equal(roll.start
 let x=0,z=0;for(let i=0;i<36;i++){const step=roll.tick(.01);x+=step.x;z+=step.z;}assert.ok(Math.abs(Math.hypot(x,z)-ROLL_DISTANCE)<1e-8);assert.equal(roll.active,false);assert.equal(roll.invulnerable,false);assert.equal(roll.start(1,0),false);roll.tick(3);assert.equal(roll.start(1,0),true);roll.tick(.29);assert.equal(roll.invulnerable,false);roll.reset();assert.equal(roll.cooldown,0);
 assert.equal(incomingThreat(0,0,1,0,10,4,0),true);assert.equal(incomingThreat(0,0,-1,0,10,4,0),false);assert.equal(incomingThreat(0,0,1,0,10,4,3),false);
 console.log('PASS: slower charge, roll distance, invulnerability window, cooldown, reset, directional AI threat detection');
+const {RUNES,KEYS,DEFAULT_LOADOUT,validLoadout,assignRune,mapSequence,spellName,composition}=await import('./dist/loadout.mjs');
+assert.equal(validLoadout({q:'q',w:'q',e:'i'}),false);
+assert.equal(validLoadout({q:'bad',w:'w',e:'e'}),false);
+assert.deepEqual(assignRune(DEFAULT_LOADOUT,'q','e'),{q:'e',w:'w',e:'q'});
+assert.deepEqual(DEFAULT_LOADOUT,{q:'q',w:'w',e:'e'});
+assert.deepEqual(assignRune(DEFAULT_LOADOUT,'w','i'),{q:'q',w:'i',e:'e'});
+let checked=0;
+for(const a of Object.keys(RUNES))for(const b of Object.keys(RUNES))for(const d of Object.keys(RUNES)){
+ const config={q:a,w:b,e:d};if(!validLoadout(config))continue;
+ for(const x of KEYS)for(const y of KEYS)for(const z of KEYS){const result=resolveSpell({parts:[x,y,z],progress:1,tap:false},config);assert.equal(result.sequence,config[x]+config[y]+config[z]);assert.ok(result.name&&!result.name.includes('undefined'));assert.equal(result.keys,x+y+z);const spec=composition(result.sequence,result.power);assert.ok(Number.isFinite(spec.damage));assert.ok(['shield','field','cone','projectile'].includes(spec.shape));checked++;}
+}
+assert.equal(checked,3240);
+assert.equal(resolveSpell({parts:['q'],progress:0,tap:true},{q:'i',w:'l',e:'g'}).name,'냉기탄');
+assert.notEqual(spellName('ig',NAMES),spellName('gi',NAMES));
+assert.ok(composition('i').slow>0);assert.ok(composition('g').force<0);assert.ok(composition('l').speed>composition('i').speed);
+console.log('PASS: distinct rune selection, slot swap, 120 loadouts / 3240 mapped combos, new spell roles');
