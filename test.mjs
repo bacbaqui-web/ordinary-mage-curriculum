@@ -67,3 +67,8 @@ console.log('PASS: opponent loadouts, all 39 plans, 1.2 seconds per ring, ordere
 const {lightningHits}=await import('./dist/elements.mjs');
 const lockedPoint={x:2,z:3};assert.equal(lightningHits(lockedPoint,{x:2,z:3},.88),true);assert.equal(lightningHits(lockedPoint,{x:4,z:3},.88),false);assert.equal(lightningHits(lockedPoint,{x:2,z:3.5},.38),false);assert.equal(lightningHits(lockedPoint,{x:2,z:3.5},.88),true);assert.deepEqual(lockedPoint,{x:2,z:3});
 console.log('PASS: lightning uses the marked ground radius; leaving the locked point avoids damage');
+
+const {ForcedMotion}=await import('./dist/motion.mjs');
+for(const direction of [1,-1]){const motion=new ForcedMotion();motion.start(1,0,3*direction);assert.ok(motion.active);const first=motion.tick(.016);assert.ok(Math.abs(first.x)>0&&Math.abs(first.x)<3);let distance=first.x;while(motion.active)distance+=motion.tick(.016).x;assert.ok(Math.abs(distance-3*direction)<1e-8);assert.equal(motion.lean,0);}
+const motion=new ForcedMotion();motion.start(1,0,2);motion.tick(.1);motion.start(0,1,-1);const step=motion.tick(.1);assert.equal(step.x,0);assert.ok(step.z<0);motion.clear();assert.equal(motion.active,false);assert.deepEqual(motion.tick(1),{x:0,z:0});
+console.log('PASS: smooth push/pull, frame-independent distance, replacing force, reset');
