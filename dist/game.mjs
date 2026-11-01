@@ -1,7 +1,7 @@
 import {ForcedMotion} from './motion.mjs';
 import {LowPolyVFX} from './lowpoly-vfx.mjs';
 import {chooseLoadout,choosePlan,OpponentCharge} from './opponent.mjs?v=8';
-import {forceSpec,wardSpec,displacement,crossesWard} from './forces.mjs';
+import {forceSpec,wardSpec,displacement,crossesWard,distanceToWard} from './forces.mjs?v=wall2';
 import {elementalSpec,inElementCone,lightningPoint,lightningHits} from './elements.mjs?v=9';
 import {describeSpell} from './guide.mjs';
 import * as T from './three.module.js';
@@ -54,7 +54,8 @@ function ring(x,z,color,r=1,life=.4){const m=mesh(new T.RingGeometry(.92,1,40),n
 function spark(x,z,color,count=10){for(let i=0;i<count;i++){const m=mesh(new T.IcosahedronGeometry(.07+rand()*.07,0),new T.MeshBasicMaterial({color}),x,.65,z);m.castShadow=false;fx.push({m,life:.25+rand()*.35,max:.6,v:new T.Vector3((rand()-.5)*5,rand()*4,(rand()-.5)*5)});}}
 function remove(m){scene.remove(m);m.traverse(o=>{o.geometry?.dispose();if(Array.isArray(o.material))o.material.forEach(x=>x.dispose());else o.material?.dispose()})}
 function collides(x,z,r=.45){return Math.abs(x)>11.6||Math.abs(z)>10||obstacles.some(o=>Math.abs(x-o.x)<o.w/2+r&&Math.abs(z-o.z)<o.h/2+r)}
-function move(a,dx,dz){if(!collides(a.x+dx,a.z))a.x+=dx;if(!collides(a.x,a.z+dz))a.z+=dz}
+function wallBlocks(from,to){return wards.some(w=>w.hp>0&&w.life>0&&crossesWard(from,to,w,.5)&&distanceToWard(to,w)<=distanceToWard(from,w)+.001);}
+function move(a,dx,dz){if(!collides(a.x+dx,a.z)&&!wallBlocks(a,{x:a.x+dx,z:a.z}))a.x+=dx;if(!collides(a.x,a.z+dz)&&!wallBlocks(a,{x:a.x,z:a.z+dz}))a.z+=dz}
 function hit(a,damage,dir,force=0){if(finished||(a===player&&roll.invulnerable))return false;let block=Math.min(a.shield,damage);a.shield-=block;damage-=block;if(block){ring(a.x,a.z,0xafdfff,.8,.2);if(a.shieldHeat){const other=a===player?enemy:player;if(Math.hypot(other.x-a.x,other.z-a.z)<3)other.hp=Math.max(0,other.hp-block*.32)}}a.hp=Math.max(0,a.hp-damage);if(damage) spark(a.x,a.z,a===player?0xffca8f:0xb8ddff,5);if(force)a.motion.start(dir.x,dir.z,force);if(a===player&&damage)flash('피격 −'+Math.round(damage));if(a.hp<=0)endRound(a===enemy);return true}
 function projectile(a,dir,opt={}){const color=opt.color||0xffa044;const m=mesh(new T.IcosahedronGeometry(opt.radius||.19,1),new T.MeshBasicMaterial({color}),a.x+dir.x*.7,.9,a.z+dir.z*.7);m.castShadow=false;const light=new T.PointLight(color,1.7,3);m.add(light);shots.push({m,owner:a,dir:dir.clone(),speed:opt.speed||10,life:opt.life||1.3,damage:opt.damage||10,force:opt.force||0,pierce:!!opt.pierce,hit:false,blast:opt.blast||0,field:opt.field||false,trail:0,color,payload:opt.payload||null});}
 function area(a,x,z,r,damage,color,force=0,dir=null,payload=null){ring(x,z,color,r,.45);const target=a===player?enemy:player;const delta=new T.Vector3(target.x-x,0,target.z-z),dist=delta.length();if(dist<r+.4){delta.normalize();if(!dir||delta.dot(dir)>.3){if(hit(target,damage,delta,force))applyPayload(target,payload)}}}
@@ -66,10 +67,10 @@ function elementalBurst(spec,dir,caster){spellVfx.burst(spec,dir,caster,collides
 function boltEffect(x,z,spec){spellVfx.bolt(x,z,spec);}
 function castElemental(s,dir,caster){const victim=caster===player?enemy:player;const spec=elementalSpec(s.sequence,s.power);
  if(spec.kind==='l'){
-  let point=caster.strikePoint?{...caster.strikePoint}:lightningPoint(caster,victim,spec.range,rand);
-  if(!caster.strikePoint&&!point.targeted){for(let i=0;i<24&&collides(point.x,point.z,.05);i++)point=lightningPoint(caster,victim,spec.range,rand);if(collides(point.x,point.z,.05))point={x:caster.x,z:caster.z,targeted:false};}
+  let point=lightningPoint(caster,victim,spec.range,rand);
+  if(!point.targeted){for(let i=0;i<24&&collides(point.x,point.z,.05);i++)point=lightningPoint(caster,victim,spec.range,rand);if(collides(point.x,point.z,.05))point={x:caster.x,z:caster.z,targeted:false};}
   boltEffect(point.x,point.z,spec);
-  if(caster.strikePoint?lightningHits(point,victim,spec.radius):point.targeted){const delta=new T.Vector3(victim.x-caster.x,0,victim.z-caster.z).normalize();if(hit(victim,spec.damage,delta,spec.force))applyPayload(victim,spec);}
+  if(point.targeted){const delta=new T.Vector3(victim.x-caster.x,0,victim.z-caster.z).normalize();if(hit(victim,spec.damage,delta,spec.force))applyPayload(victim,spec);}
  }else{
   elementalBurst(spec,dir,caster);
   if(inElementCone(caster,victim,dir,spec)){
@@ -87,6 +88,8 @@ function castForce(s,dir,caster){const spec=forceSpec(s.sequence),color=spec.for
 }
 function wardPlacement(caster,dir,aimPoint,spec){const offset=aimPoint.clone().sub(new T.Vector3(caster.x,0,caster.z));if(offset.length()<.8)offset.copy(dir).multiplyScalar(.8);if(offset.length()>spec.range)offset.setLength(spec.range);
  let point=new T.Vector3(caster.x,0,caster.z),length=offset.length(),d=offset.normalize();for(let t=.2;t<=length;t+=.2){if(collides(caster.x+d.x*t,caster.z+d.z*t,.1))break;point.set(caster.x+d.x*t,0,caster.z+d.z*t);}
+ const wall={x:point.x,z:point.z,nx:dir.x,nz:dir.z,width:spec.width};
+ for(let i=0;i<30&&[player,enemy].some(a=>distanceToWard(a,wall)<.55);i++){point.addScaledVector(d,-.2);wall.x=point.x;wall.z=point.z;}
  return point;
 }
 function castWard(s,dir,caster,aimPoint){const spec=wardSpec(s.sequence),point=wardPlacement(caster,dir,aimPoint,spec);
@@ -94,7 +97,9 @@ function castWard(s,dir,caster,aimPoint){const spec=wardSpec(s.sequence),point=w
  for(const w of wards.filter(w=>w.owner===caster))remove(w.m);wards=wards.filter(w=>w.owner!==caster);
  const m=mesh(new T.BoxGeometry(spec.width,2.3,.12),new T.MeshBasicMaterial({color:0x8ed8ff,transparent:true,opacity:.45,side:T.DoubleSide}),point.x,1.2,point.z);m.rotation.y=Math.atan2(dir.x,dir.z);m.castShadow=false;
  const frame=new T.LineSegments(new T.EdgesGeometry(m.geometry),new T.LineBasicMaterial({color:0xd9f3ff,transparent:true,opacity:.9}));m.add(frame);spellVfx.ward(m,spec.width);
- wards.push({owner:caster,m,x:point.x,z:point.z,nx:dir.x,nz:dir.z,width:spec.width,hp:spec.hp,maxHp:spec.hp,life:spec.duration});ring(point.x,point.z,0xa8dcff,1,.35);if(caster===player)flash('장막 설치 · 내구도 '+spec.hp+' · '+spec.duration+'초');
+ const ingredients=spec.colors.filter(k=>k!=='e');if(ingredients.length)m.material.color.set(RUNES[ingredients[0]].color);
+ ingredients.forEach((k,i)=>{const strip=mesh(new T.BoxGeometry(spec.width,.13,.18),new T.MeshBasicMaterial({color:RUNES[k].color}),0,-.7+i*.35,0,m);strip.castShadow=false;});
+ wards.push({owner:caster,m,x:point.x,z:point.z,nx:dir.x,nz:dir.z,width:spec.width,hp:spec.hp,maxHp:spec.hp,life:spec.duration,spec,effectCooldown:0});ring(point.x,point.z,0xa8dcff,1,.35);if(caster===player)flash('장막 설치 · 내구도 '+spec.hp+' · '+spec.duration+'초');
 }
 function updateForces(dt){
  for(let i=waves.length-1;i>=0;i--){const w=waves[i],victim=w.owner===player?enemy:player,s=w.spec,old=w.radius;w.radius=Math.min(s.range,w.radius+s.speed*dt);w.m.scale.setScalar(Math.max(.1,s.force<0?s.range-w.radius+.1:w.radius));w.m.material.opacity=.8*(1-w.radius/s.range)+.15;
@@ -102,7 +107,11 @@ function updateForces(dt){
  if(!w.hit&&distance>=Math.min(front,previous)-.4&&distance<=Math.max(front,previous)+.4&&inElementCone(w,victim,w.dir,s)&&clearPath(w,victim)){
  w.hit=true;const d=new T.Vector3(victim.x-w.x,0,victim.z-w.z).normalize();if(hit(victim,s.damage,d)){applyPayload(victim,s);const amount=displacement(s.force,distance);victim.motion.start(d.x,d.z,amount);}}
  if(w.radius>=s.range){remove(w.m);waves.splice(i,1);}}
- for(let i=wards.length-1;i>=0;i--){const w=wards[i];w.life-=dt;w.m.material.opacity=.15+.35*w.hp/w.maxHp;if(w.life<=0||w.hp<=0){spellVfx.shatter(w.x,w.z,w.width);remove(w.m);wards.splice(i,1);}}
+ for(let i=wards.length-1;i>=0;i--){const w=wards[i];w.life-=dt;w.effectCooldown-=dt;
+ const victim=w.owner===player?enemy:player;if(w.hp>0&&w.life>0&&w.effectCooldown<=0&&distanceToWard(victim,w)<1){w.effectCooldown=.8;const payload=w.spec;
+ const side=(victim.x-w.x)*w.nx+(victim.z-w.z)*w.nz>=0?1:-1,away=new T.Vector3(w.nx*side,0,w.nz*side);
+ if(payload.burn||payload.slow||payload.shock||payload.push||payload.pull){if(hit(victim,payload.shock,away)){applyPayload(victim,payload);if(payload.push)victim.motion.start(away.x,away.z,payload.push);else if(payload.pull)victim.motion.start(away.x,away.z,-payload.pull);}if(payload.shock)boltEffect(victim.x,victim.z,elementalSpec('l'));else ring(victim.x,victim.z,payload.burn?0xff9c45:payload.slow?0x72dce8:0xb4e676,.7,.3);}}
+ w.m.material.opacity=.15+.35*w.hp/w.maxHp;if(w.life<=0||w.hp<=0){spellVfx.shatter(w.x,w.z,w.width);remove(w.m);wards.splice(i,1);}}
 }
 function dispatchSpell(s,caster,dir,aimPoint){if(elementalSpec(s.sequence))castElemental(s,dir,caster);else if(forceSpec(s.sequence))castForce(s,dir,caster);else castWard(s,dir,caster,aimPoint);}
 function cast(result){if(!running||paused||finished)return;const s=resolveSpell(result,loadout);if(player.cool>0){flash('잠깐 기다려 주세요');return}if(bot&&player.mana<s.cost){flash('마력이 부족합니다. 잠시 쉬면 회복됩니다.');return}if(bot)player.mana-=s.cost;player.cool=s.tap?.16:.38;const seq=s.sequence,base=seq.slice(0,2),p=s.power,dir=player.dir.clone(),target=aim.clone();target.sub(new T.Vector3(player.x,0,player.z));if(target.length()>6)target.setLength(6);target.add(new T.Vector3(player.x,0,player.z));const third=seq[2];
@@ -133,12 +142,11 @@ function ai(dt){
  move(enemy,v.x*speed*dt,v.z*speed*dt);
  if(Math.hypot(enemy.x-ox,enemy.z-oz)<dt*.2){const side=new T.Vector3(-delta.z,0,delta.x).multiplyScalar(enemy.sidestep||1);if(collides(enemy.x+side.x*.5,enemy.z+side.z*.5))enemy.sidestep=-(enemy.sidestep||1);move(enemy,side.x*speed*dt,side.z*speed*dt);}
  if(enemyCharge.active){
- if(first==='l'&&!enemy.strikeLocked){const spec=elementalSpec(mapSequence(enemyCharge.plan,enemyLoadout));if(dist<=spec.range)enemy.strikePoint={x:player.x,z:player.z,targeted:true};else if(!enemy.strikePoint||enemy.strikePoint.targeted||Math.hypot(enemy.strikePoint.x-enemy.x,enemy.strikePoint.z-enemy.z)>spec.range){enemy.strikePoint=lightningPoint(enemy,player,spec.range,rand);for(let i=0;i<20&&collides(enemy.strikePoint.x,enemy.strikePoint.z,.05);i++)enemy.strikePoint=lightningPoint(enemy,player,spec.range,rand);if(collides(enemy.strikePoint.x,enemy.strikePoint.z,.05))enemy.strikePoint={x:enemy.x,z:enemy.z,targeted:false};}if(enemyCharge.remaining<=.55)enemy.strikeLocked=true;}
  const spell=enemyCharge.tick(dt,enemyLoadout);if(spell){if(enemy.mana>=spell.cost){enemy.mana-=spell.cost;const point=new T.Vector3(enemy.x,0,enemy.z).addScaledVector(enemy.dir,Math.min(2,dist*.5));dispatchSpell(spell,enemy,enemy.dir.clone(),point);enemy.lastSpell=spell.name;enemy.lastSpellTime=.8;}enemy.cool=.65+rand()*.4;}return;}
  if(enemy.cool<=0&&dist<10&&enemy.mana>=25){const plan=choosePlan(enemyLoadout,enemy.attackCount||0,enemy.hp,dist);enemy.attackCount=(enemy.attackCount||0)+1;enemy.strikePoint=null;enemy.strikeLocked=false;enemyCharge.start(plan);}
 }
 function update(dt){clock+=dt;
- for(const a of[player,enemy]){if(a.motion.active){const step=a.motion.tick(dt),count=Math.max(1,Math.ceil(Math.hypot(step.x,step.z)/.08));for(let i=0;i<count;i++){const dx=step.x/count,dz=step.z/count;if(collides(a.x+dx,a.z+dz)){a.motion.clear();break;}a.x+=dx;a.z+=dz;}}}
+ for(const a of[player,enemy]){if(a.motion.active){const step=a.motion.tick(dt),count=Math.max(1,Math.ceil(Math.hypot(step.x,step.z)/.08));for(let i=0;i<count;i++){const dx=step.x/count,dz=step.z/count;if(collides(a.x+dx,a.z+dz)||wallBlocks(a,{x:a.x+dx,z:a.z+dz})){a.motion.clear();break;}a.x+=dx;a.z+=dz;}}}
 const rolling=roll.active;const beforeX=player.x,beforeZ=player.z;if(rolling){const step=roll.tick(dt);for(let i=0;i<4;i++)move(player,step.x/4,step.z/4)}else{roll.tick(dt);charge.tick(dt)}player.cool=Math.max(0,player.cool-dt);player.mana=bot?Math.min(100,player.mana+dt*(charge.active?3:10)):100;
  if(moveTarget&&!rolling&&!player.motion.active){const d=moveTarget.clone().sub(new T.Vector3(player.x,0,player.z));if(d.length()<.15){moveTarget=null;marker.visible=false}else{d.normalize();const speed=(charge.active?2.8:4.4)*(player.slow>0?.55:1);const ox=player.x,oz=player.z;move(player,d.x*dt*speed,d.z*dt*speed);if(Math.abs(ox-player.x)+Math.abs(oz-player.z)<.001){moveTarget=null;marker.visible=false}}}
  player.velocity=new T.Vector3((player.x-beforeX)/dt,0,(player.z-beforeZ)/dt);
@@ -156,9 +164,9 @@ const rolling=roll.active;const beforeX=player.x,beforeZ=player.z;if(rolling){co
 function label(el,a){const pos=new T.Vector3(a.x,2.65,a.z).project(camera);el.style.left=((pos.x+1)*innerWidth/2)+'px';el.style.top=((-pos.y+1)*innerHeight/2)+'px'}
 function drawTell(caster,seq,attackTell,tellBorder,urgent=false){const spec=elementalSpec(seq)||forceSpec(seq);if(!spec)return;
  const outline=[],color=RUNES[seq[0]].color;
- if(spec.kind==='l'){if(!caster.strikePoint)return;const point=caster.strikePoint;for(let i=0;i<=64;i++){const angle=i/64*Math.PI*2;outline.push(new T.Vector3(point.x+Math.cos(angle)*spec.radius,0,point.z+Math.sin(angle)*spec.radius));}}
+ if(spec.kind==='l'){const point=caster;for(let i=0;i<=64;i++){const angle=i/64*Math.PI*2;outline.push(new T.Vector3(point.x+Math.cos(angle)*spec.range,0,point.z+Math.sin(angle)*spec.range));}}
  else{outline.push(new T.Vector3(caster.x,0,caster.z));for(let i=0;i<=48;i++){const angle=-spec.halfAngle+i/48*spec.halfAngle*2,d=caster.dir.clone().applyAxisAngle(new T.Vector3(0,1,0),angle);let reach=spec.range;for(let t=.1;t<=spec.range;t+=.1)if(collides(caster.x+d.x*t,caster.z+d.z*t,.02)){reach=Math.max(0,t-.1);break;}outline.push(new T.Vector3(caster.x+d.x*reach,0,caster.z+d.z*reach));}outline.push(new T.Vector3(caster.x,0,caster.z));}
- const center=spec.kind==='l'?new T.Vector3(caster.strikePoint.x,0,caster.strikePoint.z):outline[0],vertices=[];for(let i=0;i<outline.length-1;i++)vertices.push(center.x,0,center.z,outline[i].x,0,outline[i].z,outline[i+1].x,0,outline[i+1].z);
+ const center=spec.kind==='l'?new T.Vector3(caster.x,0,caster.z):outline[0],vertices=[];for(let i=0;i<outline.length-1;i++)vertices.push(center.x,0,center.z,outline[i].x,0,outline[i].z,outline[i+1].x,0,outline[i+1].z);
  attackTell.geometry.dispose();attackTell.geometry=new T.BufferGeometry();attackTell.geometry.setAttribute('position',new T.Float32BufferAttribute(vertices,3));attackTell.material.color.set(color);attackTell.material.opacity=urgent?.38:.21;attackTell.visible=true;
  tellBorder.geometry.dispose();tellBorder.geometry=new T.BufferGeometry().setFromPoints(outline);tellBorder.material.color.set(urgent?0xffffff:color);tellBorder.visible=true;
 }
@@ -166,12 +174,8 @@ function renderAttackTell(){
  attackTell.visible=false;tellBorder.visible=false;playerTell.visible=false;playerBorder.visible=false;wardGhost.visible=false;
  if(bot&&running&&!finished&&enemyCharge.active)drawTell(enemy,mapSequence(enemyCharge.plan,enemyLoadout),attackTell,tellBorder,enemyCharge.remaining<.55);
  if(!running||finished||!charge.active){player.strikePoint=null;return;}
- const spell=resolveSpell({parts:[...charge.parts],progress:charge.progress,tap:charge.elapsed<.15},loadout),spec=elementalSpec(spell.sequence)||forceSpec(spell.sequence);if(!spec){player.strikePoint=null;if(spell.sequence[0]==='e'){const ward=wardSpec(spell.sequence),point=wardPlacement(player,player.dir,aim,ward);wardGhost.position.set(point.x,1.2,point.z);wardGhost.rotation.y=Math.atan2(player.dir.x,player.dir.z);wardGhost.scale.x=ward.width;wardGhost.visible=true;}return;}
- if(spec.kind==='l'){
-  if(Math.hypot(enemy.x-player.x,enemy.z-player.z)<=spec.range)player.strikePoint={x:enemy.x,z:enemy.z,targeted:true};
-  else if(!player.strikePoint||player.strikePoint.targeted||player.previewRange!==spec.range||Math.hypot(player.strikePoint.x-player.x,player.strikePoint.z-player.z)>spec.range){player.strikePoint=lightningPoint(player,enemy,spec.range,rand);for(let i=0;i<20&&collides(player.strikePoint.x,player.strikePoint.z,.05);i++)player.strikePoint=lightningPoint(player,enemy,spec.range,rand);if(collides(player.strikePoint.x,player.strikePoint.z,.05))player.strikePoint={x:player.x,z:player.z,targeted:false};}
-  player.previewRange=spec.range;
- }else player.strikePoint=null;
+ const spell=resolveSpell({parts:[...charge.parts],progress:charge.progress,tap:charge.elapsed<.15},loadout),spec=elementalSpec(spell.sequence)||forceSpec(spell.sequence);if(!spec){player.strikePoint=null;if(spell.sequence[0]==='e'){const ward=wardSpec(spell.sequence),point=wardPlacement(player,player.dir,aim,ward);wardGhost.position.set(point.x,1.2,point.z);wardGhost.rotation.y=Math.atan2(player.dir.x,player.dir.z);wardGhost.scale.x=ward.width;wardGhost.material.color.set(RUNES[ward.colors.find(k=>k!=="e")||"e"].color);wardGhost.visible=true;}return;}
+ player.strikePoint=null;
  drawTell(player,spell.sequence,playerTell,playerBorder);
 }
 function ui(){renderAttackTell();for(const a of[player,enemy]){const burning=a.burn>0,chilled=a.slow>0,tinted=burning||chilled;const c=new T.Color(burning&&(!chilled||Math.floor(clock*4)%2===0)?0xff543e:0x479eff);for(const entry of a.g.userData.palette){entry.material.color.copy(entry.color);if(tinted)entry.material.color.lerp(c,.48);}a.g.position.set(a.x,0,a.z);a.g.rotation.y=Math.atan2(a.dir.x,a.dir.z);const shield=shields.get(a);shield.position.set(a.x,1,a.z);shield.visible=a.shield>0;shield.rotation.y=clock*.6}label($('playerLabel'),player);label($('enemyLabel'),enemy);$('playerHp').style.width=player.hp+'%';$('enemyHp').style.width=enemy.hp+'%';$('manaBar').style.width=player.mana+'%';$('manaText').textContent=Math.floor(player.mana);$('enemyCast').textContent=!bot?'연습 상대':enemyCharge.active?spellName(mapSequence(enemyCharge.charge.parts,enemyLoadout),NAMES)+' · 충전':enemy.lastSpellTime>0?enemy.lastSpell+' · 발사':enemy.slow>0?'감속 중':enemy.burn>0?'화상 중':'상대 마법사';$('time').textContent=String(Math.floor(clock/60)).padStart(2,'0')+':'+String(Math.floor(clock%60)).padStart(2,'0');

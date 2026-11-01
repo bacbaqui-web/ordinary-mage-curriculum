@@ -72,3 +72,8 @@ const {ForcedMotion}=await import('./dist/motion.mjs');
 for(const direction of [1,-1]){const motion=new ForcedMotion();motion.start(1,0,3*direction);assert.ok(motion.active);const first=motion.tick(.016);assert.ok(Math.abs(first.x)>0&&Math.abs(first.x)<3);let distance=first.x;while(motion.active)distance+=motion.tick(.016).x;assert.ok(Math.abs(distance-3*direction)<1e-8);assert.equal(motion.lean,0);}
 const motion=new ForcedMotion();motion.start(1,0,2);motion.tick(.1);motion.start(0,1,-1);const step=motion.tick(.1);assert.equal(step.x,0);assert.ok(step.z<0);motion.clear();assert.equal(motion.active,false);assert.deepEqual(motion.tick(1),{x:0,z:0});
 console.log('PASS: smooth push/pull, frame-independent distance, replacing force, reset');
+
+const {distanceToWard}=await import('./dist/forces.mjs');
+assert.equal(distanceToWard({x:0,z:.5},{x:0,z:0,nx:0,nz:1,width:3}),.5);assert.equal(distanceToWard({x:2,z:0},{x:0,z:0,nx:0,nz:1,width:3}),.5);
+assert.equal(wardSpec('eq').burn,2);assert.equal(wardSpec('ei').slow,1.5);assert.equal(wardSpec('el').shock,5);assert.equal(wardSpec('ew').push,1.4);assert.equal(wardSpec('eql').burn,2);assert.equal(wardSpec('eql').shock,5);
+console.log('PASS: finite wall distance and mixed elemental payloads');
