@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {Charge,resolveSpell,NAMES} from './dist/spells.mjs';
+let c=new Charge();c.down('q');c.tick(.08);assert.equal(resolveSpell(c.up('q')).sequence,'q');
+c=new Charge();c.down('q');c.tick(.25);c.down('w');c.tick(.36);assert.deepEqual(c.parts,['q','w']);c.tick(.6);assert.deepEqual(c.parts,['q','w','w']);c.tick(.6);assert.equal(c.up('w'),null);assert.equal(resolveSpell(c.up('q')).sequence,'qww');
+c=new Charge();c.down('q');c.tick(.25);c.down('w');c.tick(.36);c.up('w');c.tick(.6);assert.deepEqual(c.parts,['q','w','q']);c.tick(.6);assert.equal(resolveSpell(c.up('q')).sequence,'qwq');
+c=new Charge();c.down('q');c.down('q');assert.deepEqual(c.held,['q']);c.tick(.61);assert.equal(resolveSpell(c.up('q')).sequence,'q');
+c=new Charge();c.down('e');c.tick(5);assert.deepEqual(c.parts,['e','e','e']);assert.equal(c.progress,1);assert.equal(resolveSpell(c.up('e')).sequence,'eee');
+c=new Charge();c.down('q');c.down('w');c.down('e');c.up('e');assert.equal(c.next(),'w');c.clear();assert.equal(c.up('q'),null);
+for(const a of'qwe')for(const b of'qwe')for(const d of'qwe')assert.ok(NAMES[a+b+d]);
+console.log('PASS: tap, QWW, QWQ, key repeat, partial ring, three-ring cap, cancel, all 27 spell names');
