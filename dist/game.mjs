@@ -42,6 +42,9 @@ const attackTell=new T.Mesh(new T.BufferGeometry(),new T.MeshBasicMaterial({colo
 const tellBorder=new T.Line(new T.BufferGeometry(),new T.LineBasicMaterial({color:0xffd293,transparent:true,opacity:.95,depthTest:false}));tellBorder.position.y=.15;tellBorder.visible=false;scene.add(tellBorder);
 const playerTell=attackTell.clone();playerTell.geometry=new T.BufferGeometry();playerTell.material=attackTell.material.clone();scene.add(playerTell);
 const playerBorder=tellBorder.clone();playerBorder.geometry=new T.BufferGeometry();playerBorder.material=tellBorder.material.clone();scene.add(playerBorder);
+const wardGhost=mesh(new T.BoxGeometry(1,2.3,.12),new T.MeshBasicMaterial({color:0xa8dcff,transparent:true,opacity:.16,depthWrite:false}),0,1.2,0);wardGhost.castShadow=false;wardGhost.visible=false;
+wardGhost.add(new T.LineSegments(new T.EdgesGeometry(wardGhost.geometry),new T.LineBasicMaterial({color:0xd4f1ff,transparent:true,opacity:.8})));
+
 
 
 const marker=mesh(new T.RingGeometry(.23,.29,24),new T.MeshBasicMaterial({color:0xc2e3c3,transparent:true,opacity:.75,side:T.DoubleSide}),0,.07,0);marker.rotation.x=-Math.PI/2;marker.visible=false;marker.castShadow=false;
@@ -82,8 +85,11 @@ function castForce(s,dir,caster){const spec=forceSpec(s.sequence),color=spec.for
  waves.push({owner:caster,m,x:caster.x,z:caster.z,dir:dir.clone(),spec,radius:0,hit:false});
  if(spec.shield){caster.shield=Math.max(caster.shield,spec.shield);caster.shieldTime=2;}
 }
-function castWard(s,dir,caster,aimPoint){const spec=wardSpec(s.sequence),offset=aimPoint.clone().sub(new T.Vector3(caster.x,0,caster.z));if(offset.length()<.8)offset.copy(dir).multiplyScalar(.8);if(offset.length()>spec.range)offset.setLength(spec.range);
+function wardPlacement(caster,dir,aimPoint,spec){const offset=aimPoint.clone().sub(new T.Vector3(caster.x,0,caster.z));if(offset.length()<.8)offset.copy(dir).multiplyScalar(.8);if(offset.length()>spec.range)offset.setLength(spec.range);
  let point=new T.Vector3(caster.x,0,caster.z),length=offset.length(),d=offset.normalize();for(let t=.2;t<=length;t+=.2){if(collides(caster.x+d.x*t,caster.z+d.z*t,.1))break;point.set(caster.x+d.x*t,0,caster.z+d.z*t);}
+ return point;
+}
+function castWard(s,dir,caster,aimPoint){const spec=wardSpec(s.sequence),point=wardPlacement(caster,dir,aimPoint,spec);
  // One placed wall per caster; replacing it prevents an unlimited wall stack.
  for(const w of wards.filter(w=>w.owner===caster))remove(w.m);wards=wards.filter(w=>w.owner!==caster);
  const m=mesh(new T.BoxGeometry(spec.width,2.3,.12),new T.MeshBasicMaterial({color:0x8ed8ff,transparent:true,opacity:.45,side:T.DoubleSide}),point.x,1.2,point.z);m.rotation.y=Math.atan2(dir.x,dir.z);m.castShadow=false;
@@ -148,7 +154,7 @@ const rolling=roll.active;const beforeX=player.x,beforeZ=player.z;if(rolling){co
  if(toastTimer>0){toastTimer-=dt;if(toastTimer<=0)$('toast').classList.remove('show')}
 }
 function label(el,a){const pos=new T.Vector3(a.x,2.65,a.z).project(camera);el.style.left=((pos.x+1)*innerWidth/2)+'px';el.style.top=((-pos.y+1)*innerHeight/2)+'px'}
-function drawTell(caster,seq,attackTell,tellBorder,urgent=false){const spec=elementalSpec(seq);if(!spec)return;
+function drawTell(caster,seq,attackTell,tellBorder,urgent=false){const spec=elementalSpec(seq)||forceSpec(seq);if(!spec)return;
  const outline=[],color=RUNES[seq[0]].color;
  if(spec.kind==='l'){if(!caster.strikePoint)return;const point=caster.strikePoint;for(let i=0;i<=64;i++){const angle=i/64*Math.PI*2;outline.push(new T.Vector3(point.x+Math.cos(angle)*spec.radius,0,point.z+Math.sin(angle)*spec.radius));}}
  else{outline.push(new T.Vector3(caster.x,0,caster.z));for(let i=0;i<=48;i++){const angle=-spec.halfAngle+i/48*spec.halfAngle*2,d=caster.dir.clone().applyAxisAngle(new T.Vector3(0,1,0),angle);let reach=spec.range;for(let t=.1;t<=spec.range;t+=.1)if(collides(caster.x+d.x*t,caster.z+d.z*t,.02)){reach=Math.max(0,t-.1);break;}outline.push(new T.Vector3(caster.x+d.x*reach,0,caster.z+d.z*reach));}outline.push(new T.Vector3(caster.x,0,caster.z));}
@@ -157,10 +163,10 @@ function drawTell(caster,seq,attackTell,tellBorder,urgent=false){const spec=elem
  tellBorder.geometry.dispose();tellBorder.geometry=new T.BufferGeometry().setFromPoints(outline);tellBorder.material.color.set(urgent?0xffffff:color);tellBorder.visible=true;
 }
 function renderAttackTell(){
- attackTell.visible=false;tellBorder.visible=false;playerTell.visible=false;playerBorder.visible=false;
+ attackTell.visible=false;tellBorder.visible=false;playerTell.visible=false;playerBorder.visible=false;wardGhost.visible=false;
  if(bot&&running&&!finished&&enemyCharge.active)drawTell(enemy,mapSequence(enemyCharge.plan,enemyLoadout),attackTell,tellBorder,enemyCharge.remaining<.55);
  if(!running||finished||!charge.active){player.strikePoint=null;return;}
- const spell=resolveSpell({parts:[...charge.parts],progress:charge.progress,tap:charge.elapsed<.15},loadout),spec=elementalSpec(spell.sequence);if(!spec){player.strikePoint=null;return;}
+ const spell=resolveSpell({parts:[...charge.parts],progress:charge.progress,tap:charge.elapsed<.15},loadout),spec=elementalSpec(spell.sequence)||forceSpec(spell.sequence);if(!spec){player.strikePoint=null;if(spell.sequence[0]==='e'){const ward=wardSpec(spell.sequence),point=wardPlacement(player,player.dir,aim,ward);wardGhost.position.set(point.x,1.2,point.z);wardGhost.rotation.y=Math.atan2(player.dir.x,player.dir.z);wardGhost.scale.x=ward.width;wardGhost.visible=true;}return;}
  if(spec.kind==='l'){
   if(Math.hypot(enemy.x-player.x,enemy.z-player.z)<=spec.range)player.strikePoint={x:enemy.x,z:enemy.z,targeted:true};
   else if(!player.strikePoint||player.strikePoint.targeted||player.previewRange!==spec.range||Math.hypot(player.strikePoint.x-player.x,player.strikePoint.z-player.z)>spec.range){player.strikePoint=lightningPoint(player,enemy,spec.range,rand);for(let i=0;i<20&&collides(player.strikePoint.x,player.strikePoint.z,.05);i++)player.strikePoint=lightningPoint(player,enemy,spec.range,rand);if(collides(player.strikePoint.x,player.strikePoint.z,.05))player.strikePoint={x:player.x,z:player.z,targeted:false};}
