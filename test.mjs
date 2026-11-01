@@ -54,3 +54,12 @@ console.log('PASS: push/pull scaling, pull stopping distance, ward durability/du
 const {enemyChargeProgress}=await import('./dist/combat.mjs');
 assert.equal(enemyChargeProgress(.65,.65),0);assert.equal(enemyChargeProgress(.325,.65),.5);assert.equal(enemyChargeProgress(0,.65),null);assert.equal(enemyChargeProgress(-.1,.65),null);assert.equal(enemyChargeProgress(.2,0),null);
 console.log('PASS: enemy charge progress and inactive state');
+const {chooseLoadout,choosePlan,OpponentCharge}=await import('./dist/opponent.mjs');
+for(let t=0;t<100;t++){const l=chooseLoadout();assert.ok(validLoadout(l));for(let n=0;n<6;n++){const plan=choosePlan(l,n,40,4);assert.ok(plan.length>=1&&plan.length<=3);assert.ok(plan.every(k=>Object.hasOwn(l,k)));}}
+for(const a of KEYS)for(const b of ['',...KEYS])for(const c of (b?['',...KEYS]:[''])){
+ const plan=[...a+b+c],op=new OpponentCharge();op.start(plan);let elapsed=0,result=null;
+ while(elapsed<plan.length*1.2-.01){const dt=Math.min(.01,plan.length*1.2-.01-elapsed);if(dt<1e-9)break;result=op.tick(dt,DEFAULT_LOADOUT);assert.equal(result,null);elapsed+=dt;assert.ok(op.charge.parts.length<=3);}
+ result=op.tick(.02,DEFAULT_LOADOUT);assert.ok(result);assert.equal(result.keys,plan.join(''));assert.equal(result.sequence,mapSequence(plan,DEFAULT_LOADOUT));assert.equal(op.active,false);
+}
+const staged=new OpponentCharge();staged.start(['q','w','e']);staged.tick(.6,DEFAULT_LOADOUT);assert.deepEqual(staged.charge.parts,['q']);assert.ok(Math.abs(staged.charge.progress-.5)<1e-8);staged.tick(.61,DEFAULT_LOADOUT);assert.deepEqual(staged.charge.parts,['q','w']);staged.clear();assert.equal(staged.active,false);assert.equal(staged.tick(5,DEFAULT_LOADOUT),null);
+console.log('PASS: opponent loadouts, all 39 plans, 1.2 seconds per ring, ordered colors, three-ring cap, cancel');

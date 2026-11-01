@@ -1,3 +1,4 @@
+import {chooseLoadout,choosePlan,OpponentCharge} from './opponent.mjs?v=8';
 import {forceSpec,wardSpec,displacement,crossesWard} from './forces.mjs';
 import {elementalSpec,inElementCone,lightningPoint} from './elements.mjs';
 import {describeSpell} from './guide.mjs';
@@ -29,9 +30,10 @@ const emblem=mesh(new T.RingGeometry(2.1,2.15,64),mat(0xb7bca6,{transparent:true
 function wizard(color,trim){const g=new T.Group();const robe=mat(color),edge=mat(trim),skin=mat(0xe1c4a1),dark=mat(0x26313c);mesh(new T.ConeGeometry(.48,1.1,7),robe,0,.85,0,g);mesh(new T.CylinderGeometry(.43,.49,.08,7),edge,0,.34,0,g);mesh(new T.SphereGeometry(.23,8,6),skin,0,1.5,0,g);mesh(new T.CylinderGeometry(.56,.56,.065,10),dark,0,1.72,0,g);mesh(new T.ConeGeometry(.34,.77,7),robe,-.07,2.08,0,g);mesh(new T.CylinderGeometry(.33,.35,.075,7),edge,0,1.79,0,g);box(-.2,.2,.08,.19,.34,.36,dark,g);box(.2,.2,.08,.19,.34,.36,dark,g);const arm=box(.4,1.15,.22,.22,.23,.68,robe,g);mesh(new T.SphereGeometry(.13,7,5),skin,.4,1.15,.58,g);box(-.4,.95,0,.2,.6,.22,robe,g);const selection=mesh(new T.RingGeometry(.62,.67,40),new T.MeshBasicMaterial({color:trim,transparent:true,opacity:.65,side:T.DoubleSide}),0,.065,0,g);selection.rotation.x=-Math.PI/2;selection.castShadow=false;const body=new T.Group();body.position.y=.95;for(const child of [...g.children]){if(child===selection)continue;g.remove(child);child.position.y-=.95;body.add(child)}g.add(body);g.userData.body=body;g.userData.palette=[...new Set([robe,edge,skin,dark])].map(material=>({material,color:material.color.clone()}));scene.add(g);return g}
 const player={g:wizard(0x394351,0xe7b367),x:-5,z:4,hp:100,mana:100,shield:0,shieldTime:0,shieldHeat:false,dir:new T.Vector3(1,0,-1).normalize(),cool:0};
 const enemy={g:wizard(0x73899c,0xc2d6df),x:5,z:-4,hp:100,mana:100,shield:0,shieldTime:0,dir:new T.Vector3(-1,0,1).normalize(),cool:2,wind:0};
-const roll=new Roll();
+const roll=new Roll(),enemyCharge=new OpponentCharge();let enemyLoadout=chooseLoadout();
 const charge=new Charge(),ray=new T.Raycaster(),pointer=new T.Vector2(),ground=new T.Plane(new T.Vector3(0,1,0),0),aim=new T.Vector3(4,0,-3);let moveTarget=null,running=false,paused=false,bot=true,finished=false,clock=0,wins=0,losses=0,shots=[],fields=[],fx=[],waves=[],wards=[],history=[],toastTimer=0;
 const aimLine=new T.Line(new T.BufferGeometry(),new T.LineBasicMaterial({color:0xe9e4cb,transparent:true,opacity:.35}));scene.add(aimLine);
+const enemyAimLine=new T.Line(new T.BufferGeometry(),new T.LineBasicMaterial({color:0xffa58a,transparent:true,opacity:.65}));scene.add(enemyAimLine);
 const marker=mesh(new T.RingGeometry(.23,.29,24),new T.MeshBasicMaterial({color:0xc2e3c3,transparent:true,opacity:.75,side:T.DoubleSide}),0,.07,0);marker.rotation.x=-Math.PI/2;marker.visible=false;marker.castShadow=false;
 function tint(k){return new T.Color(ELEMENTS[k]?.color||'#9adfff')}
 function flash(text){$('toast').textContent=text;$('toast').classList.add('show');toastTimer=2}
@@ -47,10 +49,10 @@ function field(a,x,z,r,damage,color,life=3,force=0,payload=null){const m=mesh(ne
 const shields=new Map();for(const a of[player,enemy]){const m=mesh(new T.SphereGeometry(.85,20,12),new T.MeshBasicMaterial({color:0x9edbff,wireframe:true,transparent:true,opacity:.22}),a.x,1,a.z);m.visible=false;m.castShadow=false;shields.set(a,m)}
 function applyPayload(a,payload){if(!payload||finished)return;if(payload.slow)a.slow=Math.max(a.slow||0,payload.slow);if(payload.burn){if(!(a.burn>0))a.burnTick=.5;a.burn=Math.max(a.burn||0,payload.burn);}if(payload.echo&&!a.echo)a.echo={time:.25,damage:payload.echo};}
 function updateStatuses(dt){for(const a of[player,enemy]){a.slow=Math.max(0,(a.slow||0)-dt);if(a.burn>0){a.burn-=dt;a.burnTick=(a.burnTick||0)-dt;if(a.burnTick<=0){a.burnTick=.5;hit(a,2,new T.Vector3());spark(a.x,a.z,0xff9c45,3)}}if(a.echo){a.echo.time-=dt;if(a.echo.time<=0){const damage=a.echo.damage;a.echo=null;hit(a,damage,new T.Vector3());ring(a.x,a.z,0xf3d56b,.75,.25)}}}}
-function elementalBurst(spec,dir){
+function elementalBurst(spec,dir,caster){
  const cold=spec.kind==='i',count=22+spec.rings*12;
  for(let i=0;i<count;i++){
-  const angle=(rand()-.5)*spec.halfAngle*2,d=.35+rand()*(spec.range-.35),v=dir.clone().applyAxisAngle(new T.Vector3(0,1,0),angle),x=player.x+v.x*d,z=player.z+v.z*d;
+  const angle=(rand()-.5)*spec.halfAngle*2,d=.35+rand()*(spec.range-.35),v=dir.clone().applyAxisAngle(new T.Vector3(0,1,0),angle),x=caster.x+v.x*d,z=caster.z+v.z*d;
   if(collides(x,z,.02))continue;
   const size=(.12+rand()*.19)*(1+spec.rings*.15),h=cold?size*3:size*4;
   const m=mesh(new T.ConeGeometry(size,h,cold?4:5),new T.MeshBasicMaterial({color:cold?(i%2?0xa9efff:0x419cdd):(i%3?0xff672b:0xffd66b),transparent:true,opacity:.85}),x,.15+h/2,z);
@@ -62,55 +64,50 @@ function boltEffect(x,z,spec){
  for(let i=1;i<points.length;i++){const d=points[i].clone().sub(points[i-1]),m=mesh(new T.CylinderGeometry(.035*spec.rings,.045*spec.rings,d.length(),5),new T.MeshBasicMaterial({color:i%2?0xfff8ce:0xf6d55d,transparent:true,opacity:1}));m.position.copy(points[i]).add(points[i-1]).multiplyScalar(.5);m.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),d.normalize());m.castShadow=false;fx.push({m,life:.48,max:.48});}
  ring(x,z,0xffe79b,spec.radius*2,.55);spark(x,z,0xffe69a,8+spec.rings*6);
 }
-function castElemental(s,dir){const spec=elementalSpec(s.sequence,s.power);
+function castElemental(s,dir,caster){const victim=caster===player?enemy:player;const spec=elementalSpec(s.sequence,s.power);
  if(spec.kind==='l'){
-  let point=lightningPoint(player,enemy,spec.range,rand);
-  if(!point.targeted){for(let i=0;i<24&&collides(point.x,point.z,.05);i++)point=lightningPoint(player,enemy,spec.range,rand);if(collides(point.x,point.z,.05))point={x:player.x,z:player.z,targeted:false};}
+  let point=lightningPoint(caster,victim,spec.range,rand);
+  if(!point.targeted){for(let i=0;i<24&&collides(point.x,point.z,.05);i++)point=lightningPoint(caster,victim,spec.range,rand);if(collides(point.x,point.z,.05))point={x:caster.x,z:caster.z,targeted:false};}
   boltEffect(point.x,point.z,spec);
-  if(point.targeted){const delta=new T.Vector3(enemy.x-player.x,0,enemy.z-player.z).normalize();if(hit(enemy,spec.damage,delta,spec.force))applyPayload(enemy,spec);}
+  if(point.targeted){const delta=new T.Vector3(victim.x-caster.x,0,victim.z-caster.z).normalize();if(hit(victim,spec.damage,delta,spec.force))applyPayload(victim,spec);}
  }else{
-  elementalBurst(spec,dir);
-  if(inElementCone(player,enemy,dir,spec)){
-   const d=new T.Vector3(enemy.x-player.x,0,enemy.z-player.z),length=d.length();d.normalize();let blocked=false;for(let step=.25;step<length;step+=.25)if(collides(player.x+d.x*step,player.z+d.z*step,.02)){blocked=true;break;}
-   if(!blocked&&hit(enemy,spec.damage,d,spec.force))applyPayload(enemy,spec);
+  elementalBurst(spec,dir,caster);
+  if(inElementCone(caster,victim,dir,spec)){
+   const d=new T.Vector3(victim.x-caster.x,0,victim.z-caster.z),length=d.length();d.normalize();let blocked=false;for(let step=.25;step<length;step+=.25)if(collides(caster.x+d.x*step,caster.z+d.z*step,.02)){blocked=true;break;}
+   if(!blocked&&hit(victim,spec.damage,d,spec.force))applyPayload(victim,spec);
   }
  }
- if(spec.shield){player.shield=Math.max(player.shield,spec.shield);player.shieldTime=2;}
+ if(spec.shield){caster.shield=Math.max(caster.shield,spec.shield);caster.shieldTime=2;}
 }
 function clearPath(a,b){const d=new T.Vector3(b.x-a.x,0,b.z-a.z),length=d.length();d.normalize();for(let t=.2;t<length;t+=.2)if(collides(a.x+d.x*t,a.z+d.z*t,.02))return false;return true;}
-function castForce(s,dir){const spec=forceSpec(s.sequence),color=spec.force<0?0xc49ff1:0xb4e676;
- const m=mesh(new T.RingGeometry(.87,1,48,1,-spec.halfAngle,spec.halfAngle*2),new T.MeshBasicMaterial({color,side:T.DoubleSide,transparent:true,opacity:.8}),player.x,.18,player.z);m.rotation.set(-Math.PI/2,0,Math.atan2(-dir.z,dir.x));m.castShadow=false;
- waves.push({m,x:player.x,z:player.z,dir:dir.clone(),spec,radius:0,hit:false});
- if(spec.shield){player.shield=Math.max(player.shield,spec.shield);player.shieldTime=2;}
+function castForce(s,dir,caster){const spec=forceSpec(s.sequence),color=spec.force<0?0xc49ff1:0xb4e676;
+ const m=mesh(new T.RingGeometry(.87,1,48,1,-spec.halfAngle,spec.halfAngle*2),new T.MeshBasicMaterial({color,side:T.DoubleSide,transparent:true,opacity:.8}),caster.x,.18,caster.z);m.rotation.set(-Math.PI/2,0,Math.atan2(-dir.z,dir.x));m.castShadow=false;
+ waves.push({owner:caster,m,x:caster.x,z:caster.z,dir:dir.clone(),spec,radius:0,hit:false});
+ if(spec.shield){caster.shield=Math.max(caster.shield,spec.shield);caster.shieldTime=2;}
 }
-function castWard(s,dir){const spec=wardSpec(s.sequence),offset=aim.clone().sub(new T.Vector3(player.x,0,player.z));if(offset.length()<.8)offset.copy(dir).multiplyScalar(.8);if(offset.length()>spec.range)offset.setLength(spec.range);
- let point=new T.Vector3(player.x,0,player.z),length=offset.length(),d=offset.normalize();for(let t=.2;t<=length;t+=.2){if(collides(player.x+d.x*t,player.z+d.z*t,.1))break;point.set(player.x+d.x*t,0,player.z+d.z*t);}
+function castWard(s,dir,caster,aimPoint){const spec=wardSpec(s.sequence),offset=aimPoint.clone().sub(new T.Vector3(caster.x,0,caster.z));if(offset.length()<.8)offset.copy(dir).multiplyScalar(.8);if(offset.length()>spec.range)offset.setLength(spec.range);
+ let point=new T.Vector3(caster.x,0,caster.z),length=offset.length(),d=offset.normalize();for(let t=.2;t<=length;t+=.2){if(collides(caster.x+d.x*t,caster.z+d.z*t,.1))break;point.set(caster.x+d.x*t,0,caster.z+d.z*t);}
  // One placed wall per caster; replacing it prevents an unlimited wall stack.
- for(const w of wards)remove(w.m);wards=[];
+ for(const w of wards.filter(w=>w.owner===caster))remove(w.m);wards=wards.filter(w=>w.owner!==caster);
  const m=mesh(new T.BoxGeometry(spec.width,2.3,.12),new T.MeshBasicMaterial({color:0x8ed8ff,transparent:true,opacity:.45,side:T.DoubleSide}),point.x,1.2,point.z);m.rotation.y=Math.atan2(dir.x,dir.z);m.castShadow=false;
  const frame=new T.LineSegments(new T.EdgesGeometry(m.geometry),new T.LineBasicMaterial({color:0xd9f3ff,transparent:true,opacity:.9}));m.add(frame);
- wards.push({m,x:point.x,z:point.z,nx:dir.x,nz:dir.z,width:spec.width,hp:spec.hp,maxHp:spec.hp,life:spec.duration});ring(point.x,point.z,0xa8dcff,1,.35);flash('장막 설치 · 내구도 '+spec.hp+' · '+spec.duration+'초');
+ wards.push({owner:caster,m,x:point.x,z:point.z,nx:dir.x,nz:dir.z,width:spec.width,hp:spec.hp,maxHp:spec.hp,life:spec.duration});ring(point.x,point.z,0xa8dcff,1,.35);if(caster===player)flash('장막 설치 · 내구도 '+spec.hp+' · '+spec.duration+'초');
 }
 function updateForces(dt){
- for(let i=waves.length-1;i>=0;i--){const w=waves[i],s=w.spec,old=w.radius;w.radius=Math.min(s.range,w.radius+s.speed*dt);w.m.scale.setScalar(Math.max(.1,s.force<0?s.range-w.radius+.1:w.radius));w.m.material.opacity=.8*(1-w.radius/s.range)+.15;
- const distance=Math.hypot(enemy.x-w.x,enemy.z-w.z),front=s.force<0?s.range-w.radius:w.radius,previous=s.force<0?s.range-old:old;
- if(!w.hit&&distance>=Math.min(front,previous)-.4&&distance<=Math.max(front,previous)+.4&&inElementCone(w,enemy,w.dir,s)&&clearPath(w,enemy)){
- w.hit=true;const d=new T.Vector3(enemy.x-w.x,0,enemy.z-w.z).normalize();if(hit(enemy,s.damage,d)){applyPayload(enemy,s);const amount=displacement(s.force,distance),steps=Math.ceil(Math.abs(amount)/.12);for(let j=0;j<steps;j++)move(enemy,d.x*amount/steps,d.z*amount/steps);}}
+ for(let i=waves.length-1;i>=0;i--){const w=waves[i],victim=w.owner===player?enemy:player,s=w.spec,old=w.radius;w.radius=Math.min(s.range,w.radius+s.speed*dt);w.m.scale.setScalar(Math.max(.1,s.force<0?s.range-w.radius+.1:w.radius));w.m.material.opacity=.8*(1-w.radius/s.range)+.15;
+ const distance=Math.hypot(victim.x-w.x,victim.z-w.z),front=s.force<0?s.range-w.radius:w.radius,previous=s.force<0?s.range-old:old;
+ if(!w.hit&&distance>=Math.min(front,previous)-.4&&distance<=Math.max(front,previous)+.4&&inElementCone(w,victim,w.dir,s)&&clearPath(w,victim)){
+ w.hit=true;const d=new T.Vector3(victim.x-w.x,0,victim.z-w.z).normalize();if(hit(victim,s.damage,d)){applyPayload(victim,s);const amount=displacement(s.force,distance),steps=Math.ceil(Math.abs(amount)/.12);for(let j=0;j<steps;j++)move(victim,d.x*amount/steps,d.z*amount/steps);}}
  if(w.radius>=s.range){remove(w.m);waves.splice(i,1);}}
  for(let i=wards.length-1;i>=0;i--){const w=wards[i];w.life-=dt;w.m.material.opacity=.15+.35*w.hp/w.maxHp;if(w.life<=0||w.hp<=0){remove(w.m);wards.splice(i,1);}}
 }
-function castComposed(s,dir,target){const spec=composition(s.sequence,s.power),color=new T.Color(spec.color),first=s.sequence[0];
- if(spec.shape==='shield'){player.shield=s.tap?15:spec.shield;player.shieldTime=s.tap?.55:spec.duration;player.shieldHeat=s.sequence.includes('q');ring(player.x,player.z,color,1.1,.4);if(s.sequence.length>1)field(player,player.x,player.z,2.1,spec.damage*.32,color,spec.duration,spec.force,spec);}
- else if(spec.shape==='field'){const center=first==='g'||first==='w'?target:new T.Vector3(player.x,0,player.z).addScaledVector(dir,Math.min(5,Math.hypot(target.x-player.x,target.z-player.z)));field(player,center.x,center.z,spec.radius,spec.damage*.48,color,spec.duration,spec.force,spec);}
- else if(spec.shape==='cone'){area(player,player.x,player.z,spec.radius,spec.damage,color,spec.force*s.power,dir,spec);}
- else {const count=s.sequence.startsWith('ll')?3:1;for(let i=0;i<count;i++)projectile(player,dir.clone().applyAxisAngle(new T.Vector3(0,1,0),(i-(count-1)/2)*.12),{color,damage:spec.damage/(count>1?1.8:1),speed:spec.speed,life:s.tap?.65:1.15,force:spec.force,pierce:spec.pierce,blast:spec.blast,radius:first==='l'?.12:.23,payload:spec});}
-}
+function dispatchSpell(s,caster,dir,aimPoint){if(elementalSpec(s.sequence))castElemental(s,dir,caster);else if(forceSpec(s.sequence))castForce(s,dir,caster);else castWard(s,dir,caster,aimPoint);}
 function cast(result){if(!running||paused||finished)return;const s=resolveSpell(result,loadout);if(player.cool>0){flash('잠깐 기다려 주세요');return}if(bot&&player.mana<s.cost){flash('마력이 부족합니다. 잠시 쉬면 회복됩니다.');return}if(bot)player.mana-=s.cost;player.cool=s.tap?.16:.38;const seq=s.sequence,base=seq.slice(0,2),p=s.power,dir=player.dir.clone(),target=aim.clone();target.sub(new T.Vector3(player.x,0,player.z));if(target.length()>6)target.setLength(6);target.add(new T.Vector3(player.x,0,player.z));const third=seq[2];
- if(elementalSpec(seq))castElemental(s,dir);else if(forceSpec(seq))castForce(s,dir);else castWard(s,dir);
+ dispatchSpell(s,player,dir,aim);
  history.unshift({name:s.name,seq:s.keys.toUpperCase(),tier:seq.length===1?'1륜':seq.length+'중 2륜'});history=history.slice(0,4);$('history').innerHTML=history.map(h=>`<div class="history-item">${h.name}<small>${h.seq.split('').join(' → ')} · ${h.tier}</small></div>`).join('');$('spellName').textContent=s.name;$('queue').textContent=s.keys.toUpperCase().split('').join(' → ')+' / 발사 완료';$('tier').textContent=seq.length===1?'1륜 · 발동':seq.length+'중 2륜 · 발동';
 }
-function endRound(win){if(!bot){enemy.hp=100;enemy.shield=0;enemy.burn=0;enemy.slow=0;enemy.echo=null;flash('연습 상대의 체력을 회복했습니다');return}finished=true;charge.clear();moveTarget=null;if(win)wins++;else losses++;$('wins').textContent=wins;$('losses').textContent=losses;$('resultTitle').textContent=win?'승리':'패배';$('resultText').textContent=win?'주문을 조합해 냉기술사를 제압했습니다.':'충전 중에는 이동하거나 장막으로 공격을 막아 보세요.';$('result').classList.remove('hidden')}
-function reset(){for(const a of[player,enemy]){a.slow=0;a.burn=0;a.echo=null;a.burnTick=0;a.shieldHeat=false;}roll.reset();player.velocity=new T.Vector3();enemy.dodge=0;enemy.dodgeCool=0;enemy.defendCool=0;enemy.attackCount=0;enemy.sidestep=1;for(const s of shots)remove(s.m);for(const f of fields)remove(f.m);for(const f of fx)remove(f.m);for(const w of [...waves,...wards])remove(w.m);waves=[];wards=[];shots=[];fields=[];fx=[];Object.assign(player,{x:-5,z:4,hp:100,mana:100,shield:0,shieldTime:0,cool:0});Object.assign(enemy,{x:5,z:-4,hp:100,shield:0,shieldTime:0,cool:2,wind:0});charge.clear();moveTarget=null;finished=false;paused=false;clock=0;history=[];$('history').textContent='짧게 눌러 첫 마법을 써보세요.';$('result').classList.add('hidden');$('paused').classList.add('hidden');$('pause').textContent='일시정지';$('spellName').textContent='Q · W · E';$('tier').textContent='1륜 · 준비';$('queue').textContent='길게 누르면 원이 차례로 쌓입니다'}
+function endRound(win){if(!bot){enemy.hp=100;enemy.shield=0;enemy.burn=0;enemy.slow=0;enemy.echo=null;flash('연습 상대의 체력을 회복했습니다');return}finished=true;charge.clear();enemyCharge.clear();moveTarget=null;if(win)wins++;else losses++;$('wins').textContent=wins;$('losses').textContent=losses;$('resultTitle').textContent=win?'승리':'패배';$('resultText').textContent=win?'주문을 조합해 상대 마법사를 제압했습니다.':'충전 중에는 이동하거나 장막으로 공격을 막아 보세요.';$('result').classList.remove('hidden')}
+function reset(){enemyCharge.clear();enemyLoadout=chooseLoadout();enemy.lastSpell="";enemy.lastSpellTime=0;for(const a of[player,enemy]){a.slow=0;a.burn=0;a.echo=null;a.burnTick=0;a.shieldHeat=false;}roll.reset();player.velocity=new T.Vector3();enemy.dodge=0;enemy.dodgeCool=0;enemy.defendCool=0;enemy.attackCount=0;enemy.sidestep=1;for(const s of shots)remove(s.m);for(const f of fields)remove(f.m);for(const f of fx)remove(f.m);for(const w of [...waves,...wards])remove(w.m);waves=[];wards=[];shots=[];fields=[];fx=[];Object.assign(player,{x:-5,z:4,hp:100,mana:100,shield:0,shieldTime:0,cool:0});Object.assign(enemy,{x:5,z:-4,hp:100,mana:100,shield:0,shieldTime:0,cool:2,wind:0});charge.clear();moveTarget=null;finished=false;paused=false;clock=0;history=[];$('history').textContent='짧게 눌러 첫 마법을 써보세요.';$('result').classList.add('hidden');$('paused').classList.add('hidden');$('pause').textContent='일시정지';$('spellName').textContent='Q · W · E';$('tier').textContent='1륜 · 준비';$('queue').textContent='길게 누르면 원이 차례로 쌓입니다'}
 function pause(value=!paused){if(!running||finished)return;paused=value;charge.clear();moveTarget=null;$('paused').classList.toggle('hidden',!paused);$('pause').textContent=paused?'계속하기':'일시정지'}
 function point(e){const rect=canvas.getBoundingClientRect();pointer.set((e.clientX-rect.left)/rect.width*2-1,-(e.clientY-rect.top)/rect.height*2+1);ray.setFromCamera(pointer,camera);const pos=new T.Vector3();if(ray.ray.intersectPlane(ground,pos)){aim.copy(pos);const d=pos.clone().sub(new T.Vector3(player.x,0,player.z));if(d.length()>.1)player.dir.copy(d.normalize());}return pos}
 canvas.addEventListener('pointermove',e=>{point(e);if(e.buttons===2&&running&&!paused)moveTarget=aim.clone()});canvas.addEventListener('contextmenu',e=>e.preventDefault());canvas.addEventListener('pointerdown',e=>{point(e);if(e.button===2&&running&&!paused&&!finished){moveTarget=aim.clone();marker.position.set(aim.x,.07,aim.z);marker.visible=true}});
@@ -120,24 +117,20 @@ window.addEventListener('blur',()=>pause(true));document.addEventListener('visib
 $('start').onclick=()=>{$('intro').classList.add('hidden');pause(false)};$('help').onclick=()=>{if(!running)return;pause(true);$('helpLoadout').textContent=KEYS.map(k=>k.toUpperCase()+' '+RUNES[loadout[k]].name).join(' · ');$('helpCombo').textContent=spellName(mapSequence(['q','w'],loadout),NAMES);$('intro').classList.remove('hidden');$('start').innerHTML='계속하기 <span>↗</span>'};$('pause').onclick=()=>pause();$('reset').onclick=()=>{if(!running)return;reset();running=true;$('intro').classList.add('hidden')};$('again').onclick=()=>{reset();running=true};$('botToggle').onclick=()=>{bot=!bot;reset();$('botToggle').textContent=bot?'대결 모드':'연습 모드';$('botToggle').title=bot?'연습 모드로 전환':'대결 모드로 전환';$('botToggle').classList.toggle('practice',!bot);$('modeNote').textContent=bot?'대결 모드 · 누르면 연습 모드로 전환':'연습 모드 · 상대 정지 · 마력 무제한';flash(bot?'대결 모드 · 새 대결 시작':'연습 모드 · 승패 없이 조합을 연습하세요');};
 function ai(dt){
  if(!bot)return;
- const d=new T.Vector3(player.x-enemy.x,0,player.z-enemy.z),dist=d.length();d.normalize();enemy.dir.copy(d);
- enemy.cool-=dt;enemy.dodgeCool=Math.max(0,(enemy.dodgeCool||0)-dt);enemy.defendCool=Math.max(0,(enemy.defendCool||0)-dt);enemy.dodge=Math.max(0,(enemy.dodge||0)-dt);
- const threat=shots.find(s=>s.owner===player&&!s.hit&&incomingThreat(s.m.position.x,s.m.position.z,s.dir.x,s.dir.z,s.speed,enemy.x,enemy.z));
- if(threat&&enemy.dodgeCool<=0){const side=new T.Vector3(-threat.dir.z,0,threat.dir.x);if(collides(enemy.x+side.x*1.8,enemy.z+side.z*1.8))side.negate();enemy.dodgeDir=side;enemy.dodge=.38;enemy.dodgeCool=2.8;}
- if(threat&&enemy.defendCool<=0&&enemy.dodgeCool>1.5&&enemy.dodge<=0){enemy.shield=17;enemy.shieldTime=.65;enemy.defendCool=5;ring(enemy.x,enemy.z,0xb4e8ff,.85,.3)}
- let v=new T.Vector3(-d.z,0,d.x).multiplyScalar(Math.sin(clock*1.05)*.8);if(dist>6.7)v.add(d);else if(dist<4.6)v.addScaledVector(d,-1.3);
- for(const f of fields)if(f.owner===player){const away=new T.Vector3(enemy.x-f.x,0,enemy.z-f.z);if(away.length()<f.r+1)v.add(away.normalize().multiplyScalar(2.5))}
- if(enemy.dodge>0)v.copy(enemy.dodgeDir);v.normalize();const speed=(enemy.dodge>0?6:enemy.wind>0?1.4:2.9)*(enemy.slow>0?.55:1);
- const ox=enemy.x,oz=enemy.z;move(enemy,v.x*dt*speed,v.z*dt*speed);
- if(Math.hypot(enemy.x-ox,enemy.z-oz)<dt*.3){const side=new T.Vector3(-d.z,0,d.x).multiplyScalar(enemy.sidestep||1);if(collides(enemy.x+side.x*.5,enemy.z+side.z*.5))enemy.sidestep=-(enemy.sidestep||1);move(enemy,side.x*dt*speed,side.z*dt*speed)}
- if(enemy.wind>0){enemy.wind-=dt;if(enemy.wind<=0){
-  if(enemy.attackType==='nova')area(enemy,enemy.x,enemy.z,3.1,15,0xa8e6ff,1.1);
-  else {const spread=enemy.attackType==='fan'?[-.17,0,.17]:[0];for(const angle of spread)projectile(enemy,enemy.aim.clone().applyAxisAngle(new T.Vector3(0,1,0),angle),{color:0xa8e6ff,damage:spread.length>1?10:14,speed:10.5,life:1.8,radius:.17})}
-  enemy.cool=1.05+rand()*.45;
- }return}
- if(enemy.cool<=0&&dist<15){enemy.attackCount=(enemy.attackCount||0)+1;enemy.attackType=dist<3?'nova':enemy.attackCount%3===0?'fan':'bolt';enemy.wind=enemy.attackType==='nova'?.75:.65;enemy.chargeDuration=enemy.wind;
- const lead=(player.velocity||new T.Vector3()).clone().multiplyScalar(Math.min(.45,dist/10.5)*.6);enemy.aim=new T.Vector3(player.x-enemy.x,0,player.z-enemy.z).add(lead).normalize();ring(enemy.x,enemy.z,0xbeeaff,enemy.attackType==='nova'?3.1:.9,enemy.wind);
- }
+ enemy.cool=Math.max(0,enemy.cool-dt);enemy.mana=Math.min(100,enemy.mana+dt*(enemyCharge.active?3:10));enemy.lastSpellTime=Math.max(0,(enemy.lastSpellTime||0)-dt);
+ const delta=new T.Vector3(player.x-enemy.x,0,player.z-enemy.z),dist=delta.length();delta.normalize();
+ // Stop tracking the player during the last .35 seconds so a visible cast can be dodged.
+ if(!enemyCharge.active||enemyCharge.remaining>.35)enemy.dir.copy(delta);
+ const first=enemyCharge.active?enemyLoadout[enemyCharge.plan[0]]:null;
+ const n=enemyCharge.active?enemyCharge.plan.length:2;
+ const reach=first==='w'||first==='g'?3+(n-1)*1.5:2.5+(n-1)*1.6;
+ let v=new T.Vector3(-delta.z,0,delta.x).multiplyScalar(Math.sin(clock)*.35);
+ if(dist>reach*.76)v.add(delta);else if(dist<1.5)v.addScaledVector(delta,-1);
+ v.normalize();const speed=(enemyCharge.active?2.4:2.9)*(enemy.slow>0?.55:1),ox=enemy.x,oz=enemy.z;
+ move(enemy,v.x*speed*dt,v.z*speed*dt);
+ if(Math.hypot(enemy.x-ox,enemy.z-oz)<dt*.2){const side=new T.Vector3(-delta.z,0,delta.x).multiplyScalar(enemy.sidestep||1);if(collides(enemy.x+side.x*.5,enemy.z+side.z*.5))enemy.sidestep=-(enemy.sidestep||1);move(enemy,side.x*speed*dt,side.z*speed*dt);}
+ if(enemyCharge.active){const spell=enemyCharge.tick(dt,enemyLoadout);if(spell){if(enemy.mana>=spell.cost){enemy.mana-=spell.cost;const point=new T.Vector3(enemy.x,0,enemy.z).addScaledVector(enemy.dir,Math.min(2,dist*.5));dispatchSpell(spell,enemy,enemy.dir.clone(),point);enemy.lastSpell=spell.name;enemy.lastSpellTime=.8;}enemy.cool=.65+rand()*.4;}return;}
+ if(enemy.cool<=0&&dist<10&&enemy.mana>=25){const plan=choosePlan(enemyLoadout,enemy.attackCount||0,enemy.hp,dist);enemy.attackCount=(enemy.attackCount||0)+1;enemyCharge.start(plan);}
 }
 function update(dt){clock+=dt;const rolling=roll.active;const beforeX=player.x,beforeZ=player.z;if(rolling){const step=roll.tick(dt);for(let i=0;i<4;i++)move(player,step.x/4,step.z/4)}else{roll.tick(dt);charge.tick(dt)}player.cool=Math.max(0,player.cool-dt);player.mana=bot?Math.min(100,player.mana+dt*(charge.active?3:10)):100;
  if(moveTarget&&!rolling){const d=moveTarget.clone().sub(new T.Vector3(player.x,0,player.z));if(d.length()<.15){moveTarget=null;marker.visible=false}else{d.normalize();const speed=(charge.active?2.8:4.4)*(player.slow>0?.55:1);const ox=player.x,oz=player.z;move(player,d.x*dt*speed,d.z*dt*speed);if(Math.abs(ox-player.x)+Math.abs(oz-player.z)<.001){moveTarget=null;marker.visible=false}}}
@@ -146,7 +139,7 @@ function update(dt){clock+=dt;const rolling=roll.active;const beforeX=player.x,b
  updateStatuses(dt);if(finished)return;
  updateForces(dt);if(finished)return;ai(dt);
  for(const a of[player,enemy]){a.shieldTime=Math.max(0,a.shieldTime-dt);if(a.shieldTime<=0)a.shield=0}
- for(let i=shots.length-1;i>=0;i--){const s=shots[i],previous=s.m.position.clone();s.life-=dt;s.m.position.addScaledVector(s.dir,s.speed*dt);if(s.owner!==player){const wall=wards.find(w=>w.hp>0&&crossesWard(previous,s.m.position,w));if(wall){wall.hp=Math.max(0,wall.hp-s.damage);spark(s.m.position.x,s.m.position.z,0xb9eaff,8);remove(s.m);shots.splice(i,1);continue;}}s.m.rotation.x+=dt*5;s.m.rotation.y+=dt*4;s.trail-=dt;if(s.trail<0){s.trail=.05;const trail=mesh(new T.IcosahedronGeometry(.09,0),new T.MeshBasicMaterial({color:s.color,transparent:true,opacity:.5}),s.m.position.x,.9,s.m.position.z);trail.castShadow=false;fx.push({m:trail,life:.2,max:.2})}
+ for(let i=shots.length-1;i>=0;i--){const s=shots[i],previous=s.m.position.clone();s.life-=dt;s.m.position.addScaledVector(s.dir,s.speed*dt);{const wall=wards.find(w=>w.owner!==s.owner&&w.hp>0&&crossesWard(previous,s.m.position,w));if(wall){wall.hp=Math.max(0,wall.hp-s.damage);spark(s.m.position.x,s.m.position.z,0xb9eaff,8);remove(s.m);shots.splice(i,1);continue;}}s.m.rotation.x+=dt*5;s.m.rotation.y+=dt*4;s.trail-=dt;if(s.trail<0){s.trail=.05;const trail=mesh(new T.IcosahedronGeometry(.09,0),new T.MeshBasicMaterial({color:s.color,transparent:true,opacity:.5}),s.m.position.x,.9,s.m.position.z);trail.castShadow=false;fx.push({m:trail,life:.2,max:.2})}
  const target=s.owner===player?enemy:player;let impact=false;if(!s.hit&&Math.hypot(s.m.position.x-target.x,s.m.position.z-target.z)<.65){if(hit(target,s.damage,s.dir,s.force))applyPayload(target,s.payload);s.hit=true;impact=!s.pierce}if(collides(s.m.position.x,s.m.position.z,.12))impact=true;
  if(s.life<=0||impact){const x=s.m.position.x,z=s.m.position.z;spark(x,z,s.color,9);if(s.blast)area(s.owner,x,z,s.blast,s.damage*.55,s.color,.4,null,s.payload);if(s.field)field(s.owner,x,z,1.65,7,s.color,3,s.payload?.force||0,s.payload);remove(s.m);shots.splice(i,1)}
  }
@@ -154,10 +147,12 @@ function update(dt){clock+=dt;const rolling=roll.active;const beforeX=player.x,b
  if(toastTimer>0){toastTimer-=dt;if(toastTimer<=0)$('toast').classList.remove('show')}
 }
 function label(el,a){const pos=new T.Vector3(a.x,2.65,a.z).project(camera);el.style.left=((pos.x+1)*innerWidth/2)+'px';el.style.top=((-pos.y+1)*innerHeight/2)+'px'}
-function ui(){for(const a of[player,enemy]){const burning=a.burn>0,chilled=a.slow>0,tinted=burning||chilled;const c=new T.Color(burning&&(!chilled||Math.floor(clock*4)%2===0)?0xff543e:0x479eff);for(const entry of a.g.userData.palette){entry.material.color.copy(entry.color);if(tinted)entry.material.color.lerp(c,.48);}a.g.position.set(a.x,0,a.z);a.g.rotation.y=Math.atan2(a.dir.x,a.dir.z);const shield=shields.get(a);shield.position.set(a.x,1,a.z);shield.visible=a.shield>0;shield.rotation.y=clock*.6}label($('playerLabel'),player);label($('enemyLabel'),enemy);$('playerHp').style.width=player.hp+'%';$('enemyHp').style.width=enemy.hp+'%';$('manaBar').style.width=player.mana+'%';$('manaText').textContent=Math.floor(player.mana);$('enemyCast').textContent=!bot?'연습 상대':enemy.wind>0?(enemy.attackType==='nova'?'❄ 냉기 폭발':enemy.attackType==='fan'?'❄ 삼중 냉기':'❄ 냉기 충전'):(enemy.slow>0?'❄ 감속 중':enemy.burn>0?'✦ 화상 중':'냉기술사 · 숙련');$('time').textContent=String(Math.floor(clock/60)).padStart(2,'0')+':'+String(Math.floor(clock%60)).padStart(2,'0');
- const enemyProgress=bot&&running&&!finished?enemyChargeProgress(enemy.wind,enemy.chargeDuration):null;
- $('enemyOrbs').innerHTML=enemyProgress===null?'':`<div class="orb" style="--c:${RUNES.i.color};--p:${enemyProgress*100}%"><span>${RUNES.i.icon}</span></div>`;
- $('enemyOrbs').classList.toggle('charging',enemyProgress!==null);
+function ui(){for(const a of[player,enemy]){const burning=a.burn>0,chilled=a.slow>0,tinted=burning||chilled;const c=new T.Color(burning&&(!chilled||Math.floor(clock*4)%2===0)?0xff543e:0x479eff);for(const entry of a.g.userData.palette){entry.material.color.copy(entry.color);if(tinted)entry.material.color.lerp(c,.48);}a.g.position.set(a.x,0,a.z);a.g.rotation.y=Math.atan2(a.dir.x,a.dir.z);const shield=shields.get(a);shield.position.set(a.x,1,a.z);shield.visible=a.shield>0;shield.rotation.y=clock*.6}label($('playerLabel'),player);label($('enemyLabel'),enemy);$('playerHp').style.width=player.hp+'%';$('enemyHp').style.width=enemy.hp+'%';$('manaBar').style.width=player.mana+'%';$('manaText').textContent=Math.floor(player.mana);$('enemyCast').textContent=!bot?'연습 상대':enemyCharge.active?spellName(mapSequence(enemyCharge.charge.parts,enemyLoadout),NAMES)+' · 충전':enemy.lastSpellTime>0?enemy.lastSpell+' · 발사':enemy.slow>0?'감속 중':enemy.burn>0?'화상 중':'상대 마법사';$('time').textContent=String(Math.floor(clock/60)).padStart(2,'0')+':'+String(Math.floor(clock%60)).padStart(2,'0');
+ const ec=enemyCharge.charge,enemyCharging=bot&&running&&!finished&&ec.active;
+ $('enemyOrbs').innerHTML=enemyCharging?ec.parts.map((key,i)=>{const rune=RUNES[enemyLoadout[key]];return `<div class="orb" title="${rune.name}" style="--c:${rune.color};--p:${i<ec.parts.length-1?100:ec.progress*100}%"><span>${rune.icon}</span></div>`}).join(''):'';
+ $('enemyOrbs').classList.toggle('charging',enemyCharging);
+ enemyAimLine.visible=enemyCharging;if(enemyCharging){const seq=mapSequence(ec.parts,enemyLoadout),spec=elementalSpec(seq)||forceSpec(seq)||wardSpec(seq),end=new T.Vector3(enemy.x,.13,enemy.z).addScaledVector(enemy.dir,spec.range);enemyAimLine.geometry.dispose();enemyAimLine.geometry=new T.BufferGeometry().setFromPoints([new T.Vector3(enemy.x,.13,enemy.z),end]);enemyAimLine.material.color.set(RUNES[seq[0]].color);}
+ $('enemyLoadout').innerHTML=KEYS.map(k=>{const r=RUNES[enemyLoadout[k]];return `<span style="color:${r.color}">${r.icon} ${r.name}</span>`}).join(' · ');
  $('rollStatus').textContent=roll.active?'구르는 중':roll.cooldown>0?'구르기 '+roll.cooldown.toFixed(1)+'초':'Space 구르기 · 준비';$('rollStatus').classList.toggle('ready',roll.cooldown<=0);
  const body=player.g.userData.body;if(body){body.rotation.x=roll.active?(1-roll.remaining/ROLL_DURATION)*Math.PI*2:0;}
  for(const k of['q','w','e'])$('key-'+k).classList.toggle('active',charge.held.includes(k));
@@ -184,4 +179,4 @@ function cancelSelection(){$('selection').classList.add('hidden');if(selectionRe
 function resize(){renderer.setSize(innerWidth,innerHeight);camera.aspect=innerWidth/innerHeight;camera.fov=38;const fit=Math.max(1,1.4/camera.aspect);camera.position.set(18*fit,23*fit,22*fit);camera.far=100*fit;camera.lookAt(0,0,0);camera.updateProjectionMatrix()}window.addEventListener('resize',resize);resize();
 let prev=performance.now();function frame(now){requestAnimationFrame(frame);const dt=Math.min(.04,(now-prev)/1000);prev=now;if(running&&!paused&&!finished)update(dt);if(!paused)for(let i=fx.length-1;i>=0;i--){const f=fx[i];f.life-=dt;if(f.ring){f.m.scale.setScalar(f.r*(.55+.45*(1-f.life/f.max)));f.m.material.opacity=Math.max(0,f.life/f.max*.65)}else if(f.v){f.m.position.addScaledVector(f.v,dt);f.v.y-=dt*8}else if(f.m.material.transparent)f.m.material.opacity=Math.max(0,f.life/f.max*.5);if(f.life<=0){remove(f.m);fx.splice(i,1)}}ui();renderer.render(scene,camera)}requestAnimationFrame(frame);
 // Read-only diagnostics for input and rendering verification.
-window.mageDebug=()=>({loadout:{...loadout},running,paused,bot,finished,charge:{parts:[...charge.parts],held:[...charge.held],progress:charge.progress},history:[...history],roll:{active:roll.active,cooldown:roll.cooldown,invulnerable:roll.invulnerable},player:{x:player.x,z:player.z,hp:player.hp,mana:player.mana},enemy:{x:enemy.x,z:enemy.z,hp:enemy.hp},objects:scene.children.length});
+window.mageDebug=()=>({loadout:{...loadout},running,paused,bot,finished,charge:{parts:[...charge.parts],held:[...charge.held],progress:charge.progress},history:[...history],roll:{active:roll.active,cooldown:roll.cooldown,invulnerable:roll.invulnerable},player:{x:player.x,z:player.z,hp:player.hp,mana:player.mana},enemy:{x:enemy.x,z:enemy.z,hp:enemy.hp,mana:enemy.mana,loadout:{...enemyLoadout},charge:{parts:[...enemyCharge.charge.parts],progress:enemyCharge.charge.progress,remaining:enemyCharge.remaining},lastSpell:enemy.lastSpell},objects:scene.children.length});
