@@ -43,7 +43,7 @@ Three.js 0.169.0을 함께 제공합니다. 라이선스는 dist/THREE-LICENSE.t
 
 ## 공유
 
-[바로 플레이](https://ordinary-mage-duel-qwe.bacbaqui2.chatgpt.site/) · 키보드와 마우스가 필요합니다.
+[바로 플레이](https://bacbaqui-web.github.io/ordinary-mage-curriculum/) · 키보드와 마우스가 필요합니다.
 
 ## 화염·빙결·전격
 
