@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {elementalSpec} from './dist/elements.mjs';
+import {wardSpec} from './dist/forces.mjs';
+import {launchesOrb,segmentCircleHit} from './dist/delivery.mjs';
+import {advanceMovingWard} from './dist/moving-ward.mjs';
+const large=elementalSpec('qqw'),fast=elementalSpec('qww');assert(large.projectile&&fast.projectile);assert(large.radius>fast.radius);assert(large.speed<fast.speed);assert(large.damage>fast.damage);assert(large.blast>fast.blast);assert(large.burnDamage>fast.burnDamage);assert(fast.range>large.range);
+for(const seq of ['qw','qqw','qww','iw','iiw','iww','lw','llw','lww'])assert(launchesOrb(seq));assert.equal(elementalSpec('lw').overhead,false);assert.equal(launchesOrb('wq'),false);assert.equal(launchesOrb('qwl'),false);assert(elementalSpec('qwl').falling);assert(elementalSpec('qwg').force<0);
+assert.equal(segmentCircleHit({x:0,z:0},{x:10,z:0},{x:5,z:0},1),.4);assert.equal(segmentCircleHit({x:0,z:0},{x:10,z:0},{x:5,z:2},1),null);assert.equal(segmentCircleHit({x:5,z:0},{x:10,z:0},{x:5,z:0},1),0);
+const spec=wardSpec('ew'),wall=()=>({x:0,z:0,nx:1,nz:0,width:spec.width,spec,speed:spec.speed,travelled:0});
+let w=wall(),actor={x:.6,z:0};for(let i=0;i<120;i++)advanceMovingWard(w,1/60,{actors:[actor],collides:()=>false,wards:[w]});assert(Math.abs(w.x-4)<.01);assert(actor.x>w.x+.5);assert(actor.x<w.x+.7);
+w=wall();actor={x:1.9,z:0};for(let i=0;i<120;i++)advanceMovingWard(w,1/60,{actors:[actor],collides:x=>x>2,wards:[w]});assert(w.x<2);assert(actor.x<=2);assert.equal(w.speed,0);
+w=wall();for(let i=0;i<600;i++)advanceMovingWard(w,1/60,{actors:[],collides:()=>false,wards:[w]});assert(Math.abs(w.travelled-spec.travel)<.01);assert.equal(w.speed,0);assert(wardSpec('eww').speed>wardSpec('eew').speed);assert(wardSpec('eew').hp>wardSpec('eww').hp);
+console.log('PASS: large/fast orbs, electric sphere, ordered delivery, pull payload, swept hits, wall pushing/blocking/travel limit');

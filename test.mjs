@@ -75,5 +75,5 @@ console.log('PASS: smooth push/pull, frame-independent distance, replacing force
 
 const {distanceToWard}=await import('./dist/forces.mjs');
 assert.equal(distanceToWard({x:0,z:.5},{x:0,z:0,nx:0,nz:1,width:3}),.5);assert.equal(distanceToWard({x:2,z:0},{x:0,z:0,nx:0,nz:1,width:3}),.5);
-assert.equal(wardSpec('eq').burn,2);assert.equal(wardSpec('ei').slow,1.5);assert.equal(wardSpec('el').shock,5);assert.equal(wardSpec('ew').push,1.4);assert.equal(wardSpec('eql').burn,2);assert.equal(wardSpec('eql').shock,5);
+assert.equal(wardSpec('eq').burn,2);assert.equal(wardSpec('ei').slow,1.5);assert.equal(wardSpec('el').shock,5);assert.equal(wardSpec('ew').moving,true);assert.equal(wardSpec('eql').burn,2);assert.equal(wardSpec('eql').shock,5);
 console.log('PASS: finite wall distance and mixed elemental payloads');
