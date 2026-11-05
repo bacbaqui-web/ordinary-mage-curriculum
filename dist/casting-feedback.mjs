@@ -2,12 +2,12 @@ import * as T from './three.module.js';
 export class ChargeCamera{
  constructor(){this.clear();}
  clear(){this.level=0;this.time=0;this.kick=0;this.flash=0;}
- fire(tier){const i=Math.max(0,Math.min(2,tier-1));this.kick=[.05,.085,.12][i];this.flash=[.12,.18,.25][i];}
+ fire(tier){const i=Math.max(0,Math.min(2,tier-1));this.kick=[.07,.12,.18][i];this.flash=[.12,.18,.25][i];}
  update(dt,active,tier,progress=0){
   this.time+=dt;const target=active?Math.min(3,tier+progress*.25):0;
   this.level+=(target-this.level)*(1-Math.exp(-dt/(active?.35:.5)));
   this.kick*=Math.exp(-dt*14);this.flash=Math.max(0,this.flash-dt*1.8);
-  const chargeShake=Math.min(1,Math.max(0,this.level-1))*.018+Math.max(0,this.level-2)*.03;
+  const chargeShake=Math.min(1,Math.max(0,this.level-1))*.003+Math.max(0,this.level-2)*.005;
   const shake=chargeShake+this.kick;
   return {distance:1-this.level*.115+this.kick*.07,fov:38+this.level*3.2,
    x:(Math.sin(this.time*43)+Math.sin(this.time*71)*.3)*shake,
