@@ -1,3 +1,4 @@
+import {uniqueMotions,mergeMotions} from './pose-library.mjs';
 import * as T from './three.module.js';
 import {footFaces} from './foot-shape.mjs';
 import {PassiveFoot} from './passive-foot.mjs';
@@ -20,6 +21,10 @@ function compactShoulders(p){
 }
 if(compactShoulders(project)){try{localStorage.setItem(storage,JSON.stringify(project));}catch{}}
 for(const a of project.actions)if(!a.binding&&['기본 걷기','베기','주먹 타격','방어','마법 시전'].includes(a.name))a.binding=a.name;
+const cleaned=uniqueMotions(project.actions);
+if(cleaned.length!==project.actions.length){
+ try{localStorage.setItem(storage+'-before-dedup',JSON.stringify(project));project.actions=cleaned;localStorage.setItem(storage,JSON.stringify(project));}catch{$('status').textContent='중복 정리 내용을 저장하지 못했습니다. 파일 저장으로 백업하세요.';}
+}
 const current=()=>project.actions[index],pose=()=>samplePose(current(),frame);
 function save(message='브라우저에 저장됨'){current().updatedAt=Date.now();try{localStorage.setItem(storage,JSON.stringify(project));$('status').textContent=message;}catch{$('status').textContent='자동 저장 공간이 부족합니다. 파일 저장으로 보관하세요.';}}
 function checkpoint(){history.push(JSON.stringify({project,index,frame}));if(history.length>60)history.shift();future=[];}
@@ -100,7 +105,7 @@ document.addEventListener('keydown',e=>{
  else if(command==='z'||command==='y'){e.preventDefault();$(command==='y'||e.shiftKey?'redo':'undo').click();}
 });
 $('export').onclick=()=>{const url=URL.createObjectURL(new Blob([JSON.stringify(project,null,2)],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download='ordinary-mage-motions.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
-$('import').onchange=async()=>{try{const file=$('import').files[0];if(!file)return;if(file.size>10*1024*1024)throw Error('10MB 이하의 동작 파일을 선택하세요.');const incoming=validateProject(JSON.parse(await file.text()));compactShoulders(incoming);for(const a of incoming.actions)a.updatedAt=Date.now();if(project.actions.length+incoming.actions.length>100)throw Error('동작은 최대 100개까지 보관할 수 있습니다.');checkpoint();project.actions.push(...incoming.actions);index=project.actions.length-incoming.actions.length;frame=0;stop();save();sync();}catch(e){$('status').textContent='불러오지 못했습니다. '+e.message;}};
+$('import').onchange=async()=>{try{const file=$('import').files[0];if(!file)return;if(file.size>10*1024*1024)throw Error('10MB 이하의 동작 파일을 선택하세요.');const incoming=validateProject(JSON.parse(await file.text()));compactShoulders(incoming);incoming.actions=uniqueMotions(incoming.actions);for(const a of incoming.actions)a.updatedAt=Date.now();const merged=mergeMotions(project.actions,incoming.actions);if(merged.length>100)throw Error('동작은 최대 100개까지 보관할 수 있습니다.');checkpoint();project.actions=merged;index=Math.max(0,project.actions.indexOf(incoming.actions[0]));frame=0;stop();save();sync();}catch(e){$('status').textContent='불러오지 못했습니다. '+e.message;}};
 const segments=[['Hips','Spine',.36,'#55b9cd'],['Spine','Head',.28,'#55b9cd'],['Spine','LeftArm',.18,'#55b9cd'],['Spine','RightArm',.18,'#55b9cd'],['LeftArm','LeftForeArm',.19,'#f18d65'],['LeftForeArm','LeftHand',.17,'#f18d65'],['RightArm','RightForeArm',.19,'#bb8bdd'],['RightForeArm','RightHand',.17,'#bb8bdd'],['Hips','LeftUpLeg',.23,'#55b9cd'],['Hips','RightUpLeg',.23,'#55b9cd'],['LeftUpLeg','LeftLeg',.22,'#86ba6d'],['LeftLeg','LeftFoot',.20,'#86ba6d'],['RightUpLeg','RightLeg',.22,'#688ee1'],['RightLeg','RightFoot',.20,'#688ee1']];
 const views=[['앞',[0,0,6]],['옆',[6,0,0]],['위',[0,6,0]],['쿼터뷰',[5,4,6]]].map(([name,dir])=>{
  const box=document.createElement('div');box.className='view';const title=document.createElement('h2');title.textContent=name;const canvas=document.createElement('canvas');canvas.setAttribute('aria-label',name+' 관절 편집');canvas.tabIndex=0;box.append(title,canvas);$('views').append(box);
