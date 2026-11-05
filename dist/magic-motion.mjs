@@ -3,13 +3,13 @@ const V=(x,y,z)=>new T.Vector3(x,y,z);
 export function chargeMoveScale(active,count){return !active?1:count>=2?0:.5;}
 export class MagicMotion{
  constructor(){this.reset();}
- reset(){this.stepTravel=0;this.pendingStep=0;this.mode='idle';this.elapsed=0;this.stage=1;this.callback=null;this.fired=false;}
+ reset(){this.stepTravel=0;this.pendingStep=0;this.mode='idle';this.elapsed=0;this.phaseElapsed=0;this.stage=1;this.callback=null;this.fired=false;}
  press(){if(this.mode==='hold')return;this.reset();this.mode='hold';}
- release(stage=1,callback=null){const prepared=this.mode==='hold'&&this.elapsed>=2/12;this.stepTravel=0;this.pendingStep=0;this.stage=stage;this.mode='release';this.elapsed=prepared?2/12:0;this.callback=callback;this.fired=false;}
- update(dt,stage=1){if(this.mode==='idle')return;this.elapsed+=dt;if(this.mode==='hold')this.stage=stage;
+ release(stage=1,callback=null){const prepared=this.mode==='hold'&&this.elapsed>=2/12;this.stepTravel=0;this.pendingStep=0;this.stage=stage;this.mode='release';this.phaseElapsed=0;this.elapsed=prepared?2/12:0;this.callback=callback;this.fired=false;}
+ update(dt,stage=1){if(this.mode==='idle')return;this.elapsed+=dt;this.phaseElapsed+=dt;if(this.mode==='hold'&&this.stage!==stage){this.stage=stage;this.phaseElapsed=0;}
   if(this.mode==='release'&&this.stage>=2){const travel=.48*Math.min(1,Math.max(0,(this.elapsed-2/12)/.16));this.pendingStep+=travel-this.stepTravel;this.stepTravel=travel;}
   if(this.mode==='release'&&!this.fired&&this.elapsed>=2/12+(this.stage>=2?.16:0)){this.fired=true;const cb=this.callback;this.callback=null;cb?.();}
-  if(this.mode==='release'&&this.elapsed>=(this.releaseDuration||10/12))this.reset();
+  if(this.mode==='release'&&(this.splitRelease?this.phaseElapsed:this.elapsed)>=(this.releaseDuration||10/12))this.reset();
  }
  takeStep(){const d=this.pendingStep;this.pendingStep=0;return d;}
  apply(p){if(this.mode==='idle')return;const two=this.stage>=2,fire=this.mode==='release'&&this.elapsed>=2/12,ready=this.elapsed>=2/12;

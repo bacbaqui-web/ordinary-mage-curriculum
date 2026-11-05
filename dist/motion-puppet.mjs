@@ -1,3 +1,4 @@
+import {magicClipName} from './magic-clips.mjs';
 import {savedMotion,savedPose} from './live-motions.mjs';
 import * as T from './three.module.js';
 import {MagicMotion} from './magic-motion.mjs';
@@ -48,10 +49,12 @@ export class MotionPuppet{
   positions.LeftToe=positions.LeftFoot.clone().add(new T.Vector3(0,0,.22));positions.RightToe=positions.RightFoot.clone().add(new T.Vector3(0,0,.22));
   if(this.magic.mode==='idle'&&(this.charging||this.cast>0)){positions.RightForeArm.copy(positions.RightArm).add(new T.Vector3(0,-.08,.31));positions.RightHand.copy(positions.RightForeArm).add(new T.Vector3(0,this.charging?.2:0,.3));}
   this.magic.apply(positions);
-  const motionName=this.magic.mode!=='idle'?'마법 시전':this.clips[this.selectedClip]?.name;
-  const edited=savedPose(motionName,this.magic.mode!=='idle'?this.magic.elapsed:(this.editorActionTime??this.time),{loop:this.magic.mode==='idle'&&this.editorActionTime===undefined,hold:this.magic.mode==='hold'});
+  const specific=this.magic.mode!=='idle'?magicClipName(this.magic.stage,this.magic.mode):null;
+  const split=specific&&savedMotion(specific);
+  const motionName=this.magic.mode!=='idle'?(split?specific:'마법 시전'):this.clips[this.selectedClip]?.name;
+  const edited=savedPose(motionName,this.magic.mode!=='idle'?(split?this.magic.phaseElapsed:this.magic.elapsed):(this.editorActionTime??this.time),{loop:this.magic.mode==='idle'&&this.editorActionTime===undefined,hold:!split&&this.magic.mode==='hold'});
   if(edited){for(const [n,a] of Object.entries(edited))positions[n]=new T.Vector3(...a);positions.LeftToe=positions.LeftFoot.clone().add(new T.Vector3(0,0,.22));positions.RightToe=positions.RightFoot.clone().add(new T.Vector3(0,0,.22));}
-  const magicClip=savedMotion('마법 시전');this.magic.releaseDuration=magicClip?Math.max(10/12,magicClip.frames/magicClip.fps):10/12;
+  const magicClip=savedMotion(magicClipName(this.magic.stage,'release'))||savedMotion('마법 시전');this.magic.splitRelease=!!savedMotion(magicClipName(this.magic.stage,'release'));this.magic.releaseDuration=magicClip?Math.max(10/12,magicClip.frames/magicClip.fps):10/12;
   this.bodyFollow?.apply(positions,this.group);
   for(const n of Object.keys(positions))this.group.localToWorld(positions[n]);
   this.lastPositions=positions;

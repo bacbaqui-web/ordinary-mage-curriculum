@@ -20,3 +20,12 @@ project.actions=[makeWalk(1),makeWalk(2)];puppet.time=0;publish();assert.equal(p
 puppet.update(.25);puppet.render(camera);assert.ok(Math.abs(puppet.lastPositions.Head.y-2.3)<1e-6,'saved walking advances while moving');
 project.actions[0].updatedAt=100;puppet.time=0;publish();assert.equal(puppet.lastPositions.Head.y,1,'most recently edited walking wins even if earlier in list');
 console.log('PASS: imported duplicate walking, moving playback and most recently saved selection');
+const {ensureMagicClips,magicClipName}=await import('./dist/magic-clips.mjs');
+project.actions=[{...makeWalk(1),name:'마법 시전'}];assert.equal(ensureMagicClips(project),true);assert.equal(ensureMagicClips(project),false);assert.equal(project.actions.length,7);
+for(const stage of [1,2,3])for(const mode of ['hold','release']){
+ const clip=project.actions.find(a=>a.name===magicClipName(stage,mode));for(const k of clip.keys)k.pose.Head[1]=stage+(mode==='release'?.5:0);
+ puppet.magic.reset();if(mode==='hold'){puppet.magic.press();puppet.magic.update(.01,stage);}else puppet.magic.release(stage);
+ publish();assert.equal(puppet.lastPositions.Head.y,stage+(mode==='release'?.5:0));assert.equal(puppet.magic.phaseElapsed,mode==='hold'&&stage===1?.01:0);
+}
+puppet.magic.press();puppet.magic.update(.8,1);puppet.magic.update(.4,2);assert.equal(puppet.magic.phaseElapsed,0);
+console.log('PASS: six independent magic clips, idempotent migration, per-ring pose selection and phase clock reset');
