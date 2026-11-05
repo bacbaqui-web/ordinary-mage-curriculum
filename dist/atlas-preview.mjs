@@ -1,8 +1,9 @@
+import {canSee} from './vision.mjs';
 import * as T from './three.module.js';
 import {createWizard,animateWizard,projectWizard} from './wizard.mjs?v=editor-live1';
 import {LowPolyVFX} from './lowpoly-vfx.mjs';
-import {LiveMagic} from './live-magic.mjs?v=flame3';
-import {RUNES} from './combo-design.mjs?v=flame3';
+import {LiveMagic} from './live-magic.mjs?v=smoke4';
+import {RUNES} from './combo-design.mjs?v=smoke4';
 import {advanceMovingWard} from './moving-ward.mjs';
 import {ForcedMotion} from './motion.mjs';
 export function mountAtlasPreview(host,seq){
@@ -21,7 +22,7 @@ export function mountAtlasPreview(host,seq){
  pause.onclick=()=>{paused=!paused;pause.textContent=paused?'재생':'일시정지';};host.querySelector('[data-action=restart]').onclick=()=>{reset();paused=false;pause.textContent='일시정지';};host.querySelector('[data-action=view]').onclick=()=>{angle=1-angle;view();};
  function frame(now){if(disposed)return;raf=requestAnimationFrame(frame);const dt=Math.min(.05,(now-last)/1000);last=now;const w=Math.max(180,host.clientWidth),h=Math.round(w*.72);if(canvas.width!==Math.round(w*renderer.getPixelRatio())||canvas.height!==Math.round(h*renderer.getPixelRatio())){renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}
  if(!paused){elapsed+=dt;if(elapsed>charge+7)reset();if(elapsed>=charge&&!cast){cast=true;caster.g.userData.puppet.magic.release(seq.length);magic.cast({sequence:seq,power:1+(seq.length-1)*.48+.28},caster,new T.Vector3(1,0,0),new T.Vector3(target.x,0,target.z));}magic.update(dt);vfx.update(dt);if(target.burn>0){target.burn-=dt;target.burnTick-=dt;if(target.burnTick<=0){target.burnTick=.5;target.hp=Math.max(0,target.hp-target.burnDamage);}}target.slow=Math.max(0,(target.slow||0)-dt);const step=target.motion.tick(dt);target.x+=step.x;target.z+=step.z;for(let i=wards.length-1;i>=0;i--){advanceMovingWard(wards[i],dt,{actors:[caster,target],collides:()=>false,wards});wards[i].m.position.set(wards[i].x,1.2,wards[i].z);wards[i].life-=dt;if(wards[i].life<=0){remove(wards[i].m);wards.splice(i,1);}}}
- caster.g.position.set(caster.x,0,caster.z);target.g.position.set(target.x,0,target.z);animateWizard(caster.g,paused?0:dt,{charging:!cast,chargeStage:Math.min(seq.length,Math.floor(elapsed/1.2)+1),cast:cast?Math.max(0,.3-(elapsed-charge)):0,speed:cast&&seq==='qh'&&elapsed-charge<.4?7.5:0});animateWizard(target.g,paused?0:dt,{});projectWizard(caster.g,camera);projectWizard(target.g,camera);for(const entry of target.g.userData.palette){entry.material.color.copy(entry.color);if(target.burn>0)entry.material.color.lerp(new T.Color(0xff5436),.4);else if(target.slow>0)entry.material.color.lerp(new T.Color(0x479eff),.4);}
+ caster.g.position.set(caster.x,0,caster.z);target.g.position.set(target.x,0,target.z);target.g.visible=canSee(caster,target,{walls:wards,smoke:magic.fire.smokeVolumes});animateWizard(caster.g,paused?0:dt,{charging:!cast,chargeStage:Math.min(seq.length,Math.floor(elapsed/1.2)+1),cast:cast?Math.max(0,.3-(elapsed-charge)):0,speed:cast&&seq==='qh'&&elapsed-charge<.4?7.5:0});animateWizard(target.g,paused?0:dt,{});projectWizard(caster.g,camera);projectWizard(target.g,camera);for(const entry of target.g.userData.palette){entry.material.color.copy(entry.color);if(target.burn>0)entry.material.color.lerp(new T.Color(0xff5436),.4);else if(target.slow>0)entry.material.color.lerp(new T.Color(0x479eff),.4);}
 
  rings.forEach((m,i)=>{m.visible=!cast;m.quaternion.copy(camera.quaternion);m.scale.setScalar(Math.max(.04,Math.min(1,elapsed/1.2-i)));});status.textContent=paused?'일시정지':!cast?`충전 ${Math.min(seq.length,Math.floor(elapsed/1.2)+1)} / ${seq.length}`:`시전 · 상대 체력 ${Math.round(target.hp)}${target.burn>0?' · 화상':''}${target.slow>0?' · 감속':''}`;renderer.render(scene,camera);
  }raf=requestAnimationFrame(frame);

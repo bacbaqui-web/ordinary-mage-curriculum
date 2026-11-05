@@ -1,8 +1,8 @@
-import {hasFireRecipe} from './fire-spec.mjs';
-import {FireSpells} from './fire-spells.mjs?v=flame3';
+import {hasFireRecipe} from './fire-spec.mjs?v=smoke4';
+import {FireSpells} from './fire-spells.mjs?v=smoke4';
 import * as T from './three.module.js';
-import {compileSpell,spellReach,spellPayload} from './live-spells.mjs?v=flame3';
-import {RUNES} from './combo-design.mjs?v=flame3';
+import {compileSpell,spellReach,spellPayload} from './live-spells.mjs?v=smoke4';
+import {RUNES} from './combo-design.mjs?v=smoke4';
 import {crossesWard,distanceToWard} from './forces.mjs';
 import {segmentCircleHit} from './delivery.mjs';
 export class LiveMagic {

@@ -1,0 +1,4 @@
+import {crossesWard} from './forces.mjs';
+export function segmentBox(a,b,o){let lo=0,hi=1;for(const [axis,size] of [['x','w'],['z','h']]){const d=b[axis]-a[axis],min=o[axis]-o[size]/2,max=o[axis]+o[size]/2;if(Math.abs(d)<1e-9){if(a[axis]<min||a[axis]>max)return false;continue;}let p=(min-a[axis])/d,q=(max-a[axis])/d;if(p>q)[p,q]=[q,p];lo=Math.max(lo,p);hi=Math.min(hi,q);if(lo>hi)return false;}return hi>1e-4&&lo<.9999;}
+export function segmentSmoke(a,b,s){const dx=b.x-a.x,dz=b.z-a.z,length=dx*dx+dz*dz,t=length?Math.max(0,Math.min(1,((s.x-a.x)*dx+(s.z-a.z)*dz)/length)):0;return Math.hypot(a.x+dx*t-s.x,a.z+dz*t-s.z)<s.radius;}
+export function canSee(a,b,{obstacles=[],walls=[],smoke=[]}={}){if(a===b)return true;return !obstacles.some(o=>segmentBox(a,b,o))&&!walls.some(w=>w.hp>0&&w.life>0&&crossesWard(a,b,w,.08))&&!smoke.some(s=>s.life>0&&segmentSmoke(a,b,s));}

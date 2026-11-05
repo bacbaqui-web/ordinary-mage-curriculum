@@ -1,9 +1,10 @@
 import * as T from './three.module.js';
 import {crossesWard} from './forces.mjs';
-import {fireSpec} from './fire-spec.mjs';
+import {fireSpec} from './fire-spec.mjs?v=smoke4';
 // Every visible part is 3D geometry. Soft edge shading makes overlapping volumes read as mist.
 export class FireSpells{
  constructor(api){this.a=api;this.effects=[];}
+ get smokeVolumes(){return this.effects.filter(e=>e.type==='smokescreen'&&e.life>0).map(e=>({x:e.point.x,z:e.point.z,radius:e.radius,life:e.life}));}
  clear(){for(const e of this.effects)this.a.remove(e.mesh);this.effects=[];}
  fogMaterial(color,opacity){return new T.ShaderMaterial({uniforms:{tint:{value:new T.Color(color)},alpha:{value:opacity}},vertexShader:'varying vec3 n;varying vec3 v;void main(){vec4 p=modelViewMatrix*vec4(position,1.0);n=normalize(normalMatrix*normal);v=normalize(-p.xyz);gl_Position=projectionMatrix*p;}',fragmentShader:'uniform vec3 tint;uniform float alpha;varying vec3 n;varying vec3 v;void main(){float edge=pow(abs(dot(normalize(n),normalize(v))),2.5);gl_FragColor=vec4(tint,alpha*edge);}',transparent:true,depthWrite:false});}
  flame(seed,poison=false){
@@ -14,9 +15,9 @@ export class FireSpells{
  const m=new T.Mesh(new T.LatheGeometry(profile,10),material);m.userData.flame=true;return m;
  }
  cloud(s,r,form='cone'){
- const g=new T.Group();if(s.op!=='i')for(let i=0;i<34;i++){const a=form==='cone'?(Math.random()-.5)*2.1:i/34*Math.PI*2,d=form==='ring'?r*(.94+Math.random()*.12):Math.sqrt(Math.random())*r,m=this.flame(i*2.7,s.op==='p'&&i%3===0);m.position.set(Math.cos(a)*d,.05,Math.sin(a)*d);const width=.13+Math.random()*.18;m.scale.set(width,.65+Math.random()*.85,width);g.add(m);}for(let i=0;i<(s.op==='i'?30:7);i++){const a=form==='cone'?(Math.random()-.5)*2.1:Math.random()*Math.PI*2,d=form==='ring'?r*(.88+Math.random()*.15):Math.sqrt(Math.random())*r;
+ const g=new T.Group();if(s.op!=='i')for(let i=0;i<34;i++){const a=form==='cone'?(Math.random()-.5)*2.1:i/34*Math.PI*2,d=form==='ring'?r*(.94+Math.random()*.12):Math.sqrt(Math.random())*r,m=this.flame(i*2.7,s.op==='p'&&i%3===0);m.position.set(Math.cos(a)*d,.05,Math.sin(a)*d);const width=.13+Math.random()*.18;m.scale.set(width,.65+Math.random()*.85,width);g.add(m);}for(let i=0;i<(s.op==='i'?(s.seq==='qi'?75:30):7);i++){const a=form==='cone'?(Math.random()-.5)*2.1:Math.random()*Math.PI*2,d=form==='ring'?r*(.88+Math.random()*.15):Math.sqrt(Math.random())*r;
  const color=s.op==='i'?0x9b9fa5:s.op==='p'&&i%3===0?0x62ad32:0xb80e08;
- const m=new T.Mesh(new T.SphereGeometry(.35+Math.random()*.4,10,7),this.fogMaterial(color,s.op==='i'?.22:.08));m.position.set(Math.cos(a)*d,.35+Math.random()*(form==='ring'?1.1:.5),Math.sin(a)*d);m.scale.set(1.25,.85,1.25);m.userData.base=m.position.clone();m.userData.opacity=s.op==='i'?.22:.08;g.add(m);}
+ const m=new T.Mesh(new T.SphereGeometry(s.op==='i'&&s.seq==='qi'?.85+Math.random()*.6:.35+Math.random()*.4,10,7),this.fogMaterial(color,s.op==='i'?(s.seq==='qi'?.78:.22):.08));m.position.set(Math.cos(a)*d,s.op==='i'?.65+Math.random()*1.3:.35+Math.random()*(form==='ring'?1.1:.5),Math.sin(a)*d);m.scale.set(1.25,.85,1.25);m.userData.base=m.position.clone();m.userData.opacity=s.op==='i'?(s.seq==='qi'?.78:.22):.08;g.add(m);}
  if(s.op!=='i')for(let i=0;i<12;i++){const a=form==='cone'?(Math.random()-.5)*2.1:Math.random()*Math.PI*2,d=form==='ring'?r:Math.sqrt(Math.random())*r,smoke=i%2===0;const m=new T.Mesh(new T.SphereGeometry(.22+Math.random()*.3,10,7),this.fogMaterial(smoke?0x32302e:0x100b09,smoke?.12:.3));m.position.set(Math.cos(a)*d,smoke?.65:.12,Math.sin(a)*d);m.scale.set(1.2,smoke?1:.35,1.2);m.userData.base=m.position.clone();m.userData.opacity=smoke?.12:.3;m.userData.smoke=smoke;m.userData.soot=!smoke;g.add(m);}
  this.a.scene.add(g);return g;}
  add(type,mesh,s,owner,point,dir,life,extra={}){mesh.position.set(point.x,.04,point.z);const e={type,mesh,s,owner,point:{...point},dir:dir.clone(),life,max:life,age:0,tick:0,...extra};this.effects.push(e);return e;}
@@ -26,7 +27,8 @@ export class FireSpells{
  damage(e,point,radius,{cone=false,ring=false,once=false}={}){for(const v of this.a.targets(e.owner)){const dx=v.x-point.x,dz=v.z-point.z,d=Math.hypot(dx,dz);if(d>radius+.35||(ring&&d<radius-.6)||(!ring&&!this.a.clearPath(point,v)))continue;if(cone&&d>.01&&(dx*e.dir.x+dz*e.dir.z)/d<.5)continue;if(once&&e.hit.has(v))continue;
  if(this.a.hit(v,e.s.damage,e.dir,0,e.owner)){this.a.applyPayload(v,e.s,e.owner);if(once)e.hit.add(v);}}}
  cast(seq,power,owner,dir,target){if(this.effects.length>55)return;const s=fireSpec(seq,power),origin={x:owner.x,z:owner.z},delta=new T.Vector3(target.x-owner.x,0,target.z-owner.z);if(delta.length()>s.range)delta.setLength(s.range);const point={x:owner.x+delta.x,z:owner.z+delta.z};let e;
- if(['q','i','d','p'].includes(s.op)){const mesh=this.cloud(s,s.radius);mesh.rotation.y=-Math.atan2(dir.z,dir.x);e=this.add('cone',mesh,s,owner,origin,dir,s.life,{radius:s.radius});this.damage(e,origin,s.radius,{cone:true});this.embers(e,55);return;}
+ if(s.op==='i'){const p={x:owner.x+dir.x*3,z:owner.z+dir.z*3},mesh=this.cloud(s,s.radius,'circle');this.add('smokescreen',mesh,s,owner,p,dir,s.life,{radius:s.radius});return;}
+ if(['q','d','p'].includes(s.op)){const mesh=this.cloud(s,s.radius);mesh.rotation.y=-Math.atan2(dir.z,dir.x);e=this.add('cone',mesh,s,owner,origin,dir,s.life,{radius:s.radius});this.damage(e,origin,s.radius,{cone:true});this.embers(e,55);return;}
  if(s.op==='l'){const mesh=new T.Group();this.a.scene.add(mesh);e=this.add('lightning',mesh,s,owner,point,dir,.42,{radius:1.5});const pts=Array.from({length:10},(_,i)=>new T.Vector3(i===9?0:(Math.random()-.5)*.65,6-i*6/9,i===9?0:(Math.random()-.5)*.4));for(let i=0;i<9;i++){this.segment(mesh,pts[i],pts[i+1],.065,0xff241a);this.segment(mesh,pts[i],pts[i+1],.022,0xffb45a);if(i===3||i===5)this.segment(mesh,pts[i],pts[i].clone().add(new T.Vector3(.65,-.65,.2)),.035,0xff492a);}this.damage(e,point,1.5);this.residue(s,owner,point,dir);return;}
  if(s.op==='w'||s.op==='s'||s.op==='h'){
  let mesh;if(s.op==='s'){const shape=new T.Shape();shape.absarc(0,0,1.5,-1.1,1.1,false);shape.absarc(-.32,0,1.28,1.1,-1.1,true);shape.closePath();mesh=new T.Mesh(new T.ExtrudeGeometry(shape,{depth:.13,bevelEnabled:false,curveSegments:20}),new T.MeshBasicMaterial({color:0xff3725,transparent:true,opacity:.9}));mesh.rotation.x=-Math.PI/2;mesh.rotation.z=-Math.atan2(dir.z,dir.x);this.a.scene.add(mesh);}
@@ -45,7 +47,7 @@ export class FireSpells{
  this.damage(e,e.point,e.radius,{once:true});if(e.hit.size&&e.s.op==='w'){done=true;break;}}
  e.mesh.position.set(e.point.x+(e.type==='punch'?e.dir.x*.7:0),1,e.point.z+(e.type==='punch'?e.dir.z*.7:0));done||=e.distance>=e.travel;this.embers({...e,radius:e.radius},4);}
  else{const fade=Math.min(1,e.life/.5);for(const m of e.mesh.children){if(m.userData.flame){m.material.uniforms.time.value=e.age;m.material.uniforms.alpha.value=Math.min(1,e.life/.18);continue;}if(m.material?.uniforms){m.material.uniforms.alpha.value=(m.userData.opacity||.2)*fade;m.position.y=m.userData.base.y+(m.userData.soot?0:Math.sin(e.age*2+m.id)*.12)+(e.type==='smoke'||m.userData.smoke?(e.age%1.6)*.5:0);const growth=1+(e.age%1.6)*.16;m.scale.set(growth,m.userData.soot?.3:growth,growth);}}if(e.type==='vortex')e.mesh.rotation.y-=dt*2.5;
- if(e.tick<=0){e.tick=.22;if(['wall','field','vortex'].includes(e.type))this.damage(e,e.point,e.radius,{ring:e.type==='wall'});if(e.type==='vortex')for(const v of this.a.targets(e.owner)){const dx=e.point.x-v.x,dz=e.point.z-v.z,d=Math.hypot(dx,dz);if(d<e.radius+.35&&d>.3&&this.a.clearPath(e.point,v))v.motion.start(dx,dz,Math.min(.65,d-.2));}if(e.type!=='lightning'&&e.type!=='smoke')this.embers(e,e.type==='scorch'?3:10);}
+ if(e.tick<=0){e.tick=.22;if(['wall','field','vortex'].includes(e.type))this.damage(e,e.point,e.radius,{ring:e.type==='wall'});if(e.type==='vortex')for(const v of this.a.targets(e.owner)){const dx=e.point.x-v.x,dz=e.point.z-v.z,d=Math.hypot(dx,dz);if(d<e.radius+.35&&d>.3&&this.a.clearPath(e.point,v))v.motion.start(dx,dz,Math.min(.65,d-.2));}if(e.type!=='lightning'&&e.type!=='smoke'&&e.type!=='smokescreen')this.embers(e,e.type==='scorch'?3:10);}
  if(e.type==='scorch'){e.mesh.material.opacity=.65*Math.min(1,e.life/2);for(const m of e.mesh.children){m.scale.y=.65+Math.sin(e.age*12+m.id)*.3;m.material.opacity=Math.min(.8,e.life/3);}}if(e.type==='wall'&&!this.a.wards.some(w=>w.fireRing===e&&w.life>0&&w.hp>0))done=true;}
  if(done){this.a.remove(e.mesh);this.effects.splice(i,1);}
  }}
