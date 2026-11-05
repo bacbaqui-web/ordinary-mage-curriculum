@@ -14,3 +14,9 @@ pose.Head[1]+=.25;publish();assert.ok(Math.abs(puppet.lastPositions.Head.y-pose.
 project.actions[0].binding='마법 시전';puppet.magic.press();publish();assert.ok(Math.abs(puppet.lastPositions.Head.y-pose.Head[1])<1e-8);
 data='{invalid';listeners.storage({key:'ordinary-mage-pose-editor-v1'});assert.doesNotThrow(()=>puppet.render(camera));
 console.log('PASS: saved pose renders in game puppet, live storage updates, stable binding, magic override, invalid data fallback');
+puppet.magic.reset();
+const makeWalk=(y,updatedAt=0)=>({name:'기본 걷기',frames:12,fps:12,updatedAt,keys:[{frame:0,ease:'linear',pose:{...structuredClone(pose),Head:[0,y,0]}},{frame:6,ease:'linear',pose:{...structuredClone(pose),Head:[0,y+.6,0]}}]});
+project.actions=[makeWalk(1),makeWalk(2)];puppet.time=0;publish();assert.equal(puppet.lastPositions.Head.y,2,'imported walking overrides earlier default');
+puppet.update(.25);puppet.render(camera);assert.ok(Math.abs(puppet.lastPositions.Head.y-2.3)<1e-6,'saved walking advances while moving');
+project.actions[0].updatedAt=100;puppet.time=0;publish();assert.equal(puppet.lastPositions.Head.y,1,'most recently edited walking wins even if earlier in list');
+console.log('PASS: imported duplicate walking, moving playback and most recently saved selection');
