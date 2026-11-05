@@ -27,11 +27,11 @@ for(const a of Object.keys(RUNES))for(const b of Object.keys(RUNES))for(const d 
  const config={q:a,w:b,e:d};if(!validLoadout(config))continue;
  for(const x of KEYS)for(const y of KEYS)for(const z of KEYS){const result=resolveSpell({parts:[x,y,z],progress:1,tap:false},config);assert.equal(result.sequence,config[x]+config[y]+config[z]);assert.ok(result.name&&!result.name.includes('undefined'));assert.equal(result.keys,x+y+z);const spec=composition(result.sequence,result.power);assert.ok(Number.isFinite(spec.damage));assert.ok(['shield','field','cone','projectile'].includes(spec.shape));checked++;}
 }
-assert.equal(checked,3240);
+assert.equal(checked,5670);
 assert.equal(resolveSpell({parts:['q'],progress:0,tap:true},{q:'i',w:'l',e:'g'}).name,'빙결 분사');
 assert.notEqual(spellName('ig',NAMES),spellName('gi',NAMES));
 assert.ok(composition('i').slow>0);assert.ok(composition('g').force<0);assert.ok(composition('l').speed>composition('i').speed);
-console.log('PASS: distinct rune selection, slot swap, 120 loadouts / 3240 mapped combos, new spell roles');
+console.log('PASS: distinct rune selection, slot swap, 210 loadouts / 5670 mapped combos, new spell roles');
 
 const {elementalSpec,inElementCone,lightningPoint}=await import('./dist/elements.mjs');
 for(const k of 'qil'){let previous=0;for(let n=1;n<=3;n++){const s=elementalSpec(k.repeat(n));assert.ok(s.range>previous);previous=s.range;}}

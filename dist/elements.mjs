@@ -1,4 +1,4 @@
-import {fallsFromAbove,overheadDelivery,launchesOrb,orbTuning} from './delivery.mjs?v=orbs1';
+import {fallsFromAbove,overheadDelivery,launchesOrb,orbTuning} from './delivery.mjs?v=zones1';
 // First rune determines delivery; completed rings extend its reach.
 export function elementalSpec(seq,power=1){
  const kind=seq[0];if(!'qil'.includes(kind))return null;

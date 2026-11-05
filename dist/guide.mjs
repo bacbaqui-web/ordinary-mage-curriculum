@@ -1,7 +1,9 @@
-import {forceDescription} from './forces.mjs?v=orbs1';
-import {elementalDescription} from './elements.mjs?v=orbs1';
-import {composition} from './loadout.mjs?v=orbs1';
+import {groundDescription} from './ground.mjs?v=zones1';
+import {forceDescription} from './forces.mjs?v=zones1';
+import {elementalDescription} from './elements.mjs?v=zones1';
+import {composition} from './loadout.mjs?v=zones1';
 export function describeSpell(seq){
+ const ground=groundDescription(seq);if(ground)return ground;
  const force=forceDescription(seq);if(force)return force;
  const elemental=elementalDescription(seq);if(elemental)return elemental;
  if(/[ilg]/.test(seq)){

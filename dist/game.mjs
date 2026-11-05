@@ -1,25 +1,28 @@
-import {PixelVFX} from './pixel-vfx.mjs?v=pvfx1';
-import {advanceMovingWard} from './moving-ward.mjs?v=orbs1';
-import {FALL_SECONDS,overheadDelivery,segmentCircleHit} from './delivery.mjs?v=orbs1';
-import {createProgress,awardKill,requiredXP,learn,mastery,MAX_LEVEL,MAX_RANK} from './progression.mjs?v=orbs1';
-import {ForcedMotion} from './motion.mjs?v=orbs1';
-import {LowPolyVFX} from './lowpoly-vfx.mjs?v=orbs1';
-import {chooseLoadout,choosePlan,chooseLearnedPlan,spendEnemyPoints,OpponentCharge} from './opponent.mjs?v=orbs1';
-import {forceSpec,wardSpec,displacement,crossesWard,distanceToWard} from './forces.mjs?v=orbs1';
-import {elementalSpec,inElementCone,lightningPoint,lightningHits} from './elements.mjs?v=orbs1';
-import {describeSpell} from './guide.mjs?v=orbs1';
+import {groundSpec,groundPoint,inGround,advanceGround} from './ground.mjs?v=zones1';
+import {projectileAsset,groundAsset} from './effect-map.mjs?v=zones1';
+import {PixelVFX} from './pixel-vfx.mjs?v=zones1';
+import {advanceMovingWard} from './moving-ward.mjs?v=zones1';
+import {FALL_SECONDS,overheadDelivery,segmentCircleHit} from './delivery.mjs?v=zones1';
+import {createProgress,awardKill,requiredXP,learn,mastery,MAX_LEVEL,MAX_RANK} from './progression.mjs?v=zones1';
+import {ForcedMotion} from './motion.mjs?v=zones1';
+import {SpriteSpells} from './sprite-spells.mjs?v=zones1';
+import {chooseLoadout,choosePlan,chooseLearnedPlan,spendEnemyPoints,OpponentCharge} from './opponent.mjs?v=zones1';
+import {forceSpec,wardSpec,displacement,crossesWard,distanceToWard} from './forces.mjs?v=zones1';
+import {elementalSpec,inElementCone,lightningPoint,lightningHits} from './elements.mjs?v=zones1';
+import {describeSpell} from './guide.mjs?v=zones1';
 import * as T from './three.module.js';
-import {Charge,ELEMENTS,NAMES,resolveSpell} from './spells.mjs?v=orbs1';
-import {Roll,ROLL_DURATION,incomingThreat,enemyChargeProgress} from './combat.mjs?v=orbs1';
-import {RUNES,KEYS,DEFAULT_LOADOUT,validLoadout,assignRune,mapSequence,spellName,composition} from './loadout.mjs?v=orbs1';
+import {Charge,ELEMENTS,NAMES,resolveSpell} from './spells.mjs?v=zones1';
+import {Roll,ROLL_DURATION,incomingThreat,enemyChargeProgress} from './combat.mjs?v=zones1';
+import {RUNES,KEYS,DEFAULT_LOADOUT,validLoadout,assignRune,mapSequence,spellName,composition} from './loadout.mjs?v=zones1';
 let loadout={...DEFAULT_LOADOUT};try{const saved=JSON.parse(localStorage.getItem('mage-loadout-v1'));if(validLoadout(saved))loadout=saved}catch{}
 let progress=createProgress(loadout),monsters=[],spawnTimer=0,monsterId=0;
 let draft={...loadout},activeSlot='q',selectionReturn=false;
 const $=id=>document.getElementById(id),canvas=$('arena');
 const renderer=new T.WebGLRenderer({canvas,antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFSoftShadowMap;renderer.outputColorSpace=T.SRGBColorSpace;renderer.setClearColor(0x2c3940);
 const scene=new T.Scene();scene.fog=new T.Fog(0x586367,55,100);const camera=new T.PerspectiveCamera(38,1,.1,100);camera.position.set(18,23,22);camera.lookAt(0,0,0);
-const spellVfx=new LowPolyVFX(scene);
 const pixelVfx=new PixelVFX(scene);
+const spellVfx=new SpriteSpells(pixelVfx);
+pixelVfx.ready.then(()=>{if(pixelVfx.failed)flash('일부 스킬 효과를 불러오지 못했습니다. 페이지를 새로고침해 주세요.');});
 scene.add(new T.HemisphereLight(0xe2efff,0x5a614c,2.3));const sun=new T.DirectionalLight(0xffe4ba,3.2);sun.position.set(-8,18,9);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-30,right:30,top:30,bottom:-30});sun.shadow.normalBias=.04;scene.add(sun);
 const mat=(color,extra={})=>new T.MeshStandardMaterial({color,roughness:.87,flatShading:true,...extra});const stoneMats=[mat(0x8a928a),mat(0x93988f),mat(0x858d86),mat(0x9a9e94)];
 function mesh(geo,material,x=0,y=0,z=0,parent=scene){const m=new T.Mesh(geo,material);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m}
@@ -48,7 +51,7 @@ const attackTell=new T.Mesh(new T.BufferGeometry(),new T.MeshBasicMaterial({colo
 const tellBorder=new T.Line(new T.BufferGeometry(),new T.LineBasicMaterial({color:0xffd293,transparent:true,opacity:.95,depthTest:false}));tellBorder.position.y=.15;tellBorder.visible=false;scene.add(tellBorder);
 const playerTell=attackTell.clone();playerTell.geometry=new T.BufferGeometry();playerTell.material=attackTell.material.clone();scene.add(playerTell);
 const playerBorder=tellBorder.clone();playerBorder.geometry=new T.BufferGeometry();playerBorder.material=tellBorder.material.clone();scene.add(playerBorder);
-const wardGhost=mesh(new T.BoxGeometry(1,2.3,.12),new T.MeshBasicMaterial({color:0xa8dcff,transparent:true,opacity:.16,depthWrite:false}),0,1.2,0);wardGhost.castShadow=false;wardGhost.visible=false;
+const wardGhost=mesh(new T.PlaneGeometry(1,2.3),new T.MeshBasicMaterial({color:0xa8dcff,transparent:true,opacity:.16,depthWrite:false}),0,1.2,0);wardGhost.castShadow=false;wardGhost.visible=false;
 wardGhost.add(new T.LineSegments(new T.EdgesGeometry(wardGhost.geometry),new T.LineBasicMaterial({color:0xd4f1ff,transparent:true,opacity:.8})));
 
 
@@ -56,17 +59,17 @@ wardGhost.add(new T.LineSegments(new T.EdgesGeometry(wardGhost.geometry),new T.L
 const marker=mesh(new T.RingGeometry(.23,.29,24),new T.MeshBasicMaterial({color:0xc2e3c3,transparent:true,opacity:.75,side:T.DoubleSide}),0,.07,0);marker.rotation.x=-Math.PI/2;marker.visible=false;marker.castShadow=false;
 function tint(k){return new T.Color(ELEMENTS[k]?.color||'#9adfff')}
 function flash(text){$('toast').textContent=text;$('toast').classList.add('show');toastTimer=2}
-function ring(x,z,color,r=1,life=.4){const m=mesh(new T.RingGeometry(.92,1,40),new T.MeshBasicMaterial({color,transparent:true,opacity:.8,side:T.DoubleSide}),x,.12,z);m.rotation.x=-Math.PI/2;m.castShadow=false;fx.push({m,life,max:life,r,ring:true});}
-function spark(x,z,color,count=10){for(let i=0;i<count;i++){const m=mesh(new T.IcosahedronGeometry(.07+rand()*.07,0),new T.MeshBasicMaterial({color}),x,.65,z);m.castShadow=false;fx.push({m,life:.25+rand()*.35,max:.6,v:new T.Vector3((rand()-.5)*5,rand()*4,(rand()-.5)*5)});}}
+function ring(x,z,color,r=1,life=.4){pixelVfx.play('magic-circle',x,z,{width:r*2,color,duration:life});}
+function spark(x,z,color,count=10){pixelVfx.play('hit-spark',x,z,{width:1.1,color,y:.7});}
 function remove(m){scene.remove(m);m.traverse(o=>{o.geometry?.dispose();if(Array.isArray(o.material))o.material.forEach(x=>x.dispose());else o.material?.dispose()})}
 function collides(x,z,r=.45){return Math.abs(x)>23.6||Math.abs(z)>21.6||obstacles.some(o=>Math.abs(x-o.x)<o.w/2+r&&Math.abs(z-o.z)<o.h/2+r)}
 function wallBlocks(from,to){return wards.some(w=>w.hp>0&&w.life>0&&crossesWard(from,to,w,.5)&&distanceToWard(to,w)<=distanceToWard(from,w)+.001);}
 function move(a,dx,dz){if(!collides(a.x+dx,a.z)&&!wallBlocks(a,{x:a.x+dx,z:a.z}))a.x+=dx;if(!collides(a.x,a.z+dz)&&!wallBlocks(a,{x:a.x,z:a.z+dz}))a.z+=dz}
 function hit(a,damage,dir,force=0,source=null){if(finished||a.dead||(a===player&&roll.invulnerable))return false;if(a.monster&&(source===player||source===enemy)){a.aggro=true;a.aggroTarget=source;}if(a===enemy&&source===player)enemy.retaliate=6;let block=Math.min(a.shield,damage);a.shield-=block;damage-=block;if(block){pixelVfx.play('parry',a.x,a.z,{width:1.8,y:1});ring(a.x,a.z,0xafdfff,.8,.2);if(a.shieldHeat){const other=a===player?enemy:player;if(Math.hypot(other.x-a.x,other.z-a.z)<3)other.hp=Math.max(0,other.hp-block*.32)}}a.hp=Math.max(0,a.hp-damage);if(damage){pixelVfx.play('hit-spark',a.x,a.z,{width:1.1,y:1});spark(a.x,a.z,a===player?0xffca8f:0xb8ddff,5);}if(force)a.motion.start(dir.x,dir.z,force);if(a===player&&damage)flash('피격 −'+Math.round(damage));if(a.hp<=0){if(a.monster)killMonster(a,source);else endRound(a===enemy)};return true}
 function castOrb(spell,dir,caster){const spec=elementalSpec(spell.sequence,spell.power),color=RUNES[spec.kind].color;
- const m=mesh(new T.IcosahedronGeometry(spec.radius,spec.kind==='i'?0:1),new T.MeshBasicMaterial({color}),caster.x,.95,caster.z);m.castShadow=false;
- const shell=new T.Mesh(new T.IcosahedronGeometry(spec.radius*1.25,1),new T.MeshBasicMaterial({color,wireframe:true,transparent:true,opacity:.45}));m.add(shell);
- if(spec.kind==='l')for(let i=0;i<3;i++){const band=new T.Mesh(new T.TorusGeometry(spec.radius*1.2,.025,4,16),new T.MeshBasicMaterial({color:0xfff4bf}));band.rotation.set(i*Math.PI/3,i*Math.PI/2,0);m.add(band);}
+ const m=new T.Object3D();m.position.set(caster.x,.95,caster.z);scene.add(m);
+ const screenStart=m.position.clone().project(camera),screenEnd=m.position.clone().add(dir).project(camera),rotation=Math.atan2(screenEnd.y-screenStart.y,screenEnd.x-screenStart.x);
+ pixelVfx.play(projectileAsset(spec.kind),caster.x,caster.z,{width:Math.max(1.4,spec.radius*4),y:.95,duration:spec.range/spec.speed+1,loop:true,rotation,follow:()=>m.parent?m.position:null});
  shots.push({m,owner:caster,dir:dir.clone(),spec,color,distance:0,trail:0});if(spec.shield){caster.shield=Math.max(caster.shield,spec.shield);caster.shieldTime=2;}
 }
 function explodeOrb(shot){const {spec,m,owner,color}=shot,point=m.position;pixelVfx.impact(spec.kind,point.x,point.z,spec.blast);spellVfx.pulse(point.x,point.z,spec.blast,color,.45);spark(point.x,point.z,color,12+Math.round(spec.radius*14));
@@ -84,11 +87,11 @@ function updateOrbs(dt){for(let i=shots.length-1;i>=0;i--){const s=shots[i],trav
 }}
 function area(a,x,z,r,damage,color,force=0,dir=null,payload=null){ring(x,z,color,r,.45);for(const target of targets(a)){const delta=new T.Vector3(target.x-x,0,target.z-z),dist=delta.length();if(dist<r+.4){delta.normalize();if(!dir||delta.dot(dir)>.3){if(hit(target,damage,delta,force,a))applyPayload(target,payload,a)}}}}
 function field(a,x,z,r,damage,color,life=3,force=0,payload=null){const m=mesh(new T.CircleGeometry(r,48),new T.MeshBasicMaterial({color,transparent:true,opacity:.16,side:T.DoubleSide}),x,.085,z);m.rotation.x=-Math.PI/2;m.castShadow=false;fields.push({m,owner:a,x,z,r,damage,color,life,tick:.1,force,payload});ring(x,z,color,r,.6)}
-const shields=new Map();for(const a of[player,enemy]){const m=mesh(new T.SphereGeometry(.85,20,12),new T.MeshBasicMaterial({color:0x9edbff,wireframe:true,transparent:true,opacity:.22}),a.x,1,a.z);m.visible=false;m.castShadow=false;shields.set(a,m)}
+const shields=new Map();for(const a of[player,enemy]){const m=new T.Object3D();m.userData.active=false;shields.set(a,m);}
 function applyPayload(a,payload,source=null){if(!payload||finished||a.dead)return;if(payload.slow)a.slow=Math.max(a.slow||0,payload.slow);if(payload.burn){if(!(a.burn>0))a.burnTick=.5;a.burn=Math.max(a.burn||0,payload.burn);a.burnOwner=source;a.burnDamage=payload.burnDamage||2;}if(payload.echo&&!a.echo)a.echo={time:.25,damage:payload.echo,owner:source};}
 function updateStatuses(dt){for(const a of[player,enemy,...monsters.filter(m=>!m.dead)]){a.slow=Math.max(0,(a.slow||0)-dt);if(a.burn>0){a.burn-=dt;a.burnTick=(a.burnTick||0)-dt;if(a.burnTick<=0){a.burnTick=.5;hit(a,a.burnDamage||2,new T.Vector3(),0,a.burnOwner);spark(a.x,a.z,0xff9c45,3)}}if(a.echo){a.echo.time-=dt;if(a.echo.time<=0){const {damage,owner}=a.echo;a.echo=null;hit(a,damage,new T.Vector3(),0,owner);ring(a.x,a.z,0xf3d56b,.75,.25)}}}}
-function elementalBurst(spec,dir,caster){spellVfx.burst(spec,dir,caster,collides);for(const distance of [.8,1.6,2.4]){if(distance>spec.range)break;const x=caster.x+dir.x*distance,z=caster.z+dir.z*distance;if(!clearPath(caster,{x,z}))break;pixelVfx.impact(spec.kind,x,z,.75);}}
-function boltEffect(x,z,spec){spellVfx.bolt(x,z,spec);pixelVfx.play('lightning-strike',x,z,{width:Math.min(4,spec.height*.75)});}
+function elementalBurst(spec,dir,caster){spellVfx.burst(spec,dir,caster,collides);}
+function boltEffect(x,z,spec){spellVfx.bolt(x,z,spec);}
 function targets(caster){return [caster===player?enemy:player,...monsters.filter(m=>!m.dead)];}
 function chooseStrikePoint(caster,spec){
  const victims=targets(caster),inside=victims.filter(v=>Math.hypot(v.x-caster.x,v.z-caster.z)<=spec.range),reference=caster===player?aim:(enemyTarget||player);
@@ -110,7 +113,7 @@ function castElemental(s,dir,caster){const victims=targets(caster),spec=elementa
  if(spec.shield){caster.shield=Math.max(caster.shield,spec.shield);caster.shieldTime=2;}
 }
 function clearPath(a,b){const d=new T.Vector3(b.x-a.x,0,b.z-a.z),length=d.length();d.normalize();for(let t=.2;t<length;t+=.2)if(collides(a.x+d.x*t,a.z+d.z*t,.02))return false;return true;}
-function castForce(s,dir,caster){const spec=forceSpec(s.sequence);spec.damage*=s.mastery||1;const color=spec.force<0?0xc49ff1:0xb4e676;spellVfx.force(spec,dir,caster);pixelVfx.play(spec.force<0?'void-implosion':'wind-gust',caster.x+dir.x*1.2,caster.z+dir.z*1.2,{width:2.4,y:.4});
+function castForce(s,dir,caster){const spec=forceSpec(s.sequence);spec.damage*=s.mastery||1;const color=spec.force<0?0xc49ff1:0xb4e676;spellVfx.force(spec,dir,caster);
  const m=mesh(new T.RingGeometry(.94,1,14,1,-spec.halfAngle,spec.halfAngle*2),new T.MeshBasicMaterial({color,side:T.DoubleSide,transparent:true,opacity:.8}),caster.x,.18,caster.z);m.rotation.set(-Math.PI/2,0,Math.atan2(-dir.z,dir.x));m.castShadow=false;
  waves.push({owner:caster,m,x:caster.x,z:caster.z,dir:dir.clone(),spec,radius:0,hit:new Set()});
  if(spec.shield){caster.shield=Math.max(caster.shield,spec.shield);caster.shieldTime=2;}
@@ -121,14 +124,24 @@ function wardPlacement(caster,dir,aimPoint,spec){const offset=aimPoint.clone().s
  for(let i=0;i<30&&[player,enemy,...monsters.filter(m=>!m.dead)].some(a=>distanceToWard(a,wall)<.55);i++){point.addScaledVector(d,-.2);wall.x=point.x;wall.z=point.z;}
  return point;
 }
+function castGround(spell,caster,target){
+ const spec=groundSpec(spell.sequence),point=groundPoint(caster,target,spec.range,collides),color=RUNES[spec.kind].color;
+ spec.damage*=spell.mastery||1;
+ for(const f of fields.filter(f=>f.owner===caster&&f.ground))remove(f.m);
+ fields=fields.filter(f=>f.owner!==caster||!f.ground);
+ const m=mesh(new T.CircleGeometry(spec.radius,64),new T.MeshBasicMaterial({color,transparent:true,opacity:.2,depthWrite:false,side:T.DoubleSide}),point.x,.09,point.z);m.rotation.x=-Math.PI/2;m.castShadow=false;
+ const border=new T.Mesh(new T.RingGeometry(spec.radius-.04,spec.radius,64),new T.MeshBasicMaterial({color,transparent:true,opacity:.85,depthWrite:false,side:T.DoubleSide}));border.position.z=.015;m.add(border);
+ const f={ground:true,owner:caster,m,x:point.x,z:point.z,r:spec.radius,life:spec.duration,tick:0,spec};fields.push(f);
+ pixelVfx.play(groundAsset(spec.kind),point.x,point.z,{width:spec.radius*2,duration:spec.duration,loop:true,follow:()=>m.parent?{x:point.x,y:.12,z:point.z}:null});
+ if(caster===player)flash('장판 설치 · 반경 '+spec.radius.toFixed(1)+'m · '+spec.duration+'초');
+}
+function tickGround(f){for(const victim of targets(f.owner)){if(!inGround(f,victim,f.r)||!clearPath(f,victim))continue;const d=new T.Vector3(victim.x-f.x,0,victim.z-f.z),distance=d.length();d.normalize();if(hit(victim,f.spec.damage,d,0,f.owner)){applyPayload(victim,f.spec,f.owner);if(f.spec.force)victim.motion.start(d.x,d.z,displacement(f.spec.force,distance));if(f.spec.shock)pixelVfx.play('static-burst',victim.x,victim.z,{width:1.2,y:.7});}}}
 function castWard(s,dir,caster,aimPoint){const spec=wardSpec(s.sequence);spec.hp=Math.round(spec.hp*(s.mastery||1));const point=wardPlacement(caster,dir,spec.moving?new T.Vector3(caster.x,0,caster.z).addScaledVector(dir,1.2):aimPoint,spec);
  // One placed wall per caster; replacing it prevents an unlimited wall stack.
  for(const w of wards.filter(w=>w.owner===caster))remove(w.m);wards=wards.filter(w=>w.owner!==caster);
- const m=mesh(new T.BoxGeometry(spec.width,2.3,.12),new T.MeshBasicMaterial({color:0x8ed8ff,transparent:true,opacity:.45,side:T.DoubleSide}),point.x,1.2,point.z);m.rotation.y=Math.atan2(dir.x,dir.z);m.castShadow=false;
- const frame=new T.LineSegments(new T.EdgesGeometry(m.geometry),new T.LineBasicMaterial({color:0xd9f3ff,transparent:true,opacity:.9}));m.add(frame);spellVfx.ward(m,spec.width);pixelVfx.play('shield-bubble',m.position.x,m.position.z,{width:spec.width,duration:.7});
- const ingredients=spec.colors.filter(k=>k!=='e');if(ingredients.length&&!spec.moving)m.material.color.set(RUNES[ingredients[0]].color);
- ingredients.forEach((k,i)=>{const strip=mesh(new T.BoxGeometry(spec.width,.13,.18),new T.MeshBasicMaterial({color:RUNES[k].color}),0,-.7+i*.35,0,m);strip.castShadow=false;});
- wards.push({owner:caster,m,x:point.x,z:point.z,nx:dir.x,nz:dir.z,width:spec.width,hp:spec.hp,maxHp:spec.hp,life:spec.duration,spec,travelled:0,speed:spec.speed||0,effectCooldown:0});ring(point.x,point.z,0xa8dcff,1,.35);if(caster===player)flash('장막 설치 · 내구도 '+spec.hp+' · '+spec.duration+'초');
+ const m=new T.Object3D();m.position.set(point.x,1.2,point.z);scene.add(m);
+ pixelVfx.play('ice-wall',point.x,point.z,{width:spec.width*1.25,duration:spec.duration,planeAngle:Math.atan2(dir.x,dir.z),holdFrame:10,follow:()=>m.parent?{x:m.position.x,y:.12,z:m.position.z}:null});
+ wards.push({owner:caster,m,x:point.x,z:point.z,nx:dir.x,nz:dir.z,width:spec.width,hp:spec.hp,maxHp:spec.hp,life:spec.duration,spec,travelled:0,speed:spec.speed||0,effectCooldown:0});ring(point.x,point.z,0xa8dcff,1,.35);if(caster===player)flash('장벽 설치 · 내구도 '+spec.hp+' · '+spec.duration+'초');
 }
 function updateForces(dt){
  for(let i=waves.length-1;i>=0;i--){const w=waves[i],s=w.spec,old=w.radius;w.radius=Math.min(s.range,w.radius+s.speed*dt);w.m.scale.setScalar(Math.max(.1,s.force<0?s.range-w.radius+.1:w.radius));w.m.material.opacity=.8*(1-w.radius/s.range)+.15;
@@ -140,9 +153,9 @@ function updateForces(dt){
  if(w.hp>0&&w.life>0&&w.effectCooldown<=0){w.effectCooldown=.8;for(const victim of targets(w.owner).filter(v=>distanceToWard(v,w)<1)){const payload=w.spec;
  const side=(victim.x-w.x)*w.nx+(victim.z-w.z)*w.nz>=0?1:-1,away=new T.Vector3(w.nx*side,0,w.nz*side);
  if(payload.burn||payload.slow||payload.shock||payload.push||payload.pull){if(hit(victim,payload.shock,away,0,w.owner)){applyPayload(victim,payload,w.owner);if(payload.push)victim.motion.start(away.x,away.z,payload.push);else if(payload.pull)victim.motion.start(away.x,away.z,-payload.pull);}if(payload.shock)boltEffect(victim.x,victim.z,elementalSpec('l'));else ring(victim.x,victim.z,payload.burn?0xff9c45:payload.slow?0x72dce8:0xb4e676,.7,.3);}}
- }w.m.material.opacity=.15+.35*w.hp/w.maxHp;if(w.life<=0||w.hp<=0){spellVfx.shatter(w.x,w.z,w.width);pixelVfx.play('frost-nova',w.x,w.z,{width:w.width});remove(w.m);wards.splice(i,1);}}
+ }if(w.life<=0||w.hp<=0){spellVfx.shatter(w.x,w.z,w.width);remove(w.m);wards.splice(i,1);}}
 }
-function dispatchSpell(s,caster,dir,aimPoint){pixelVfx.play('magic-circle',caster.x,caster.z,{width:1.8,color:RUNES[s.sequence[0]].color,duration:.55});if((elementalSpec(s.sequence)||forceSpec(s.sequence))?.falling)castFalling(s,dir,caster);else if(elementalSpec(s.sequence)?.projectile)castOrb(s,dir,caster);else if(elementalSpec(s.sequence))castElemental(s,dir,caster);else if(forceSpec(s.sequence))castForce(s,dir,caster);else castWard(s,dir,caster,aimPoint);}
+function dispatchSpell(s,caster,dir,aimPoint){pixelVfx.play('magic-circle',caster.x,caster.z,{width:1.8,color:RUNES[s.sequence[0]].color,duration:.55});if(groundSpec(s.sequence))castGround(s,caster,aimPoint);else if((elementalSpec(s.sequence)||forceSpec(s.sequence))?.falling)castFalling(s,dir,caster);else if(elementalSpec(s.sequence)?.projectile)castOrb(s,dir,caster);else if(elementalSpec(s.sequence))castElemental(s,dir,caster);else if(forceSpec(s.sequence))castForce(s,dir,caster);else castWard(s,dir,caster,aimPoint);}
 function cast(result){if(!running||paused||finished)return;const s=resolveSpell(result,loadout);if(s.parts.some(k=>!progress.ranks[k]))return;s.mastery=mastery(progress,s.parts[0]);s.power*=s.mastery;if(player.cool>0){flash('잠깐 기다려 주세요');return}if(bot&&player.mana<s.cost){flash('마력이 부족합니다. 잠시 쉬면 회복됩니다.');return}if(bot)player.mana-=s.cost;player.cool=s.tap?.16:.38;const seq=s.sequence,base=seq.slice(0,2),p=s.power,dir=player.dir.clone(),target=aim.clone();target.sub(new T.Vector3(player.x,0,player.z));if(target.length()>6)target.setLength(6);target.add(new T.Vector3(player.x,0,player.z));const third=seq[2];
  dispatchSpell(s,player,dir,aim);
  history.unshift({name:s.name,seq:s.keys.toUpperCase(),tier:seq.length===1?'1륜':seq.length+'중 2륜'});history=history.slice(0,4);$('history').innerHTML=history.map(h=>`<div class="history-item">${h.name}<small>${h.seq.split('').join(' → ')} · ${h.tier}</small></div>`).join('');$('spellName').textContent=s.name;$('queue').textContent=s.keys.toUpperCase().split('').join(' → ')+' / 발사 완료';$('tier').textContent=seq.length===1?'1륜 · 발동':seq.length+'중 2륜 · 발동';
@@ -164,7 +177,7 @@ function ai(dt){
  if(!enemyCharge.active||enemyCharge.remaining>.35)enemy.dir.copy(delta);
  if(!enemyCharge.active&&enemy.cool<=0&&dist<7&&enemy.mana>=25){enemyCharge.start(chooseLearnedPlan(enemyLoadout,enemyProgress,enemy.attackCount||0,enemy.hp,dist));enemy.attackCount=(enemy.attackCount||0)+1;}
  const seq=enemyCharge.active?mapSequence(enemyCharge.plan,enemyLoadout):enemyLoadout[KEYS.find(k=>enemyProgress.ranks[k]>0&&enemyLoadout[k]!=='e')];
- const spec=elementalSpec(seq)||forceSpec(seq)||wardSpec(seq),reach=spec.range;
+ const spec=groundSpec(seq)||elementalSpec(seq)||forceSpec(seq)||wardSpec(seq),reach=spec.range;
  let v=delta.clone();if(dist<reach*.68)v.set(0,0,0);if(dist<1.6)v.copy(delta).multiplyScalar(-1);
  const speed=(enemy.motion.active?0:enemyCharge.active&&enemyCharge.remaining<=.35?0:enemyCharge.active?2.8:4.4)*(enemy.slow>0?.55:1),ox=enemy.x,oz=enemy.z;
  move(enemy,v.x*speed*dt,v.z*speed*dt);
@@ -181,16 +194,17 @@ const rolling=roll.active;const beforeX=player.x,beforeZ=player.z;if(rolling){co
  updateForces(dt);updateFalling(dt);if(finished)return;ai(dt);
  for(const a of[player,enemy]){a.shieldTime=Math.max(0,a.shieldTime-dt);if(a.shieldTime<=0)a.shield=0}
  updateOrbs(dt);
- for(let i=fields.length-1;i>=0;i--){const f=fields[i];f.life-=dt;f.tick-=dt;f.m.material.opacity=.12+Math.sin(clock*5)*.04;if(f.tick<=0){f.tick=.5;area(f.owner,f.x,f.z,f.r,f.damage*.5,f.color,f.force,null,f.payload)}if(f.life<=0){remove(f.m);fields.splice(i,1)}}
+ for(let i=fields.length-1;i>=0;i--){const f=fields[i];if(f.ground){const alive=advanceGround(f,dt,()=>tickGround(f));f.m.material.opacity=.14+.05*(1+Math.sin(clock*4));if(!alive){remove(f.m);fields.splice(i,1);}continue;}f.life-=dt;f.tick-=dt;f.m.material.opacity=.12+Math.sin(clock*5)*.04;if(f.tick<=0){f.tick=.5;area(f.owner,f.x,f.z,f.r,f.damage*.5,f.color,f.force,null,f.payload)}if(f.life<=0){remove(f.m);fields.splice(i,1)}}
  if(toastTimer>0){toastTimer-=dt;if(toastTimer<=0)$('toast').classList.remove('show')}
 }
 function label(el,a){const pos=new T.Vector3(a.x,2.65,a.z).project(camera);el.style.display=Math.abs(pos.x)>1||Math.abs(pos.y)>1?'none':'';el.style.left=((pos.x+1)*innerWidth/2)+'px';el.style.top=((-pos.y+1)*innerHeight/2)+'px'}
-function drawTell(caster,seq,attackTell,tellBorder,urgent=false){const spec=elementalSpec(seq)||forceSpec(seq);if(!spec)return;
+function drawTell(caster,seq,attackTell,tellBorder,urgent=false){const spec=groundSpec(seq)||elementalSpec(seq)||forceSpec(seq);if(!spec)return;
  const outline=[],color=RUNES[seq[0]].color;
- if(spec.projectile){let reach=spec.range;for(let t=.1;t<=spec.range;t+=.1)if(collides(caster.x+caster.dir.x*t,caster.z+caster.dir.z*t,spec.radius)){reach=t;break;}const side=new T.Vector3(-caster.dir.z,0,caster.dir.x).multiplyScalar(spec.radius+.2),start=new T.Vector3(caster.x,0,caster.z),end=start.clone().addScaledVector(caster.dir,reach);outline.push(start.clone().add(side),end.clone().add(side),end.clone().sub(side),start.clone().sub(side),start.clone().add(side));}
+ if(spec.ground){const point=groundPoint(caster,caster===player?aim:(enemyTarget||player),spec.range,collides);for(let i=0;i<=64;i++){const a=i/64*Math.PI*2;outline.push(new T.Vector3(point.x+Math.cos(a)*spec.radius,0,point.z+Math.sin(a)*spec.radius));}}
+ else if(spec.projectile){let reach=spec.range;for(let t=.1;t<=spec.range;t+=.1)if(collides(caster.x+caster.dir.x*t,caster.z+caster.dir.z*t,spec.radius)){reach=t;break;}const side=new T.Vector3(-caster.dir.z,0,caster.dir.x).multiplyScalar(spec.radius+.2),start=new T.Vector3(caster.x,0,caster.z),end=start.clone().addScaledVector(caster.dir,reach);outline.push(start.clone().add(side),end.clone().add(side),end.clone().sub(side),start.clone().sub(side),start.clone().add(side));}
  else if(spec.overhead){const point=caster;for(let i=0;i<=64;i++){const angle=i/64*Math.PI*2;outline.push(new T.Vector3(point.x+Math.cos(angle)*spec.range,0,point.z+Math.sin(angle)*spec.range));}}
  else{outline.push(new T.Vector3(caster.x,0,caster.z));for(let i=0;i<=48;i++){const angle=-spec.halfAngle+i/48*spec.halfAngle*2,d=caster.dir.clone().applyAxisAngle(new T.Vector3(0,1,0),angle);let reach=spec.range;for(let t=.1;t<=spec.range;t+=.1)if(collides(caster.x+d.x*t,caster.z+d.z*t,.02)){reach=Math.max(0,t-.1);break;}outline.push(new T.Vector3(caster.x+d.x*reach,0,caster.z+d.z*reach));}outline.push(new T.Vector3(caster.x,0,caster.z));}
- const center=spec.overhead?new T.Vector3(caster.x,0,caster.z):outline[0],vertices=[];for(let i=0;i<outline.length-1;i++)vertices.push(center.x,0,center.z,outline[i].x,0,outline[i].z,outline[i+1].x,0,outline[i+1].z);
+ const center=spec.ground?new T.Vector3(outline[0].x-spec.radius,0,outline[0].z):spec.overhead?new T.Vector3(caster.x,0,caster.z):outline[0],vertices=[];for(let i=0;i<outline.length-1;i++)vertices.push(center.x,0,center.z,outline[i].x,0,outline[i].z,outline[i+1].x,0,outline[i+1].z);
  attackTell.geometry.dispose();attackTell.geometry=new T.BufferGeometry();attackTell.geometry.setAttribute('position',new T.Float32BufferAttribute(vertices,3));attackTell.material.color.set(color);attackTell.material.opacity=urgent?.38:.21;attackTell.visible=true;
  tellBorder.geometry.dispose();tellBorder.geometry=new T.BufferGeometry().setFromPoints(outline);tellBorder.material.color.set(urgent?0xffffff:color);tellBorder.visible=true;
 }
@@ -198,15 +212,15 @@ function renderAttackTell(){
  attackTell.visible=false;tellBorder.visible=false;playerTell.visible=false;playerBorder.visible=false;wardGhost.visible=false;
  if(bot&&running&&!finished&&enemyCharge.active)drawTell(enemy,mapSequence(enemyCharge.plan,enemyLoadout),attackTell,tellBorder,enemyCharge.remaining<.55);
  if(!running||finished||!charge.active){player.strikePoint=null;return;}
- const spell=resolveSpell({parts:[...charge.parts],progress:charge.progress,tap:charge.elapsed<.15},loadout),spec=elementalSpec(spell.sequence)||forceSpec(spell.sequence);if(!spec){player.strikePoint=null;if(spell.sequence[0]==='e'){const ward=wardSpec(spell.sequence),point=wardPlacement(player,player.dir,ward.moving?new T.Vector3(player.x,0,player.z).addScaledVector(player.dir,1.2):aim,ward);wardGhost.position.set(point.x,1.2,point.z);wardGhost.rotation.y=Math.atan2(player.dir.x,player.dir.z);wardGhost.scale.x=ward.width;wardGhost.material.color.set(RUNES[ward.colors.find(k=>k!=="e")||"e"].color);wardGhost.visible=true;if(ward.moving){const points=[point.clone().add(new T.Vector3(-player.dir.z,0,player.dir.x).multiplyScalar(ward.width/2)),point.clone().addScaledVector(player.dir,ward.travel).add(new T.Vector3(-player.dir.z,0,player.dir.x).multiplyScalar(ward.width/2)),point.clone().addScaledVector(player.dir,ward.travel).add(new T.Vector3(player.dir.z,0,-player.dir.x).multiplyScalar(ward.width/2)),point.clone().add(new T.Vector3(player.dir.z,0,-player.dir.x).multiplyScalar(ward.width/2))];points.push(points[0].clone());playerBorder.geometry.dispose();playerBorder.geometry=new T.BufferGeometry().setFromPoints(points);playerBorder.material.color.set(0xa8dcff);playerBorder.visible=true;}}return;}
+ const spell=resolveSpell({parts:[...charge.parts],progress:charge.progress,tap:charge.elapsed<.15},loadout),spec=groundSpec(spell.sequence)||elementalSpec(spell.sequence)||forceSpec(spell.sequence);if(!spec){player.strikePoint=null;if(spell.sequence[0]==='e'){const ward=wardSpec(spell.sequence),point=wardPlacement(player,player.dir,ward.moving?new T.Vector3(player.x,0,player.z).addScaledVector(player.dir,1.2):aim,ward);wardGhost.position.set(point.x,1.2,point.z);wardGhost.rotation.y=Math.atan2(player.dir.x,player.dir.z);wardGhost.scale.x=ward.width;wardGhost.material.color.set(RUNES[ward.colors.find(k=>k!=="e")||"e"].color);wardGhost.visible=true;if(ward.moving){const points=[point.clone().add(new T.Vector3(-player.dir.z,0,player.dir.x).multiplyScalar(ward.width/2)),point.clone().addScaledVector(player.dir,ward.travel).add(new T.Vector3(-player.dir.z,0,player.dir.x).multiplyScalar(ward.width/2)),point.clone().addScaledVector(player.dir,ward.travel).add(new T.Vector3(player.dir.z,0,-player.dir.x).multiplyScalar(ward.width/2)),point.clone().add(new T.Vector3(player.dir.z,0,-player.dir.x).multiplyScalar(ward.width/2))];points.push(points[0].clone());playerBorder.geometry.dispose();playerBorder.geometry=new T.BufferGeometry().setFromPoints(points);playerBorder.material.color.set(0xa8dcff);playerBorder.visible=true;}}return;}
  player.strikePoint=null;
  drawTell(player,spell.sequence,playerTell,playerBorder);
 }
-function ui(){updateCamera();renderHunt();renderAttackTell();for(const a of[player,enemy]){const burning=a.burn>0,chilled=a.slow>0,tinted=burning||chilled;const c=new T.Color(burning&&(!chilled||Math.floor(clock*4)%2===0)?0xff543e:0x479eff);for(const entry of a.g.userData.palette){entry.material.color.copy(entry.color);if(tinted)entry.material.color.lerp(c,.48);}a.g.position.set(a.x,0,a.z);a.g.rotation.y=Math.atan2(a.dir.x,a.dir.z);const shield=shields.get(a);shield.position.set(a.x,1,a.z);shield.visible=a.shield>0;shield.rotation.y=clock*.6}label($('playerLabel'),player);label($('enemyLabel'),enemy);$('playerHp').style.width=player.hp+'%';$('enemyHp').style.width=enemy.hp+'%';$('manaBar').style.width=player.mana+'%';$('manaText').textContent=Math.floor(player.mana);$('enemyCast').textContent=!bot?'연습 상대':enemyCharge.active?spellName(mapSequence(enemyCharge.charge.parts,enemyLoadout),NAMES)+' · 충전':enemy.lastSpellTime>0?enemy.lastSpell+' · 발사':enemy.slow>0?'감속 중':enemy.burn>0?'화상 중':(enemyTarget?.monster?'몬스터 사냥 중':'상대 마법사');$('enemyLevel').textContent='Lv. '+enemyProgress.level+' · 사냥 '+enemyProgress.kills;$('time').textContent=String(Math.floor(clock/60)).padStart(2,'0')+':'+String(Math.floor(clock%60)).padStart(2,'0');
+function ui(){updateCamera();renderHunt();renderAttackTell();for(const a of[player,enemy]){const burning=a.burn>0,chilled=a.slow>0,tinted=burning||chilled;const c=new T.Color(burning&&(!chilled||Math.floor(clock*4)%2===0)?0xff543e:0x479eff);for(const entry of a.g.userData.palette){entry.material.color.copy(entry.color);if(tinted)entry.material.color.lerp(c,.48);}a.g.position.set(a.x,0,a.z);a.g.rotation.y=Math.atan2(a.dir.x,a.dir.z);const shield=shields.get(a);shield.position.set(a.x,1,a.z);if(a.shield>0&&!shield.userData.active)pixelVfx.play('shield-bubble',a.x,a.z,{width:1.8,duration:a.shieldTime,loop:true,follow:()=>a.shield>0?{x:a.x,z:a.z,y:.12}:null});shield.userData.active=a.shield>0;shield.rotation.y=clock*.6}label($('playerLabel'),player);label($('enemyLabel'),enemy);$('playerHp').style.width=player.hp+'%';$('enemyHp').style.width=enemy.hp+'%';$('manaBar').style.width=player.mana+'%';$('manaText').textContent=Math.floor(player.mana);$('enemyCast').textContent=!bot?'연습 상대':enemyCharge.active?spellName(mapSequence(enemyCharge.charge.parts,enemyLoadout),NAMES)+' · 충전':enemy.lastSpellTime>0?enemy.lastSpell+' · 발사':enemy.slow>0?'감속 중':enemy.burn>0?'화상 중':(enemyTarget?.monster?'몬스터 사냥 중':'상대 마법사');$('enemyLevel').textContent='Lv. '+enemyProgress.level+' · 사냥 '+enemyProgress.kills;$('time').textContent=String(Math.floor(clock/60)).padStart(2,'0')+':'+String(Math.floor(clock%60)).padStart(2,'0');
  const ec=enemyCharge.charge,enemyCharging=bot&&running&&!finished&&ec.active;
  $('enemyOrbs').innerHTML=enemyCharging?ec.parts.map((key,i)=>{const rune=RUNES[enemyLoadout[key]];return `<div class="orb" title="${rune.name}" style="--c:${rune.color};--p:${i<ec.parts.length-1?100:ec.progress*100}%"><span>${rune.icon}</span></div>`}).join(''):'';
  $('enemyOrbs').classList.toggle('charging',enemyCharging);
- enemyAimLine.visible=enemyCharging&&enemyLoadout[ec.parts[0]]==='e';if(enemyCharging){const seq=mapSequence(ec.parts,enemyLoadout),spec=elementalSpec(seq)||forceSpec(seq)||wardSpec(seq),end=new T.Vector3(enemy.x,.13,enemy.z).addScaledVector(enemy.dir,spec.range);enemyAimLine.geometry.dispose();enemyAimLine.geometry=new T.BufferGeometry().setFromPoints([new T.Vector3(enemy.x,.13,enemy.z),end]);enemyAimLine.material.color.set(RUNES[seq[0]].color);}
+ enemyAimLine.visible=enemyCharging&&enemyLoadout[ec.parts[0]]==='e';if(enemyCharging){const seq=mapSequence(ec.parts,enemyLoadout),spec=groundSpec(seq)||elementalSpec(seq)||forceSpec(seq)||wardSpec(seq),end=new T.Vector3(enemy.x,.13,enemy.z).addScaledVector(enemy.dir,spec.range);enemyAimLine.geometry.dispose();enemyAimLine.geometry=new T.BufferGeometry().setFromPoints([new T.Vector3(enemy.x,.13,enemy.z),end]);enemyAimLine.material.color.set(RUNES[seq[0]].color);}
  $('enemyLoadout').innerHTML=KEYS.map(k=>{const r=RUNES[enemyLoadout[k]];const rank=enemyProgress.ranks[k];return `<span style="color:${rank?r.color:'#75838c'}" title="${rank?'숙련 '+rank:'미습득'}">${rank?r.icon:'🔒'} ${r.name}${rank?' '+rank:''}</span>`}).join(' · ');
  $('rollStatus').textContent=roll.active?'구르는 중':roll.cooldown>0?'구르기 '+roll.cooldown.toFixed(1)+'초':'Space 구르기 · 준비';$('rollStatus').classList.toggle('ready',roll.cooldown<=0);
  for(const a of[player,enemy]){const body=a.g.userData.body;if(!body)continue;const angle=a.g.rotation.y,m=a.motion,localX=m.x*Math.cos(angle)-m.z*Math.sin(angle),localZ=m.x*Math.sin(angle)+m.z*Math.cos(angle);body.rotation.x=m.lean*localZ;body.rotation.z=-m.lean*localX;if(a===player&&roll.active){body.rotation.x=(1-roll.remaining/ROLL_DURATION)*Math.PI*2;body.rotation.z=0;}}
@@ -260,4 +274,4 @@ for(const k of KEYS){$('learn-'+k).onclick=()=>{if(!running||paused||finished)re
 function resize(){renderer.setSize(innerWidth,innerHeight);camera.aspect=innerWidth/innerHeight;camera.fov=38;const fit=Math.max(1,1.4/camera.aspect);camera.position.set(player.x+12*fit,17*fit,player.z+15*fit);camera.far=140*fit;camera.lookAt(player.x,0,player.z);camera.updateProjectionMatrix()}window.addEventListener('resize',resize);resize();
 let prev=performance.now();function frame(now){requestAnimationFrame(frame);const dt=Math.min(.04,(now-prev)/1000);prev=now;if(running&&!paused&&!finished)update(dt);if(!paused)for(let i=fx.length-1;i>=0;i--){const f=fx[i];f.life-=dt;if(f.ring){f.m.scale.setScalar(f.r*(.55+.45*(1-f.life/f.max)));f.m.material.opacity=Math.max(0,f.life/f.max*.65)}else if(f.v){f.m.position.addScaledVector(f.v,dt);f.v.y-=dt*8}else if(f.m.material.transparent)f.m.material.opacity=Math.max(0,f.life/f.max*.5);if(f.life<=0){remove(f.m);fx.splice(i,1)}}if(!paused){spellVfx.update(dt);pixelVfx.update(dt);}ui();renderer.render(scene,camera)}requestAnimationFrame(frame);
 // Read-only diagnostics for input and rendering verification.
-window.mageDebug=()=>({loadout:{...loadout},running,paused,bot,finished,charge:{parts:[...charge.parts],held:[...charge.held],progress:charge.progress},history:[...history],roll:{active:roll.active,cooldown:roll.cooldown,invulnerable:roll.invulnerable},progress:structuredClone(progress),monsters:monsters.filter(m=>!m.dead).map(m=>({id:m.id,x:m.x,z:m.z,hp:m.hp})),player:{x:player.x,z:player.z,hp:player.hp,mana:player.mana},enemy:{progress:structuredClone(enemyProgress),target:enemyTarget?.monster?'monster':enemyTarget?'player':null,x:enemy.x,z:enemy.z,hp:enemy.hp,mana:enemy.mana,loadout:{...enemyLoadout},charge:{parts:[...enemyCharge.charge.parts],progress:enemyCharge.charge.progress,remaining:enemyCharge.remaining},lastSpell:enemy.lastSpell},projectiles:shots.map(s=>({kind:s.spec.kind,radius:s.spec.radius,speed:s.spec.speed,distance:s.distance})),walls:wards.map(w=>({x:w.x,z:w.z,moving:w.speed>0,travelled:w.travelled})),vfx:spellVfx.stats(),pixelVfx:pixelVfx.stats(),objects:scene.children.length});
+window.mageDebug=()=>({loadout:{...loadout},running,paused,bot,finished,charge:{parts:[...charge.parts],held:[...charge.held],progress:charge.progress},history:[...history],roll:{active:roll.active,cooldown:roll.cooldown,invulnerable:roll.invulnerable},progress:structuredClone(progress),monsters:monsters.filter(m=>!m.dead).map(m=>({id:m.id,x:m.x,z:m.z,hp:m.hp})),player:{x:player.x,z:player.z,hp:player.hp,mana:player.mana},enemy:{progress:structuredClone(enemyProgress),target:enemyTarget?.monster?'monster':enemyTarget?'player':null,x:enemy.x,z:enemy.z,hp:enemy.hp,mana:enemy.mana,loadout:{...enemyLoadout},charge:{parts:[...enemyCharge.charge.parts],progress:enemyCharge.charge.progress,remaining:enemyCharge.remaining},lastSpell:enemy.lastSpell},groundZones:fields.filter(f=>f.ground).map(f=>({x:f.x,z:f.z,radius:f.r,life:f.life})),projectiles:shots.map(s=>({kind:s.spec.kind,radius:s.spec.radius,speed:s.spec.speed,distance:s.distance})),walls:wards.map(w=>({x:w.x,z:w.z,moving:w.speed>0,travelled:w.travelled})),vfx:spellVfx.stats(),pixelVfx:pixelVfx.stats(),objects:scene.children.length});

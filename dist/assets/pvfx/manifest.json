@@ -166,5 +166,173 @@
     "frame_ms": 70,
     "loop": false,
     "file": "wind-gust.png"
+  },
+  "shield-shatter": {
+    "size": [
+      64,
+      64
+    ],
+    "pivot": [
+      0,
+      0
+    ],
+    "frames": 17,
+    "frame_ms": 60,
+    "loop": false,
+    "file": "shield-shatter.png"
+  },
+  "flamethrower": {
+    "size": [
+      128,
+      48
+    ],
+    "pivot": [
+      6,
+      32
+    ],
+    "frames": 16,
+    "frame_ms": 60,
+    "loop": true,
+    "file": "flamethrower.png"
+  },
+  "ground-flames": {
+    "size": [
+      64,
+      40
+    ],
+    "pivot": [
+      32,
+      33
+    ],
+    "frames": 16,
+    "frame_ms": 75,
+    "loop": true,
+    "file": "ground-flames.png"
+  },
+  "frost-breath": {
+    "size": [
+      96,
+      40
+    ],
+    "pivot": [
+      4,
+      21
+    ],
+    "frames": 14,
+    "frame_ms": 65,
+    "loop": true,
+    "file": "frost-breath.png"
+  },
+  "ice-wall": {
+    "size": [
+      80,
+      56
+    ],
+    "pivot": [
+      40,
+      48
+    ],
+    "frames": 21,
+    "frame_ms": 70,
+    "loop": false,
+    "file": "ice-wall.png"
+  },
+  "ball-lightning": {
+    "size": [
+      96,
+      48
+    ],
+    "pivot": [
+      0,
+      24
+    ],
+    "frames": 20,
+    "frame_ms": 60,
+    "loop": false,
+    "file": "ball-lightning.png"
+  },
+  "ice-shard": {
+    "size": [
+      112,
+      48
+    ],
+    "pivot": [
+      92,
+      24
+    ],
+    "frames": 19,
+    "frame_ms": 70,
+    "loop": false,
+    "file": "ice-shard.png"
+  },
+  "magic-missile": {
+    "size": [
+      156,
+      60
+    ],
+    "pivot": [
+      128,
+      30
+    ],
+    "frames": 28,
+    "frame_ms": 70,
+    "loop": false,
+    "file": "magic-missile.png"
+  },
+  "burning-aura": {
+    "size": [
+      48,
+      64
+    ],
+    "pivot": [
+      24,
+      54
+    ],
+    "frames": 12,
+    "frame_ms": 75,
+    "loop": true,
+    "file": "burning-aura.png"
+  },
+  "electrified": {
+    "size": [
+      48,
+      56
+    ],
+    "pivot": [
+      24,
+      47
+    ],
+    "frames": 14,
+    "frame_ms": 65,
+    "loop": true,
+    "file": "electrified.png"
+  },
+  "frozen-chill": {
+    "size": [
+      40,
+      48
+    ],
+    "pivot": [
+      20,
+      42
+    ],
+    "frames": 14,
+    "frame_ms": 70,
+    "loop": true,
+    "file": "frozen-chill.png"
+  },
+  "whirlwind": {
+    "size": [
+      48,
+      72
+    ],
+    "pivot": [
+      24,
+      68
+    ],
+    "frames": 14,
+    "frame_ms": 65,
+    "loop": true,
+    "file": "whirlwind.png"
   }
 }
