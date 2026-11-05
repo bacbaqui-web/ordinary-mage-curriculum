@@ -8,6 +8,7 @@ export class BodyFollow{
  update(dt,{aim}){
   this.aim=aim;
   if(!this.ready){this.head=this.chest=this.pelvis=aim;this.history=[{time:-1,aim}];this.ready=true;}
+  if(dt<=0)return;
   this.clock+=dt;this.history.push({time:this.clock,aim});
   while(this.history.length>2&&this.history[1].time<this.clock-.5)this.history.shift();
   const delayed=delay=>{let value=this.history[0].aim;for(const sample of this.history){if(sample.time>this.clock-delay)break;value=sample.aim;}return value;};
