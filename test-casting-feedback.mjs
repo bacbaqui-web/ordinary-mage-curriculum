@@ -44,3 +44,9 @@ assert.ok(rim.data[(128*rim.width+226)*4+3]>200);
 feedback.fire(new T.Vector3(),new T.Vector3(0,0,1),'#ffffff');
 assert.ok(feedback.bursts[0].group.children.every(o=>o.isGroup));
 console.log('PASS: transparent rune center, soft rim alpha and no filled firing disc');
+const strengths=[];
+for(const tier of [1,2,3]){const c=new ChargeCamera();let energy=0;for(let i=0;i<300;i++){const v=c.update(1/60,true,tier);if(i>180)energy+=v.x*v.x+v.y*v.y;}strengths.push(energy);}
+assert.ok(strengths[1]>strengths[0]+.1);assert.ok(strengths[2]>strengths[1]*3);
+let lastKick=0,lastFlash=0;
+for(const tier of [1,2,3]){const c=new ChargeCamera();c.fire(tier);assert.ok(c.kick>lastKick&&c.flash>lastFlash);lastKick=c.kick;lastFlash=c.flash;for(let i=0;i<60;i++)c.update(1/60,false,1);assert.equal(c.flash,0);assert.ok(c.kick<.001);c.fire(tier);c.clear();assert.equal(c.flash,0);assert.equal(c.kick,0);}
+console.log('PASS: stronger second/compound charge shake, tiered firing impulse and flash, recovery/reset');

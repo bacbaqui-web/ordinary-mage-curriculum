@@ -1,18 +1,18 @@
-import {BurnVisuals,applyBurnVisual} from './burn-visuals.mjs?v=fire10';
-import {castWithPresentation,renderCastPresentation} from './cast-presentation.mjs?v=fire10';
+import {BurnVisuals,applyBurnVisual} from './burn-visuals.mjs?v=ash11';
+import {castWithPresentation,renderCastPresentation} from './cast-presentation.mjs?v=ash11';
 import {CastRecoil,HitScreen,chargeSetback} from './combat-response.mjs?v=rim9';
 import {VisionShade} from './vision-shade.mjs';
-import {CastingFeedback,ChargeCamera,impactFeedback} from './casting-feedback.mjs?v=rim9';
+import {CastingFeedback,ChargeCamera,impactFeedback} from './casting-feedback.mjs?v=cast10';
 import {chargeMoveScale} from './magic-motion.mjs';
 import {canSee} from './vision.mjs';
-import {fireSpec,hasFireRecipe} from './fire-spec.mjs?v=fire10';
+import {fireSpec,hasFireRecipe} from './fire-spec.mjs?v=ash11';
 import {BodyFollow} from './body-follow.mjs?v=stride2';
 import {bindMouseControls} from './mouse-controls.mjs';
 import {createWizard,animateWizard,projectWizard} from './wizard.mjs?v=editor-live1';
 import {QueuedCharge} from './queued-charge.mjs?v=interrupt7';
-import {LiveMagic} from './live-magic.mjs?v=fire10';
-import {spellReach} from './live-spells.mjs?v=fire10';
-import {describe as describeDesign} from './combo-design.mjs?v=fire10';
+import {LiveMagic} from './live-magic.mjs?v=ash11';
+import {spellReach} from './live-spells.mjs?v=ash11';
+import {describe as describeDesign} from './combo-design.mjs?v=ash11';
 import {MeshFeedback} from './mesh-feedback.mjs';
 import {groundSpec,groundPoint,inGround,advanceGround} from './ground.mjs?v=zones1';
 import {projectileAsset,groundAsset} from './effect-map.mjs?v=zones1';
@@ -22,14 +22,14 @@ import {FALL_SECONDS,overheadDelivery,segmentCircleHit} from './delivery.mjs?v=z
 import {createProgress,awardKill,requiredXP,learn,mastery,MAX_LEVEL,MAX_RANK} from './progression.mjs?v=zones1';
 import {ForcedMotion} from './motion.mjs?v=zones1';
 import {LowPolyVFX} from './lowpoly-vfx.mjs';
-import {chooseLoadout,choosePlan,chooseLearnedPlan,spendEnemyPoints,OpponentCharge} from './live-opponent.mjs?v=fire10';
+import {chooseLoadout,choosePlan,chooseLearnedPlan,spendEnemyPoints,OpponentCharge} from './live-opponent.mjs?v=ash11';
 import {forceSpec,wardSpec,displacement,crossesWard,distanceToWard} from './forces.mjs?v=zones1';
 import {elementalSpec,inElementCone,lightningPoint,lightningHits} from './elements.mjs?v=zones1';
 const describeSpell=seq=>describeDesign(seq).steps.join(' ');
 import * as T from './three.module.js';
-import {Charge,ELEMENTS,NAMES,resolveSpell} from './live-charge-spells.mjs?v=fire10';
+import {Charge,ELEMENTS,NAMES,resolveSpell} from './live-charge-spells.mjs?v=ash11';
 import {Roll,ROLL_DURATION,incomingThreat,enemyChargeProgress} from './combat.mjs?v=zones1';
-import {RUNES,KEYS,DEFAULT_LOADOUT,validLoadout,assignRune,mapSequence,spellName,composition} from './live-loadout.mjs?v=fire10';
+import {RUNES,KEYS,DEFAULT_LOADOUT,validLoadout,assignRune,mapSequence,spellName,composition} from './live-loadout.mjs?v=ash11';
 let loadout={...DEFAULT_LOADOUT};try{const saved=JSON.parse(localStorage.getItem('mage-loadout-v1'));if(validLoadout(saved))loadout=saved}catch{}
 let progress=createProgress(loadout),monsters=[],spawnTimer=0,monsterId=0;
 let draft={...loadout},activeSlot='q',selectionReturn=false;
@@ -83,6 +83,7 @@ function collides(x,z,r=.45){return Math.abs(x)>23.6||Math.abs(z)>21.6||obstacle
 function wallBlocks(from,to){return wards.some(w=>w.hp>0&&w.life>0&&crossesWard(from,to,w,.5)&&distanceToWard(to,w)<=distanceToWard(from,w)+.001);}
 function move(a,dx,dz){if(!collides(a.x+dx,a.z)&&!wallBlocks(a,{x:a.x+dx,z:a.z}))a.x+=dx;if(!collides(a.x,a.z+dz)&&!wallBlocks(a,{x:a.x,z:a.z+dz}))a.z+=dz}
 const hitScreen=new HitScreen(),hitOverlay=document.createElement('div');hitOverlay.id='hitScreen';hitOverlay.setAttribute('aria-hidden','true');hitOverlay.style.cssText='position:fixed;inset:0;pointer-events:none;z-index:80;opacity:0;background:radial-gradient(ellipse at center,transparent 42%,rgba(164,0,8,.35) 70%,rgba(255,24,36,.88) 100%);box-shadow:inset 0 0 65px 12px rgba(255,25,40,.6)';document.body.append(hitOverlay);const reducedShake=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const castOverlay=document.createElement('div');castOverlay.id='castFlash';castOverlay.setAttribute('aria-hidden','true');castOverlay.style.cssText='position:fixed;inset:0;pointer-events:none;z-index:79;opacity:0;background:radial-gradient(ellipse at center,#fff 0%,#fff 25%,var(--cast-color,#fff) 100%)';document.body.append(castOverlay);
 function hit(a,damage,dir,force=0,source=null){if(finished||a.dead||(a===player&&roll.invulnerable))return false;if(a.monster&&(source===player||source===enemy)){a.aggro=true;a.aggroTarget=source;}if(source?.castContacts)source.castContacts.push(new T.Vector3(a.x,a.monster ? .65 : 1,a.z));if(a===enemy&&source===player)enemy.retaliate=6;let block=Math.min(a.shield,damage);a.shield-=block;damage-=block;if(block){pixelVfx.play('parry',a.x,a.z,{width:1.8,y:1});ring(a.x,a.z,0xafdfff,.8,.2);if(a.shieldHeat){const other=a===player?enemy:player;if(Math.hypot(other.x-a.x,other.z-a.z)<3)other.hp=Math.max(0,other.hp-block*.32)}}a.hp=Math.max(0,a.hp-damage);if(damage){pixelVfx.play('hit-spark',a.x,a.z,{width:1.1,y:1});spark(a.x,a.z,a===player?0xffca8f:0xb8ddff,5);}impactFeedback(a,damage,dir,force);if(a===player){hitScreen.hit(damage);charge.disrupt(chargeSetback(damage));}else if(a===enemy)enemyCharge.disrupt(chargeSetback(damage));if(a===player&&damage)flash('피격 −'+Math.round(damage)+(charge.active?' · 충전 방해':''));if(a.hp<=0){if(a.monster)killMonster(a,source);else endRound(a===enemy)};return true}
 function castOrb(spell,dir,caster){const spec=elementalSpec(spell.sequence,spell.power),color=RUNES[spec.kind].color;
  const m=new T.Object3D();m.position.set(caster.x,.95,caster.z);scene.add(m);
@@ -180,7 +181,7 @@ function updateVisibility(){enemy.g.visible=visibleTo(player,enemy);shields.get(
 function dispatchSpell(s,caster,dir,aimPoint){caster.recoil??=new CastRecoil();caster.recoil.start(dir,s.sequence.length,hasFireRecipe(s.sequence)&&fireSpec(s.sequence).op==='h'?fireSpec(s.sequence).dashDuration:0);if(caster===player)moveTarget=null;
  if(s.sequence==='qh'&&caster===player)moveTarget=null;
  castWithPresentation({magic:liveMagic,wards,clearPath,collides,wallBlocks},s,caster,dir,aimPoint);
- if(caster===player)chargeCamera.fire(s.sequence.length);caster.g.userData.puppet.magic.release(s.sequence?.length||1);caster.g.userData.puppet.magic.elapsed=2/12;
+ if(caster===player){chargeCamera.fire(s.sequence.length);castOverlay.style.setProperty('--cast-color',RUNES[s.sequence[0]].color);}caster.g.userData.puppet.magic.release(s.sequence?.length||1);caster.g.userData.puppet.magic.elapsed=2/12;
 }
 
 function cast(result){if(!running||paused||finished)return;const s=resolveSpell(result,loadout);if(s.parts.some(k=>!progress.ranks[k]))return;s.mastery=mastery(progress,s.parts[0]);s.power*=s.mastery;if(player.cool>0){flash('잠깐 기다려 주세요');return}if(bot&&player.mana<s.cost){flash('마력이 부족합니다. 잠시 쉬면 회복됩니다.');return}if(bot)player.mana-=s.cost;player.cool=s.tap?.16:.38;const seq=s.sequence,base=seq.slice(0,2),p=s.power,dir=player.dir.clone(),target=aim.clone();target.sub(new T.Vector3(player.x,0,player.z));if(target.length()>6)target.setLength(6);target.add(new T.Vector3(player.x,0,player.z));const third=seq[2];
@@ -188,7 +189,7 @@ function cast(result){if(!running||paused||finished)return;const s=resolveSpell(
  history.unshift({name:s.name,seq:s.keys.toUpperCase(),tier:seq.length===1?'1륜':seq.length===2?'2륜':'2륜 복합'});history=history.slice(0,4);$('history').innerHTML=history.map(h=>`<div class="history-item">${h.name}<small>${h.seq.split('').join(' → ')} · ${h.tier}</small></div>`).join('');$('spellName').textContent=s.name;$('queue').textContent=s.keys.toUpperCase().split('').join(' → ')+' / 발사 완료';$('tier').textContent=seq.length===1?'1륜 · 발동':seq.length===2?'2륜 · 발동':'2륜 복합 · 발동';
 }
 function endRound(win){if(!bot){const a=win?enemy:player;a.hp=100;a.shield=0;a.burn=0;a.slow=0;a.echo=null;flash(win?'연습 상대의 체력을 회복했습니다':'연습 모드 · 체력을 회복했습니다');return}finished=true;charge.clear();enemyCharge.clear();moveTarget=null;if(win)wins++;else losses++;$('wins').textContent=wins;$('losses').textContent=losses;$('resultTitle').textContent=win?'승리':'패배';$('resultText').textContent=win?'주문을 조합해 상대 마법사를 제압했습니다.':'몬스터의 공격을 피하며 사냥하세요. 새 대결은 레벨 1부터 시작합니다.';$('result').classList.remove('hidden')}
-function reset(){burnVisuals.clear();for(const a of[player,enemy]){a.ashTime=0;a.greenFireTime=0;}hitScreen.clear();for(const a of[player,enemy])a.recoil?.clear();castingFeedback.clear();chargeCamera.level=0;chargeCamera.kick=0;liveMagic.clear();resetHunt();spellVfx.clear();pixelVfx.clear();enemy.strikePoint=null;enemy.strikeLocked=false;enemyCharge.clear();enemyLoadout=chooseLoadout();enemyProgress=createProgress(enemyLoadout);enemyTarget=null;enemy.retaliate=0;fallingStrikes=[];enemy.lastSpell="";enemy.lastSpellTime=0;for(const a of[player,enemy]){a.motion.clear();a.hitFlash=0;a.pendingCastLight=null;a.poison=0;a.wet=0;a.slow=0;a.burn=0;a.echo=null;a.burnTick=0;a.shieldHeat=false;}roll.reset();player.velocity=new T.Vector3();enemy.dodge=0;enemy.dodgeCool=0;enemy.defendCool=0;enemy.attackCount=0;enemy.sidestep=1;for(const s of shots)remove(s.m);for(const f of fields)remove(f.m);for(const f of fx)remove(f.m);for(const w of [...waves,...wards])remove(w.m);waves=[];wards=[];shots=[];fields=[];fx=[];Object.assign(player,{x:-5,z:4,hp:100,mana:100,shield:0,shieldTime:0,cool:0});Object.assign(enemy,{x:16,z:-14,hp:100,mana:100,shield:0,shieldTime:0,cool:2,wind:0});charge.clear();moveTarget=null;finished=false;paused=false;clock=0;history=[];$('history').textContent='QWE로 예약하고 좌클릭으로 시전하세요.';$('result').classList.add('hidden');$('paused').classList.add('hidden');$('pause').textContent='일시정지';$('spellName').textContent='Q · W · E';$('tier').textContent='1륜 · 준비';$('queue').textContent='QWE로 대기줄을 채우세요'}
+function reset(){burnVisuals.clear();for(const a of[player,enemy]){a.ashTime=0;a.greenFireTime=0;}hitScreen.clear();for(const a of[player,enemy])a.recoil?.clear();castingFeedback.clear();chargeCamera.clear();liveMagic.clear();resetHunt();spellVfx.clear();pixelVfx.clear();enemy.strikePoint=null;enemy.strikeLocked=false;enemyCharge.clear();enemyLoadout=chooseLoadout();enemyProgress=createProgress(enemyLoadout);enemyTarget=null;enemy.retaliate=0;fallingStrikes=[];enemy.lastSpell="";enemy.lastSpellTime=0;for(const a of[player,enemy]){a.motion.clear();a.hitFlash=0;a.pendingCastLight=null;a.poison=0;a.wet=0;a.slow=0;a.burn=0;a.echo=null;a.burnTick=0;a.shieldHeat=false;}roll.reset();player.velocity=new T.Vector3();enemy.dodge=0;enemy.dodgeCool=0;enemy.defendCool=0;enemy.attackCount=0;enemy.sidestep=1;for(const s of shots)remove(s.m);for(const f of fields)remove(f.m);for(const f of fx)remove(f.m);for(const w of [...waves,...wards])remove(w.m);waves=[];wards=[];shots=[];fields=[];fx=[];Object.assign(player,{x:-5,z:4,hp:100,mana:100,shield:0,shieldTime:0,cool:0});Object.assign(enemy,{x:16,z:-14,hp:100,mana:100,shield:0,shieldTime:0,cool:2,wind:0});charge.clear();moveTarget=null;finished=false;paused=false;clock=0;history=[];$('history').textContent='QWE로 예약하고 좌클릭으로 시전하세요.';$('result').classList.add('hidden');$('paused').classList.add('hidden');$('pause').textContent='일시정지';$('spellName').textContent='Q · W · E';$('tier').textContent='1륜 · 준비';$('queue').textContent='QWE로 대기줄을 채우세요'}
 function pause(value=!paused){if(!running||finished)return;paused=value;charge.clear();moveTarget=null;$('paused').classList.toggle('hidden',!paused);$('pause').textContent=paused?'계속하기':'일시정지'}
 function point(e){const rect=canvas.getBoundingClientRect();pointer.set((e.clientX-rect.left)/rect.width*2-1,-(e.clientY-rect.top)/rect.height*2+1);ray.setFromCamera(pointer,camera);const pos=new T.Vector3();if(ray.ray.intersectPlane(ground,pos)){aim.copy(pos);const d=pos.clone().sub(new T.Vector3(player.x,0,player.z));if(d.length()>.1)player.dir.copy(d.normalize());}return pos}
 canvas.addEventListener('pointermove',point);
@@ -294,7 +295,7 @@ function updateHunt(dt){spawnTimer-=dt;if(spawnTimer<=0){spawnTimer=5;if(!monste
 function renderProgress(){if(!$('growth'))return;$('growthLevel').textContent='레벨 '+progress.level;$('skillPoints').textContent='스킬 포인트 '+progress.points;
  for(const k of KEYS){const n=progress.ranks[k],r=RUNES[loadout[k]],el=$('learn-'+k);el.disabled=progress.points<1||n>=MAX_RANK;el.textContent=n===0?r.name+' 배우기':n<MAX_RANK?r.name+' 강화 '+(n+1):r.name+' 숙련 완료';$('key-'+k).classList.toggle('unlearned',n===0);$('key-'+k).querySelector('small').textContent=n?'숙련 '+n+' / 3 · '+(n===1?'기본 위력':(loadout[k]==='e'?'내구도':'직접 피해')+' +'+((n-1)*15)+'%'):'미습득 · 스킬 포인트 필요';}
 }
-function updateCamera(){const fit=Math.max(1,1.1/camera.aspect);camera.position.set(player.x+12*fit*chargeView.distance+chargeView.x,17*fit*chargeView.distance+chargeView.y,player.z+15*fit*chargeView.distance);camera.fov=chargeView.fov;camera.updateProjectionMatrix();camera.lookAt(player.x,.5*(1-chargeView.distance),player.z);const kick=hitScreen.shake(reducedShake);camera.position.x+=kick.x;camera.position.y+=kick.y;camera.updateMatrixWorld();hitOverlay.style.opacity=String(hitScreen.opacity);}
+function updateCamera(){const fit=Math.max(1,1.1/camera.aspect);camera.position.set(player.x+12*fit*chargeView.distance,17*fit*chargeView.distance,player.z+15*fit*chargeView.distance);camera.fov=chargeView.fov;camera.updateProjectionMatrix();camera.lookAt(player.x,.5*(1-chargeView.distance),player.z);const kick=hitScreen.shake(reducedShake);camera.position.x+=kick.x+chargeView.x*(reducedShake?.15:1);camera.position.y+=kick.y+chargeView.y*(reducedShake?.15:1);castOverlay.style.opacity=String((chargeView.flash||0)*(reducedShake?.35:1));camera.updateMatrixWorld();hitOverlay.style.opacity=String(hitScreen.opacity);}
 function renderHunt(){const need=requiredXP(progress.level);$('xpText').textContent=progress.level===MAX_LEVEL?'최대 레벨 · 사냥 '+progress.kills:progress.xp+' / '+need+' XP · 사냥 '+progress.kills;$('xpBar').style.width=(progress.level===MAX_LEVEL?100:progress.xp/need*100)+'%';
  const c=$('minimap').getContext('2d');c.fillStyle='#17242b';c.fillRect(0,0,180,160);const p=a=>({x:(a.x+25)/50*180,y:(a.z+23)/46*160});for(const o of obstacles){const q=p(o);c.fillStyle='#637272';c.fillRect(q.x-o.w*1.8,q.y-o.h*1.74,o.w*3.6,o.h*3.48);}for(const a of [...monsters,enemy,player]){if(a.dead||a!==player&&!visibleTo(player,a))continue;const q=p(a);c.fillStyle=a===player?'#e9d393':a===enemy?'#ff837b':'#a7d878';c.beginPath();c.arc(q.x,q.y,a.monster?2.5:3.5,0,7);c.fill();}}
 for(const k of KEYS){$('learn-'+k).onclick=()=>{if(!running||paused||finished)return;if(learn(progress,k)){charge.clear();renderProgress();flash(RUNES[loadout[k]].name+(progress.ranks[k]===1?' 습득 · '+k.toUpperCase()+'로 사용':' 숙련도 상승'));}};}
