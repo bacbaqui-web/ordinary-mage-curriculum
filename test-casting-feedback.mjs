@@ -36,3 +36,11 @@ moving=false;feedback.update(.1);feedback.update(.2);assert.equal(feedback.beams
 for(let i=0;i<20;i++)feedback.beam(new T.Vector3(),()=>({point:destination,active:true}),palette);
 assert.equal(feedback.beams.length,12);feedback.clear();assert.equal(feedback.beams.length,0);
 console.log('PASS: single connected beam, matching rune stroke, moving endpoint, impact fade, beam cap and cleanup');
+
+const rim=a.rings[0].children[0].material.map.image;
+assert.equal(rim.data[(128*rim.width+128)*4+3],0);
+assert.equal(rim.data[3],0);
+assert.ok(rim.data[(128*rim.width+226)*4+3]>200);
+feedback.fire(new T.Vector3(),new T.Vector3(0,0,1),'#ffffff');
+assert.ok(feedback.bursts[0].group.children.every(o=>o.isGroup));
+console.log('PASS: transparent rune center, soft rim alpha and no filled firing disc');

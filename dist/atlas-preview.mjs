@@ -1,7 +1,7 @@
 import {crossesWard,distanceToWard} from './forces.mjs';
-import {CastingFeedback,ChargeCamera,impactFeedback} from './casting-feedback.mjs';
+import {CastingFeedback,ChargeCamera,impactFeedback} from './casting-feedback.mjs?v=rim9';
 import {castWithPresentation,renderCastPresentation} from './cast-presentation.mjs';
-import {CastRecoil} from './combat-response.mjs?v=interrupt7';
+import {CastRecoil} from './combat-response.mjs?v=rim9';
 import {BodyFollow} from './body-follow.mjs';
 import {canSee} from './vision.mjs';
 import * as T from './three.module.js';

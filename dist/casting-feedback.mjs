@@ -5,9 +5,17 @@ export class ChargeCamera{
  update(dt,active,tier,progress=0){this.time+=dt;const target=active?Math.min(3,tier+progress*.25):0;this.level+=(target-this.level)*(1-Math.exp(-dt/(active?.35:.5)));this.kick*=Math.exp(-dt*10);const shake=Math.max(0,this.level-2)*.075+this.kick;return {distance:1-this.level*.115,fov:38+this.level*3.2,x:Math.sin(this.time*43)*shake,y:Math.sin(this.time*57+.7)*shake*.65};}
 }
 export const RUNE_STROKE=.0408;
-const ringGeometry=new T.RingGeometry(.94,1.06,80),glowGeometry=new T.RingGeometry(.75,1.25,80),lineGeometry=new T.PlaneGeometry(1,1);
+const ringGeometry=new T.RingGeometry(.94,1.06,80),glowGeometry=new T.PlaneGeometry(2.6,2.6),lineGeometry=new T.PlaneGeometry(1,1);
 function material(color,opacity){const m=new T.MeshBasicMaterial({color,transparent:true,opacity,blending:T.AdditiveBlending,depthWrite:false,side:T.DoubleSide});m.userData.opacity=opacity;return m;}
-function runeRing(){const g=new T.Group();for(const [geo,alpha,scale] of [[glowGeometry,.22,1.12],[glowGeometry,.42,1],[ringGeometry,1,1]]){const m=new T.Mesh(geo,material('#ffffff',alpha));m.scale.setScalar(scale);g.add(m);}return g;}
+// A radial alpha texture keeps the center fully transparent, with light only at the rim.
+const glowSize=256,glowPixels=new Uint8Array(glowSize*glowSize*4);
+for(let y=0;y<glowSize;y++)for(let x=0;x<glowSize;x++){
+ const r=Math.hypot((x+.5)/glowSize*2.6-1.3,(y+.5)/glowSize*2.6-1.3),i=(y*glowSize+x)*4;
+ glowPixels[i]=glowPixels[i+1]=glowPixels[i+2]=255;
+ glowPixels[i+3]=r<.80||r>1.20?0:Math.round(255*Math.exp(-(((r-1)/.085)**2)));
+}
+const rimGlow=new T.DataTexture(glowPixels,glowSize,glowSize);rimGlow.magFilter=T.LinearFilter;rimGlow.minFilter=T.LinearFilter;rimGlow.needsUpdate=true;
+function runeRing(){const g=new T.Group();for(const [geo,alpha] of [[glowGeometry,.45],[glowGeometry,.7],[ringGeometry,1]]){const mat=material('#ffffff',alpha);if(geo===glowGeometry)mat.map=rimGlow;g.add(new T.Mesh(geo,mat));}return g;}
 export function runeLayout(stage,colors){
  const c=Array.isArray(colors)?colors:[colors],main=c[0]||'#ffffff',level=Math.max(1,Math.min(3,stage));
  const rings=[{x:0,y:0,r:.34,color:main,white:level===1}];
@@ -32,7 +40,7 @@ export class CastingFeedback{
  s.dots.forEach((dot,i)=>{const life=.45+noise(i)*.55,age=this.time/life+i*.618,cycle=Math.floor(age),t=age-cycle,spec=layout.rings[i%layout.rings.length],angle=noise(i+cycle*49)*Math.PI*2,travel=t*(.25+noise(i+cycle+80)*.45),r=spec.r+travel;
  dot.position.set(spec.x+Math.cos(angle)*r,spec.y+Math.sin(angle)*r-t*t*.10,.04);dot.material.color.set(i%4===0?'#ffffff':spec.color);dot.material.opacity=(1-t)*(.65+.3*Math.sin(t*30+i)**2);dot.scale.setScalar(.5+noise(i+cycle*13));});
  }
- fire(position,direction,colors,tier=1){if(this.bursts.length>=12)dispose(this.bursts.shift().group);const state=diagram(),{group}=state;arrange(state,tier,colors);group.position.copy(typeof position==='function'?position():position);group.quaternion.setFromUnitVectors(new T.Vector3(0,0,1),direction.clone().normalize());this.scene.add(group);const flash=new T.Mesh(new T.CircleGeometry(.22,32),material('#ffffff',.65));group.add(flash);this.bursts.push({group,age:0,tier,flash,follow:typeof position==='function'?position:null});}
+ fire(position,direction,colors,tier=1){if(this.bursts.length>=12)dispose(this.bursts.shift().group);const state=diagram(),{group}=state;arrange(state,tier,colors);group.position.copy(typeof position==='function'?position():position);group.quaternion.setFromUnitVectors(new T.Vector3(0,0,1),direction.clone().normalize());this.scene.add(group);this.bursts.push({group,age:0,tier,follow:typeof position==='function'?position:null});}
  beam(start,target,colors,visible=()=>true,tier=1){
   const color=Array.isArray(colors)?colors[0]:colors,follow=typeof start==='function'?start:null;start=follow?follow():start;
   if(this.beams.length>=12)dispose(this.beams.shift().group);
