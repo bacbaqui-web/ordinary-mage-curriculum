@@ -1,8 +1,8 @@
 import * as T from './three.module.js';
 import {createWizard,animateWizard,projectWizard} from './wizard.mjs?v=editor-live1';
 import {LowPolyVFX} from './lowpoly-vfx.mjs';
-import {LiveMagic} from './live-magic.mjs?v=ember2';
-import {RUNES} from './combo-design.mjs?v=ember2';
+import {LiveMagic} from './live-magic.mjs?v=flame3';
+import {RUNES} from './combo-design.mjs?v=flame3';
 import {advanceMovingWard} from './moving-ward.mjs';
 import {ForcedMotion} from './motion.mjs';
 export function mountAtlasPreview(host,seq){
