@@ -1,3 +1,4 @@
+import {castWithPresentation,renderCastPresentation} from './cast-presentation.mjs';
 import {CastRecoil,HitScreen,chargeSetback} from './combat-response.mjs?v=interrupt7';
 import {VisionShade} from './vision-shade.mjs';
 import {CastingFeedback,ChargeCamera,impactFeedback} from './casting-feedback.mjs';
@@ -176,21 +177,7 @@ function visibleTo(a,b){return canSee(a,b,{obstacles,walls:wards,smoke:liveMagic
 function updateVisibility(){enemy.g.visible=visibleTo(player,enemy);shields.get(enemy).visible=enemy.g.visible;for(const m of monsters)m.g.visible=!m.dead&&visibleTo(player,m);}
 function dispatchSpell(s,caster,dir,aimPoint){caster.recoil??=new CastRecoil();caster.recoil.start(dir,s.sequence.length,s.sequence==='qh'?.4:0);if(caster===player)moveTarget=null;
  if(s.sequence==='qh'&&caster===player)moveTarget=null;
- const hand=caster.g.userData.puppet.lastPositions?.RightHand?.clone().addScaledVector(dir,.25)||new T.Vector3(caster.x,1.3,caster.z).addScaledVector(dir,.5);
- const origin=clearPath(caster,{x:hand.x,z:hand.z})?hand:null;
- const before=new Set([...liveMagic.effects,...liveMagic.fire.effects,...wards]);caster.castContacts=[];
- liveMagic.cast(s,caster,dir,aimPoint,origin);
- const created=[...liveMagic.effects,...liveMagic.fire.effects,...wards].filter(e=>!before.has(e)),contacts=caster.castContacts;caster.castContacts=null;
- const moving=created.find(e=>['projectile','shot','punch','slash'].includes(e.type)),effect=moving||created[0];
- let end;
- if(contacts.length)end=contacts.sort((a,b)=>a.distanceTo(hand)-b.distanceTo(hand))[0];
- else if(effect?.type==='cone')end=new T.Vector3(effect.point.x,.25,effect.point.z).addScaledVector(dir,(effect.radius||1)*.75);
- else if(effect?.point)end=new T.Vector3(effect.point.x,.15,effect.point.z);
- else if(effect?.mesh||effect?.m)end=(effect.mesh||effect.m).position.clone();
- else{end=aimPoint.clone();const delta=end.clone().sub(new T.Vector3(caster.x,0,caster.z));delta.y=0;if(delta.length()>spellReach(s.sequence))delta.setLength(spellReach(s.sequence));end.set(caster.x+delta.x,.15,caster.z+delta.z);}
- if(!moving){const delta=end.clone().sub(hand),distance=delta.length();for(let d=.1;d<distance;d+=.1){const point=hand.clone().addScaledVector(delta,d/distance);if(collides(point.x,point.z,.1)||wallBlocks(caster,point)){end.copy(hand).addScaledVector(delta,Math.max(0,d-.1)/distance);break;}}}
- const beamTarget=moving?()=>({point:moving.mesh.position,active:!!moving.mesh.parent&&moving.life>0}):()=>({point:end,active:false});
- caster.castFlash=.3;caster.pendingCastLight={colors:[...s.sequence].map(k=>RUNES[k].color),tier:s.sequence.length,dir:dir.clone(),origin:hand,beamTarget};
+ castWithPresentation({magic:liveMagic,wards,clearPath,collides,wallBlocks},s,caster,dir,aimPoint);
  if(caster===player)chargeCamera.fire(s.sequence.length);caster.g.userData.puppet.magic.release(s.sequence?.length||1);caster.g.userData.puppet.magic.elapsed=2/12;
 }
 
@@ -322,7 +309,7 @@ let prev=performance.now();function frame(now){requestAnimationFrame(frame);cons
  u.animationPosition={x:a.x,z:a.z};projectWizard(a.g,camera);
  const runes=a===player?loadout:enemyLoadout,parts=a===player?charge.parts:enemyCharge.charge.parts,colors=parts.map(k=>RUNES[runes[k]]?.color||'#ffffff');
  castingFeedback.charge(a,charging,stage||1,colors,u.puppet.lastPositions,camera);
- if(a.pendingCastLight){const event=a.pendingCastLight,hand=()=>u.puppet.lastPositions.RightHand.clone().addScaledVector(event.dir,.25);castingFeedback.fire(hand,event.dir,event.colors,event.tier);castingFeedback.beam(hand,event.beamTarget,event.colors,()=>a.g.visible,event.tier);a.pendingCastLight=null;}
+ renderCastPresentation(a,castingFeedback);
 
  }visionShade.update(paused?0:dt,player,{obstacles,walls:wards,smoke:liveMagic.fire.smokeVolumes});renderer.render(scene,camera)}requestAnimationFrame(frame);
 // Read-only diagnostics for input and rendering verification.
