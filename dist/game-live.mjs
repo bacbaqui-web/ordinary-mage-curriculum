@@ -2,7 +2,7 @@ import {BurnVisuals,applyBurnVisual} from './burn-visuals.mjs?v=ash11';
 import {castWithPresentation,renderCastPresentation} from './cast-presentation.mjs?v=ash11';
 import {CastRecoil,HitScreen,chargeSetback} from './combat-response.mjs?v=rim9';
 import {VisionShade} from './vision-shade.mjs';
-import {CastingFeedback,ChargeCamera,impactFeedback} from './casting-feedback.mjs?v=cast10';
+import {CastingFeedback,ChargeCamera,impactFeedback} from './casting-feedback.mjs?v=calm11';
 import {chargeMoveScale} from './magic-motion.mjs';
 import {canSee} from './vision.mjs';
 import {fireSpec,hasFireRecipe} from './fire-spec.mjs?v=ash11';
