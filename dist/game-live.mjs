@@ -1,3 +1,4 @@
+import {VisionShade} from './vision-shade.mjs';
 import {CastingFeedback,ChargeCamera,impactFeedback} from './casting-feedback.mjs';
 import {chargeMoveScale} from './magic-motion.mjs';
 import {canSee} from './vision.mjs';
@@ -52,6 +53,7 @@ for(const x of[-9,8]){box(x,1.8,-11, .13,3.6,.13,mat(0x514838));const flag=box(x
 // Ground markings are actual geometry and remain readable beneath spells.
 const emblem=mesh(new T.RingGeometry(2.1,2.15,64),mat(0xb7bca6,{transparent:true,opacity:.45}),0,.045,0);emblem.rotation.x=-Math.PI/2;emblem.castShadow=false;
 function wizard(color,trim){return createWizard(scene,color,trim);}
+const visionShade=new VisionShade(scene);
 const player={g:wizard(0x394351,0xe7b367),x:-5,z:4,hp:100,mana:100,shield:0,shieldTime:0,shieldHeat:false,dir:new T.Vector3(1,0,-1).normalize(),cool:0};
 const enemy={g:wizard(0x73899c,0xc2d6df),x:5,z:-4,hp:100,mana:100,shield:0,shieldTime:0,dir:new T.Vector3(-1,0,1).normalize(),cool:2,wind:0};
 player.motion=new ForcedMotion();enemy.motion=new ForcedMotion();
@@ -302,6 +304,6 @@ let prev=performance.now();function frame(now){requestAnimationFrame(frame);cons
  castingFeedback.charge(a,charging,stage||1,colors,u.puppet.lastPositions,camera);
  if(a.pendingCastLight){const event=a.pendingCastLight,hand=event.origin||u.puppet.lastPositions.RightHand.clone().addScaledVector(event.dir,.25);castingFeedback.fire(hand,event.dir,event.colors,event.tier);a.pendingCastLight=null;}
 
- }renderer.render(scene,camera)}requestAnimationFrame(frame);
+ }visionShade.update(paused?0:dt,player,{obstacles,walls:wards,smoke:liveMagic.fire.smokeVolumes});renderer.render(scene,camera)}requestAnimationFrame(frame);
 // Read-only diagnostics for input and rendering verification.
 window.mageDebug=()=>({loadout:{...loadout},running,paused,bot,finished,charge:{queue:[...charge.queue],active:charge.active,parts:[...charge.parts],held:[...charge.held],progress:charge.progress},history:[...history],roll:{active:roll.active,cooldown:roll.cooldown,invulnerable:roll.invulnerable},progress:structuredClone(progress),monsters:monsters.filter(m=>!m.dead).map(m=>({id:m.id,x:m.x,z:m.z,hp:m.hp})),player:{x:player.x,z:player.z,hp:player.hp,mana:player.mana},vision:{enemyVisible:enemy.g.visible,smoke:liveMagic.fire.smokeVolumes},enemy:{progress:structuredClone(enemyProgress),target:enemyTarget?.monster?'monster':enemyTarget?'player':null,x:enemy.x,z:enemy.z,hp:enemy.hp,mana:enemy.mana,loadout:{...enemyLoadout},charge:{parts:[...enemyCharge.charge.parts],progress:enemyCharge.charge.progress,remaining:enemyCharge.remaining},lastSpell:enemy.lastSpell},groundZones:fields.filter(f=>f.ground).map(f=>({x:f.x,z:f.z,radius:f.r,life:f.life})),projectiles:shots.map(s=>({kind:s.spec.kind,radius:s.spec.radius,speed:s.spec.speed,distance:s.distance})),walls:wards.map(w=>({x:w.x,z:w.z,moving:w.speed>0,travelled:w.travelled})),vfx:spellVfx.stats(),pixelVfx:pixelVfx.stats(),objects:scene.children.length});
