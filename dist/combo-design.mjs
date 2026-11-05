@@ -1,4 +1,4 @@
-import {FIRE_RECIPES} from './fire-spec.mjs?v=fire10';
+import {FIRE_RECIPES} from './fire-spec.mjs?v=ash11';
 export const RUNES={
 q:{name:'화염',icon:'✦',color:'#ff9869',body:'화염',action:'확산합니다',effect:'짧은 화상을 남깁니다'},
 i:{name:'빙결',icon:'❄',color:'#8fe2ff',body:'냉기',action:'응축합니다',effect:'이동 속도를 낮춥니다'},
