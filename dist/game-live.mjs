@@ -1,18 +1,18 @@
-import {BurnVisuals,applyBurnVisual} from './burn-visuals.mjs';
-import {castWithPresentation,renderCastPresentation} from './cast-presentation.mjs?v=burn9';
+import {BurnVisuals,applyBurnVisual} from './burn-visuals.mjs?v=fire10';
+import {castWithPresentation,renderCastPresentation} from './cast-presentation.mjs?v=fire10';
 import {CastRecoil,HitScreen,chargeSetback} from './combat-response.mjs?v=rim9';
 import {VisionShade} from './vision-shade.mjs';
 import {CastingFeedback,ChargeCamera,impactFeedback} from './casting-feedback.mjs?v=rim9';
 import {chargeMoveScale} from './magic-motion.mjs';
 import {canSee} from './vision.mjs';
-import {fireSpec,hasFireRecipe} from './fire-spec.mjs?v=burn9';
+import {fireSpec,hasFireRecipe} from './fire-spec.mjs?v=fire10';
 import {BodyFollow} from './body-follow.mjs?v=stride2';
 import {bindMouseControls} from './mouse-controls.mjs';
 import {createWizard,animateWizard,projectWizard} from './wizard.mjs?v=editor-live1';
 import {QueuedCharge} from './queued-charge.mjs?v=interrupt7';
-import {LiveMagic} from './live-magic.mjs?v=burn9';
-import {spellReach} from './live-spells.mjs?v=burn9';
-import {describe as describeDesign} from './combo-design.mjs?v=burn9';
+import {LiveMagic} from './live-magic.mjs?v=fire10';
+import {spellReach} from './live-spells.mjs?v=fire10';
+import {describe as describeDesign} from './combo-design.mjs?v=fire10';
 import {MeshFeedback} from './mesh-feedback.mjs';
 import {groundSpec,groundPoint,inGround,advanceGround} from './ground.mjs?v=zones1';
 import {projectileAsset,groundAsset} from './effect-map.mjs?v=zones1';
@@ -22,14 +22,14 @@ import {FALL_SECONDS,overheadDelivery,segmentCircleHit} from './delivery.mjs?v=z
 import {createProgress,awardKill,requiredXP,learn,mastery,MAX_LEVEL,MAX_RANK} from './progression.mjs?v=zones1';
 import {ForcedMotion} from './motion.mjs?v=zones1';
 import {LowPolyVFX} from './lowpoly-vfx.mjs';
-import {chooseLoadout,choosePlan,chooseLearnedPlan,spendEnemyPoints,OpponentCharge} from './live-opponent.mjs?v=burn9';
+import {chooseLoadout,choosePlan,chooseLearnedPlan,spendEnemyPoints,OpponentCharge} from './live-opponent.mjs?v=fire10';
 import {forceSpec,wardSpec,displacement,crossesWard,distanceToWard} from './forces.mjs?v=zones1';
 import {elementalSpec,inElementCone,lightningPoint,lightningHits} from './elements.mjs?v=zones1';
 const describeSpell=seq=>describeDesign(seq).steps.join(' ');
 import * as T from './three.module.js';
-import {Charge,ELEMENTS,NAMES,resolveSpell} from './live-charge-spells.mjs?v=burn9';
+import {Charge,ELEMENTS,NAMES,resolveSpell} from './live-charge-spells.mjs?v=fire10';
 import {Roll,ROLL_DURATION,incomingThreat,enemyChargeProgress} from './combat.mjs?v=zones1';
-import {RUNES,KEYS,DEFAULT_LOADOUT,validLoadout,assignRune,mapSequence,spellName,composition} from './live-loadout.mjs?v=burn9';
+import {RUNES,KEYS,DEFAULT_LOADOUT,validLoadout,assignRune,mapSequence,spellName,composition} from './live-loadout.mjs?v=fire10';
 let loadout={...DEFAULT_LOADOUT};try{const saved=JSON.parse(localStorage.getItem('mage-loadout-v1'));if(validLoadout(saved))loadout=saved}catch{}
 let progress=createProgress(loadout),monsters=[],spawnTimer=0,monsterId=0;
 let draft={...loadout},activeSlot='q',selectionReturn=false;
@@ -177,7 +177,7 @@ const liveMagic=new LiveMagic({scene,vfx:spellVfx,remove,targets,hit,applyPayloa
 const burnVisuals=new BurnVisuals(scene);
 function visibleTo(a,b){return canSee(a,b,{obstacles,walls:wards,smoke:liveMagic.fire.smokeVolumes});}
 function updateVisibility(){enemy.g.visible=visibleTo(player,enemy);shields.get(enemy).visible=enemy.g.visible;for(const m of monsters)m.g.visible=!m.dead&&visibleTo(player,m);}
-function dispatchSpell(s,caster,dir,aimPoint){caster.recoil??=new CastRecoil();caster.recoil.start(dir,s.sequence.length,s.sequence==='qh'?.4:0);if(caster===player)moveTarget=null;
+function dispatchSpell(s,caster,dir,aimPoint){caster.recoil??=new CastRecoil();caster.recoil.start(dir,s.sequence.length,hasFireRecipe(s.sequence)&&fireSpec(s.sequence).op==='h'?fireSpec(s.sequence).dashDuration:0);if(caster===player)moveTarget=null;
  if(s.sequence==='qh'&&caster===player)moveTarget=null;
  castWithPresentation({magic:liveMagic,wards,clearPath,collides,wallBlocks},s,caster,dir,aimPoint);
  if(caster===player)chargeCamera.fire(s.sequence.length);caster.g.userData.puppet.magic.release(s.sequence?.length||1);caster.g.userData.puppet.magic.elapsed=2/12;
@@ -230,9 +230,9 @@ charge.tick(dt);const chargeSpeed=chargeMoveScale(charge.active,charge.parts.len
  if(toastTimer>0){toastTimer-=dt;if(toastTimer<=0)$('toast').classList.remove('show')}
 }
 function label(el,a){const pos=new T.Vector3(a.x,2.65,a.z).project(camera);el.style.display=Math.abs(pos.x)>1||Math.abs(pos.y)>1?'none':'';el.style.left=((pos.x+1)*innerWidth/2)+'px';el.style.top=((-pos.y+1)*innerHeight/2)+'px'}
-function drawFireTell(caster,seq,border){const s=fireSpec(seq),target=caster===player?aim:(enemyTarget||player),dir=caster.dir,points=[];let p={x:caster.x,z:caster.z},r=s.op==='s'?2.6:s.radius;
-if(s.op==='i')p={x:caster.x+dir.x*3,z:caster.z+dir.z*3};if(['l','t','g'].includes(s.op)){const d=new T.Vector3(target.x-p.x,0,target.z-p.z);if(d.length()>s.range)d.setLength(s.range);p={x:p.x+d.x,z:p.z+d.z};}if(s.op==='e')r=2;if(s.op==='l')r=1.5;if(s.op==='g')r=2.8;
-if(['w','h'].includes(s.op)){const side=new T.Vector3(-dir.z,0,dir.x).multiplyScalar(s.op==='s'?1.4:s.op==='h'?.65:s.orbRadius),a=new T.Vector3(p.x,0,p.z),b=a.clone().addScaledVector(dir,s.op==='h'?3:s.range);points.push(a.clone().add(side),b.clone().add(side),b.clone().sub(side),a.clone().sub(side),a.clone().add(side));}
+function drawFireTell(caster,seq,border){const s=fireSpec(seq),target=caster===player?aim:(enemyTarget||player),dir=caster.dir,points=[];let p={x:caster.x,z:caster.z},r=s.radius;
+if(s.op==='i')p={x:caster.x+dir.x*3,z:caster.z+dir.z*3};if(['l','t','g'].includes(s.op)){const d=new T.Vector3(target.x-p.x,0,target.z-p.z);if(d.length()>s.range)d.setLength(s.range);p={x:p.x+d.x,z:p.z+d.z};}
+if(['w','h'].includes(s.op)){const side=new T.Vector3(-dir.z,0,dir.x).multiplyScalar(s.op==='s'?1.4:s.op==='h'?.6*s.scale:s.orbRadius),a=new T.Vector3(p.x,0,p.z),b=a.clone().addScaledVector(dir,s.op==='h'?s.dashDistance:s.range);points.push(a.clone().add(side),b.clone().add(side),b.clone().sub(side),a.clone().sub(side),a.clone().add(side));}
 else if(['q','d','p','s'].includes(s.op)){points.push(new T.Vector3(p.x,0,p.z));for(let i=0;i<=40;i++){const a=Math.atan2(dir.z,dir.x)-Math.PI/3+i/40*Math.PI*2/3;points.push(new T.Vector3(p.x+Math.cos(a)*r,0,p.z+Math.sin(a)*r));}points.push(new T.Vector3(p.x,0,p.z));}
 else for(let i=0;i<=48;i++){const a=i/48*Math.PI*2;points.push(new T.Vector3(p.x+Math.cos(a)*r,0,p.z+Math.sin(a)*r));}
 border.geometry.dispose();border.geometry=new T.BufferGeometry().setFromPoints(points);border.material.color.set(s.op==='i'?0xaaaaaa:s.op==='p'?0x9cba39:0xff5436);border.visible=true;}

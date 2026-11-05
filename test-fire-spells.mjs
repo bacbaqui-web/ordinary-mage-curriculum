@@ -23,3 +23,15 @@ console.log('PASS fire shapes, cone direction, steam, debuffs, lightning residue
 cast('qi');assert.equal(f.smokeVolumes.length,1);assert.ok(f.smokeVolumes[0].radius>fireSpec('q').radius);assert.equal(f.effects[0].type,'smokescreen');assert.equal(hits.length,0);for(let i=0;i<121;i++)f.update(.05);assert.equal(f.smokeVolumes.length,0);console.log('PASS dense smoke lasts six seconds and expires without damage');
 
 victim.x=1.5;cast('qh');for(let i=0;i<10;i++)f.update(.05);assert.ok(hits.some(h=>h.force===4.5));victim.x=5;cast('qs');assert.equal(hits.length,0);cast('qg');assert.ok(f.effects[0].mesh.children.some(m=>m.userData.vortex));console.log('PASS melee-only fire slash, strong punch knockback, rising vortex geometry');
+
+// Upgrades must change the actual hit area, payload, movement and residual effects.
+for(const op of ['d','p','e','t','g','s','h']){const base=fireSpec('q'+op),up=fireSpec('qq'+op);assert.ok(up.radius>base.radius);assert.ok(up.damage>base.damage);}
+assert.equal(fireSpec('qqi').radius,fireSpec('qi').radius);assert.ok(fireSpec('qi').radius<4.8);
+cast('qqq');assert.ok(f.effects.filter(e=>e.type==='scorch').length>=9);assert.equal(f.effects[0].radius,6.6);
+cast('qql');assert.equal(f.effects[0].radius,2.25);assert.ok(f.effects[1].mesh.scale.x>2);
+victim.x=3.6;cast('qs');assert.equal(hits.length,0);cast('qqs');assert.ok(hits.some(h=>h.v===victim));
+cast('qqe');assert.ok(wards.every(w=>Math.abs(Math.hypot(w.x,w.z)-3)<1e-8));
+victim.x=1.5;cast('qqh');for(let i=0;i<12;i++)f.update(.05);assert.ok(hits.some(h=>h.force===7));assert.ok(owner.x>4.9);
+cast('qqh');blocked=true;for(let i=0;i<12;i++)f.update(.05);assert.ok(owner.x<=1);blocked=false;
+cast('qqi');f.update(.05);assert.ok(hits.length>0);assert.ok(payloads.some(x=>x.p.burn));
+console.log('PASS fire upgrades: radius, damage, smoke size, scorch, melee reach, walls, dash collision and knockback');

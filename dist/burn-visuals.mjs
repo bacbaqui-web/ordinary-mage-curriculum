@@ -1,5 +1,5 @@
 import * as T from './three.module.js';
-import {FireSpells} from './fire-spells.mjs?v=burn9';
+import {FireSpells} from './fire-spells.mjs?v=fire10';
 export function applyBurnVisual(a,p){if(p.ash)a.ashTime=Math.max(a.ashTime||0,p.ash);if(p.greenFire)a.greenFireTime=Math.max(a.greenFireTime||0,p.greenFire);}
 export class BurnVisuals{
  constructor(scene){this.scene=scene;this.states=new Map();this.factory=new FireSpells({scene});this.time=0;}
