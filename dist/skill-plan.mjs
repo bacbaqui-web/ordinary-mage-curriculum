@@ -1,5 +1,5 @@
-import {RUNES,valid,describe} from './combo-design.mjs?v=roles12';
-import {mountAtlasPreview} from './atlas-preview.mjs?v=mesh1';
+import {RUNES,valid,describe} from './combo-design.mjs?v=live12';
+import {mountAtlasPreview} from './atlas-preview.mjs?v=live12';
 const $=id=>document.getElementById(id),ids=Object.keys(RUNES);let seq=valid(location.hash.slice(1))?location.hash.slice(1):'qqw',branch=seq.slice(0,2),dispose=()=>{};
 const recipe=s=>[...s].map(k=>RUNES[k].name).join(' → ');
 const icons=s=>[...s].map(k=>`<span class="rune-icon" style="--rune:${RUNES[k].color}" title="${RUNES[k].name}">${RUNES[k].icon}</span>`).join('<i>＋</i>');
@@ -7,7 +7,7 @@ function button(s){const d=describe(s);return `<button data-seq="${s}" class="no
 function render(){const base=seq[0],d=describe(seq);if(branch.length!==2||branch[0]!==base)branch=base+base;if(seq.length>1)branch=seq.slice(0,2);document.documentElement.style.setProperty('--accent',d.color);
 $('bases').innerHTML=ids.map(k=>`<button class="base-rune" data-seq="${k}" aria-pressed="${base===k}"><span class="rune-icon" style="--rune:${RUNES[k].color}">${RUNES[k].icon}</span><span><b>${RUNES[k].name}</b><small>1륜</small></span></button>`).join('');
 const pool=$('repeat').checked?[...new Set(seq)]:ids;$('treeTitle').textContent=RUNES[base].name+'에서 시작';$('root').innerHTML=button(base);$('pairs').innerHTML=pool.map(k=>button(base+k)).join('');$('triples').innerHTML=pool.map(k=>button(branch+k)).join('');
-dispose();$('detail').innerHTML=`<span class="eyebrow">${seq.length===1?'1륜':seq.length+'중 2륜'} · 조합 설계</span><h2>${d.name}</h2><div class="icon-formula">${icons(seq)}</div><p>${recipe(seq)}</p><div id="atlasPreview"></div><div class="dual-role"><strong>${RUNES[base].name}의 두 역할</strong><p><span>무엇을</span>${RUNES[base].body}을 만듭니다</p><p><span>어떻게 한다</span>${RUNES[base].action}</p></div><ol>${d.steps.map(s=>`<li>${s}</li>`).join('')}</ol><p class="notice">${d.balance}</p><button id="reverse">순서 뒤집어 비교</button><button id="share">조합 링크 복사</button><p id="status" role="status"></p>`;
+dispose();$('detail').innerHTML=`<span class="eyebrow">${seq.length===1?'1륜':seq.length+'중 2륜'} · 조합 마법</span><h2>${d.name}</h2><div class="icon-formula">${icons(seq)}</div><p>${recipe(seq)}</p><div id="atlasPreview"></div><div class="dual-role"><strong>${RUNES[base].name}의 두 역할</strong><p><span>무엇을</span>${RUNES[base].body}을 만듭니다</p><p><span>어떻게 한다</span>${RUNES[base].action}</p></div><ol>${d.steps.map(s=>`<li>${s}</li>`).join('')}</ol><p class="notice">${d.balance}</p><button id="reverse">순서 뒤집어 비교</button><button id="share">조합 링크 복사</button><p id="status" role="status"></p>`;
 // Use the model's generated first sentence for the correct Korean object particle.
 $('detail').querySelector('.dual-role p').innerHTML='<span>무엇을</span>'+RUNES[base].body;
 dispose=mountAtlasPreview($('atlasPreview'),seq);$('reverse').onclick=()=>select([...seq].reverse().join(''));$('share').onclick=async()=>{try{await navigator.clipboard.writeText(location.href);$('status').textContent='링크를 복사했습니다.'}catch{$('status').textContent='주소창의 링크를 복사해 주세요.'}};requestAnimationFrame(drawConnections);}

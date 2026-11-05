@@ -1,0 +1,41 @@
+import * as T from './three.module.js';
+import {compileSpell,spellReach,spellPayload} from './live-spells.mjs';
+import {RUNES} from './combo-design.mjs';
+import {crossesWard,distanceToWard} from './forces.mjs';
+import {segmentCircleHit} from './delivery.mjs';
+export class LiveMagic {
+ constructor(api){this.a=api;this.effects=[];}
+ clear(){for(const e of this.effects)this.a.remove(e.mesh);this.effects=[];}
+ shape(kind,r=.35,form='orb'){const color=RUNES[kind].color,g=form==='wall'?new T.BoxGeometry(.2,2.4,r*2):form==='field'?new T.CylinderGeometry(r,r,.07,40):form==='blade'?new T.BoxGeometry(.12,.15,r*2):kind==='i'?new T.OctahedronGeometry(r):new T.IcosahedronGeometry(r,kind==='d'?0:1);const mesh=new T.Mesh(g,new T.MeshStandardMaterial({color,emissive:color,emissiveIntensity:.45,flatShading:true,transparent:form==='field',opacity:form==='field'?.25:1}));mesh.castShadow=true;this.a.scene.add(mesh);return mesh;}
+ cast(spell,caster,dir,target){const node=compileSpell(spell.sequence,spell.power);if(this.effects.length>90)return;this.execute(node,caster,{x:caster.x,z:caster.z},dir.clone(),{x:target.x,z:target.z},{range:spellReach(spell.sequence),radius:1.2+spell.sequence.length*.25,mult:1});}
+ payload(node){let p=spellPayload(node.kind,node.power);for(let n=node;n;n=n.inner){if(n.op==='i'){p.damage*=1.35;}if(n.op==='d')p.damage*=1.2;}return p;}
+ apply(node,owner,point,radius,dir=null,cone=false,mult=1){const p=this.payload(node);for(const v of this.a.targets(owner)){const dx=v.x-point.x,dz=v.z-point.z,len=Math.hypot(dx,dz);if(len>radius+.4||!this.a.clearPath(point,v))continue;if(cone&&len>.01&&(dx*dir.x+dz*dir.z)/len<.45)continue;const d=new T.Vector3(dx,0,dz).normalize();if(this.a.hit(v,p.damage*mult*(node.kind==='l'&&v.wet>0?1.35:1),d,p.force,owner)){this.a.applyPayload(v,p,owner);if(p.poison){v.poison=p.poison;v.poisonTick=.5;v.poisonOwner=owner;v.poisonDamage=2*node.power;}if(p.wet)v.wet=p.wet;}}
+ }
+ particles(kind,p,r=1){const hex=new T.Color(RUNES[kind].color).getHex();for(let i=0;i<26;i++){const a=Math.random()*Math.PI*2;this.a.vfx.particle(kind==='i'?'shard':'chunk',[p.x+Math.cos(a)*r*Math.random(),.25+Math.random()*.6,p.z+Math.sin(a)*r*Math.random()],[Math.cos(a),.8+Math.random(),Math.sin(a)],.08+Math.random()*.12,hex,.45,{gravity:kind==='d'?4:0,stretch:kind==='i'?2.4:1.2});}this.a.vfx.pulse(p.x,p.z,r,hex,.4);}
+ clamp(origin,target,range){const d=new T.Vector3(target.x-origin.x,0,target.z-origin.z);if(d.length()>range)d.setLength(range);return{x:origin.x+d.x,z:origin.z+d.z};}
+ execute(n,owner,origin,dir,target,c){const point=this.clamp(origin,target,c.range),inner=n.inner||n;
+ if(n.op==='q'||n.op==='i'||n.op==='d'){const next={...c};if(n.op==='q'){next.radius*=1.6;next.range*=1.2;}if(n.op==='i'){next.radius*=.6;next.mult*=1.4;}if(n.op==='d'){next.mult*=1.25;}this.execute(inner,owner,origin,dir,target,next);return;}
+ if(n.op==='w'){
+  const moving=inner.op==='t'||inner.op==='e';if(moving&&!n.deliver){this.install(inner,owner,origin,dir,c,dir.clone().multiplyScalar(3.8));return;}
+  const repeated=inner.op==='w',expanded=inner.op==='q';const mesh=this.shape(n.kind,repeated?.25:expanded?.72:.4);mesh.position.set(origin.x,1,origin.z);this.effects.push({type:'projectile',mesh,owner,node:repeated?inner.inner:inner,dir,target,ctx:c,distance:0,life:4,speed:repeated?18:expanded?6:9});return;
+ }
+ if(n.op==='l'){const mesh=this.shape(n.kind,.35);mesh.position.set(point.x,5,point.z);this.a.vfx.pulse(point.x,point.z,c.radius,RUNES[n.kind].color,.65);this.effects.push({type:'drop',mesh,owner,node:inner,dir,point,ctx:c,life:.65,max:.65});return;}
+ if((n.op==='e'||n.op==='t')&&inner.op==='w'){this.execute({...inner,deliver:true,inner:{...n,inner:inner.inner}},owner,origin,dir,target,c);return;}
+ if((n.op==='e'||n.op==='t')&&inner.op==='l'){this.execute({...inner,inner:{...n,inner:inner.inner}},owner,origin,dir,target,c);return;}
+ if(n.op==='e'||n.op==='t'){this.install(n,owner,point,dir,c);return;}
+ if(n.op==='g'){for(const v of this.a.targets(owner)){const len=Math.hypot(v.x-point.x,v.z-point.z);if(len<c.radius*2&&len>.5&&this.a.clearPath(point,v))v.motion.start((v.x-point.x)/len,(v.z-point.z)/len,-Math.min(2.5,len-.5));}this.execute(inner,owner,point,dir,point,c);return;}
+ if(n.op==='p'){this.apply(inner,owner,point,c.radius,dir,false,.5*c.mult);const mesh=this.shape(n.kind,.65,'field');mesh.position.set(point.x,.1,point.z);this.effects.push({type:'field',mesh,owner,node:inner,point,dir,ctx:{...c,radius:c.radius*.7},life:3,tick:0});return;}
+ if(n.op==='a'){for(let i=-1;i<=1;i++){const spread=dir.clone().applyAxisAngle(new T.Vector3(0,1,0),i*.4);const p={x:origin.x+spread.x*2,z:origin.z+spread.z*2};this.execute(inner,owner,p,spread,p,{...c,radius:c.radius*.65,mult:c.mult*.45});}return;}
+ if(n.op==='s'){this.particles(n.kind,origin,c.radius*1.6);this.apply(inner,owner,origin,c.radius*1.6,null,false,c.mult);return;}
+ if(n.op==='h'){this.particles(n.kind,point,c.radius*.55);this.apply(inner,owner,point,c.radius*.55,null,false,c.mult*1.6);return;}
+ this.particles(n.kind,origin,c.radius);this.apply(n,owner,origin,c.radius,dir,false,c.mult);
+ }
+ install(n,owner,point,dir,c,velocity=null){const wall=n.op==='e',r=wall?1.6:c.radius;if(wall){point={...point};for(let i=0;i<35&&(this.a.collides(point.x,point.z,.3)||this.a.targets(owner).concat(owner).some(v=>distanceToWard(v,{x:point.x,z:point.z,nx:dir.x,nz:dir.z,width:r*2})<.6));i++){point.x-=dir.x*.2;point.z-=dir.z*.2;}for(const w of this.a.wards.filter(w=>w.owner===owner))w.life=0;}const mesh=this.shape(n.kind,r,wall?'wall':'field');mesh.position.set(point.x,wall?1.2:.08,point.z);mesh.rotation.y=Math.atan2(-dir.z,dir.x);if(wall){const spec={moving:!!velocity,damage:0,shock:n.kind==='l'?5:0,burn:n.kind==='q'?2:0,slow:n.kind==='i'?2:0,push:n.kind==='w'?1:0,pull:n.kind==='g'?1:0,travel:7};this.a.wards.push({owner,mesh,m:mesh,x:point.x,z:point.z,nx:dir.x,nz:dir.z,width:r*2,hp:36*n.depth,maxHp:36*n.depth,life:3+n.depth,spec,travelled:0,speed:velocity?3.8:0,effectCooldown:0});return;}
+ this.effects.push({type:'field',mesh,owner,node:n.inner||n,point:{...point},dir,ctx:c,life:3+n.depth,tick:0,velocity});}
+ update(dt){for(let i=this.effects.length-1;i>=0;i--){const e=this.effects[i];e.life-=dt;let done=e.life<=0;
+ if(e.type==='projectile'){const step=Math.min(e.speed*dt,e.ctx.range-e.distance),from=e.mesh.position.clone(),to=from.clone().addScaledVector(e.dir,step);let impact=false,blocked=false,tmin=1;for(let n=0;n<Math.ceil(step/.08);n++){const p=from.clone().lerp(to,(n+1)/Math.ceil(step/.08));const wall=this.a.wards.find(w=>w.owner!==e.owner&&w.hp>0&&crossesWard(from,p,w,.25));if(wall){wall.hp=Math.max(0,wall.hp-this.payload(e.node).damage);blocked=true;break;}if(this.a.collides(p.x,p.z,.25)){blocked=true;break;}}if(!blocked)for(const v of this.a.targets(e.owner)){const t=segmentCircleHit(from,to,v,.6);if(t!==null&&t<tmin){tmin=t;impact=true;}}e.mesh.position.copy(from).lerp(to,tmin);e.distance+=step;done||=blocked||impact||e.distance>=e.ctx.range-.01;if(done&&!blocked){const p={x:e.mesh.position.x,z:e.mesh.position.z};this.execute(e.node,e.owner,p,e.dir,p,e.ctx);}this.a.vfx.particle('chunk',e.mesh.position.toArray(),[0,.4,0],.12,new T.Color(RUNES[e.node.kind].color).getHex(),.2);}
+ else if(e.type==='drop'){e.mesh.position.y=.2+4.8*Math.max(0,e.life/e.max);if(done)this.execute(e.node,e.owner,e.point,e.dir,e.point,e.ctx);}
+ else if(e.type==='field'){if(e.velocity){const next={x:e.point.x+e.velocity.x*dt,z:e.point.z+e.velocity.z*dt};if(!this.a.collides(next.x,next.z,.2)){Object.assign(e.point,next);e.mesh.position.set(next.x,.08,next.z);}}e.tick-=dt;if(e.tick<=0){e.tick=.65;this.apply(e.node,e.owner,e.point,e.ctx.radius,null,false,e.ctx.mult*.3);this.particles(e.node.kind,e.point,e.ctx.radius);} }
+ if(done){this.a.remove(e.mesh);this.effects.splice(i,1);}
+ }}
+}
