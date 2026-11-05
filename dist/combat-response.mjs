@@ -13,3 +13,5 @@ export class HitScreen{
  get opacity(){return this.strength*Math.min(1,this.time/.3);}
  shake(reduced=false){const a=this.strength*Math.min(1,this.time/.35)*(reduced?.015:.13);return{x:Math.sin(this.time*103)*a,y:Math.cos(this.time*87)*a*.65};}
 }
+
+export const chargeSetback=damage=>damage>0?Math.min(.7,.3+damage*.015):0;

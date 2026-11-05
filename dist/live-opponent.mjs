@@ -8,6 +8,7 @@ export class OpponentCharge{
  constructor(){this.charge=new Charge();this.clear()}
  clear(){this.charge.clear();this.plan=[];this.elapsed=0;}
  start(plan){this.clear();if(plan.length<1||plan.length>3||plan.some(k=>!KEYS.includes(k)))throw Error('잘못된 상대 주문');this.plan=[...plan];this.charge.down(plan[0]);}
+ disrupt(seconds){if(!this.active||seconds<=0)return 0;const before=this.elapsed;this.elapsed=Math.max(0,this.elapsed-seconds);const index=Math.min(this.plan.length-1,Math.floor(this.elapsed/RING_SECONDS));this.charge.parts=this.plan.slice(0,index+1);this.charge.progress=(this.elapsed-index*RING_SECONDS)/RING_SECONDS;this.charge.elapsed=this.elapsed;this.charge.held=[this.plan[Math.min(index+1,this.plan.length-1)]];return before-this.elapsed;}
  get active(){return this.charge.active}
  get remaining(){return Math.max(0,this.plan.length*RING_SECONDS-this.elapsed)}
  tick(dt,loadout){if(!this.active)return null;let budget=Math.min(dt,this.remaining);while(budget>1e-9){const c=this.charge;c.held=[this.plan[Math.min(c.parts.length,this.plan.length-1)]];const step=Math.min(budget,Math.max(1e-8,(1-c.progress)*RING_SECONDS));c.tick(step+1e-12);this.elapsed+=step;budget-=step;}

@@ -1,4 +1,4 @@
-import {CastRecoil,HitScreen} from './combat-response.mjs';
+import {CastRecoil,HitScreen,chargeSetback} from './combat-response.mjs?v=interrupt7';
 import {VisionShade} from './vision-shade.mjs';
 import {CastingFeedback,ChargeCamera,impactFeedback} from './casting-feedback.mjs';
 import {chargeMoveScale} from './magic-motion.mjs';
@@ -7,7 +7,7 @@ import {fireSpec,hasFireRecipe} from './fire-spec.mjs?v=smoke4';
 import {BodyFollow} from './body-follow.mjs?v=stride2';
 import {bindMouseControls} from './mouse-controls.mjs';
 import {createWizard,animateWizard,projectWizard} from './wizard.mjs?v=editor-live1';
-import {QueuedCharge} from './queued-charge.mjs';
+import {QueuedCharge} from './queued-charge.mjs?v=interrupt7';
 import {LiveMagic} from './live-magic.mjs?v=smoke4';
 import {spellReach} from './live-spells.mjs?v=smoke4';
 import {describe as describeDesign} from './combo-design.mjs?v=smoke4';
@@ -20,7 +20,7 @@ import {FALL_SECONDS,overheadDelivery,segmentCircleHit} from './delivery.mjs?v=z
 import {createProgress,awardKill,requiredXP,learn,mastery,MAX_LEVEL,MAX_RANK} from './progression.mjs?v=zones1';
 import {ForcedMotion} from './motion.mjs?v=zones1';
 import {LowPolyVFX} from './lowpoly-vfx.mjs';
-import {chooseLoadout,choosePlan,chooseLearnedPlan,spendEnemyPoints,OpponentCharge} from './live-opponent.mjs?v=smoke4';
+import {chooseLoadout,choosePlan,chooseLearnedPlan,spendEnemyPoints,OpponentCharge} from './live-opponent.mjs?v=interrupt7';
 import {forceSpec,wardSpec,displacement,crossesWard,distanceToWard} from './forces.mjs?v=zones1';
 import {elementalSpec,inElementCone,lightningPoint,lightningHits} from './elements.mjs?v=zones1';
 const describeSpell=seq=>describeDesign(seq).steps.join(' ');
@@ -81,7 +81,7 @@ function collides(x,z,r=.45){return Math.abs(x)>23.6||Math.abs(z)>21.6||obstacle
 function wallBlocks(from,to){return wards.some(w=>w.hp>0&&w.life>0&&crossesWard(from,to,w,.5)&&distanceToWard(to,w)<=distanceToWard(from,w)+.001);}
 function move(a,dx,dz){if(!collides(a.x+dx,a.z)&&!wallBlocks(a,{x:a.x+dx,z:a.z}))a.x+=dx;if(!collides(a.x,a.z+dz)&&!wallBlocks(a,{x:a.x,z:a.z+dz}))a.z+=dz}
 const hitScreen=new HitScreen(),hitOverlay=document.createElement('div');hitOverlay.id='hitScreen';hitOverlay.setAttribute('aria-hidden','true');hitOverlay.style.cssText='position:fixed;inset:0;pointer-events:none;z-index:80;opacity:0;background:radial-gradient(ellipse at center,transparent 42%,rgba(164,0,8,.35) 70%,rgba(255,24,36,.88) 100%);box-shadow:inset 0 0 65px 12px rgba(255,25,40,.6)';document.body.append(hitOverlay);const reducedShake=matchMedia('(prefers-reduced-motion: reduce)').matches;
-function hit(a,damage,dir,force=0,source=null){if(finished||a.dead||(a===player&&roll.invulnerable))return false;if(a.monster&&(source===player||source===enemy)){a.aggro=true;a.aggroTarget=source;}if(source?.castContacts)source.castContacts.push(new T.Vector3(a.x,a.monster ? .65 : 1,a.z));if(a===enemy&&source===player)enemy.retaliate=6;let block=Math.min(a.shield,damage);a.shield-=block;damage-=block;if(block){pixelVfx.play('parry',a.x,a.z,{width:1.8,y:1});ring(a.x,a.z,0xafdfff,.8,.2);if(a.shieldHeat){const other=a===player?enemy:player;if(Math.hypot(other.x-a.x,other.z-a.z)<3)other.hp=Math.max(0,other.hp-block*.32)}}a.hp=Math.max(0,a.hp-damage);if(damage){pixelVfx.play('hit-spark',a.x,a.z,{width:1.1,y:1});spark(a.x,a.z,a===player?0xffca8f:0xb8ddff,5);}impactFeedback(a,damage,dir,force);if(a===player)hitScreen.hit(damage);if(a===player&&damage)flash('피격 −'+Math.round(damage));if(a.hp<=0){if(a.monster)killMonster(a,source);else endRound(a===enemy)};return true}
+function hit(a,damage,dir,force=0,source=null){if(finished||a.dead||(a===player&&roll.invulnerable))return false;if(a.monster&&(source===player||source===enemy)){a.aggro=true;a.aggroTarget=source;}if(source?.castContacts)source.castContacts.push(new T.Vector3(a.x,a.monster ? .65 : 1,a.z));if(a===enemy&&source===player)enemy.retaliate=6;let block=Math.min(a.shield,damage);a.shield-=block;damage-=block;if(block){pixelVfx.play('parry',a.x,a.z,{width:1.8,y:1});ring(a.x,a.z,0xafdfff,.8,.2);if(a.shieldHeat){const other=a===player?enemy:player;if(Math.hypot(other.x-a.x,other.z-a.z)<3)other.hp=Math.max(0,other.hp-block*.32)}}a.hp=Math.max(0,a.hp-damage);if(damage){pixelVfx.play('hit-spark',a.x,a.z,{width:1.1,y:1});spark(a.x,a.z,a===player?0xffca8f:0xb8ddff,5);}impactFeedback(a,damage,dir,force);if(a===player){hitScreen.hit(damage);charge.disrupt(chargeSetback(damage));}else if(a===enemy)enemyCharge.disrupt(chargeSetback(damage));if(a===player&&damage)flash('피격 −'+Math.round(damage)+(charge.active?' · 충전 방해':''));if(a.hp<=0){if(a.monster)killMonster(a,source);else endRound(a===enemy)};return true}
 function castOrb(spell,dir,caster){const spec=elementalSpec(spell.sequence,spell.power),color=RUNES[spec.kind].color;
  const m=new T.Object3D();m.position.set(caster.x,.95,caster.z);scene.add(m);
  const screenStart=m.position.clone().project(camera),screenEnd=m.position.clone().add(dir).project(camera),rotation=Math.atan2(screenEnd.y-screenStart.y,screenEnd.x-screenStart.x);
