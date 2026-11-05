@@ -1,0 +1,9 @@
+import * as T from './three.module.js';
+// Same mesh construction as the published game's wizard; isolated from ongoing character work.
+export function createPublishedWizard(scene,color,trim){
+const mat=color=>new T.MeshStandardMaterial({color,roughness:.85,flatShading:true});
+function mesh(geometry,material,x,y,z,parent=scene){const m=new T.Mesh(geometry,material);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m;}
+function box(x,y,z,w,h,d,material,parent=scene){return mesh(new T.BoxGeometry(w,h,d),material,x,y,z,parent);}
+function wizard(color,trim){const g=new T.Group();const robe=mat(color),edge=mat(trim),skin=mat(0xe1c4a1),dark=mat(0x26313c);mesh(new T.ConeGeometry(.48,1.1,7),robe,0,.85,0,g);mesh(new T.CylinderGeometry(.43,.49,.08,7),edge,0,.34,0,g);mesh(new T.SphereGeometry(.23,8,6),skin,0,1.5,0,g);mesh(new T.CylinderGeometry(.56,.56,.065,10),dark,0,1.72,0,g);mesh(new T.ConeGeometry(.34,.77,7),robe,-.07,2.08,0,g);mesh(new T.CylinderGeometry(.33,.35,.075,7),edge,0,1.79,0,g);box(-.2,.2,.08,.19,.34,.36,dark,g);box(.2,.2,.08,.19,.34,.36,dark,g);const arm=box(.4,1.15,.22,.22,.23,.68,robe,g);mesh(new T.SphereGeometry(.13,7,5),skin,.4,1.15,.58,g);box(-.4,.95,0,.2,.6,.22,robe,g);const selection=mesh(new T.RingGeometry(.62,.67,40),new T.MeshBasicMaterial({color:trim,transparent:true,opacity:.65,side:T.DoubleSide}),0,.065,0,g);selection.rotation.x=-Math.PI/2;selection.castShadow=false;const body=new T.Group();body.position.y=.95;for(const child of [...g.children]){if(child===selection)continue;g.remove(child);child.position.y-=.95;body.add(child)}g.add(body);g.userData.body=body;g.userData.arm=arm;g.userData.palette=[...new Set([robe,edge,skin,dark])].map(material=>({material,color:material.color.clone()}));scene.add(g);return g}
+return wizard(color,trim);
+}
