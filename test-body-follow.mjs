@@ -4,24 +4,14 @@ import {BodyFollow,angleDelta} from './dist/body-follow.mjs';
 import {MotionPuppet} from './dist/motion-puppet.mjs';
 const turn=new BodyFollow();turn.update(0,{aim:0,x:0,z:0});turn.update(.03,{aim:1,x:0,z:0});assert.ok(turn.head>turn.chest&&turn.chest>turn.pelvis);
 for(let i=0;i<120;i++){turn.update(1/60,{aim:3,x:0,z:0});assert.ok(Math.abs(angleDelta(turn.head,turn.chest))<=.90001);assert.ok(Math.abs(angleDelta(turn.chest,turn.pelvis))<=.70001);}
-const scene=new T.Scene(),p=new MotionPuppet(scene),camera=new T.PerspectiveCamera();camera.position.set(4,4,4);camera.lookAt(0,1,0);p.bodyFollow=new BodyFollow();let previous=null,maxSlip=0;
-for(let i=0;i<240;i++){
- const z=i*4.4/120;p.group.position.z=z;p.update(1/120);p.bodyFollow.update(1/120,{aim:0,x:0,z,vz:4.4});p.render(camera);
- const state=p.bodyFollow;
- if(previous)for(const side of ['Left','Right'])if(state.swing?.side!==side&&previous.swing!==side){maxSlip=Math.max(maxSlip,p.lastPositions[side+'Foot'].distanceTo(previous[side]));}
- previous={Left:p.lastPositions.LeftFoot.clone(),Right:p.lastPositions.RightFoot.clone(),swing:state.swing?.side};
- for(const side of ['Left','Right'])assert.ok(p.lastPositions[side+'Foot'].y>=.099,'feet stay above floor');
+const puppet=new MotionPuppet(new T.Scene()),camera=new T.PerspectiveCamera();
+camera.position.set(4,4,4);camera.lookAt(0,1,0);
+for(const time of [0,.15,.35,.7]){
+ puppet.time=time;puppet.update(0);puppet.bodyFollow=null;puppet.render(camera);
+ const original=Object.fromEntries(Object.entries(puppet.lastPositions).map(([n,p])=>[n,p.clone()]));
+ puppet.bodyFollow=new BodyFollow();puppet.bodyFollow.update(0,{aim:0});puppet.render(camera);
+ for(const [n,p] of Object.entries(puppet.lastPositions))assert.ok(p.distanceTo(original[n])<1e-9,'saved motion stays unchanged without turning');
+ puppet.bodyFollow.update(.03,{aim:1});puppet.render(camera);
+ for(const [n,p] of Object.entries(puppet.lastPositions))assert.ok(Math.abs(p.y-original[n].y)<1e-9,'turning does not change pelvis or foot height');
 }
-console.log({maxSlip});assert.ok(maxSlip<.01,'stance foot should remain planted');
-console.log('PASS: staggered turning, angular limits, grounded feet, planted stance during movement');
-for(const [vx,vz] of [[0,-3],[3,0],[-3,0],[0,0]]){
- for(let i=0;i<60;i++){
-  p.group.position.x+=vx/120;p.group.position.z+=vz/120;const aim=Math.PI*i/60;p.group.rotation.y=aim;
-  p.update(1/120);p.bodyFollow.update(1/120,{aim,x:p.group.position.x,z:p.group.position.z,vx,vz});p.render(camera);
-  for(const point of Object.values(p.lastPositions))assert.ok(point.toArray().every(Number.isFinite));
-  for(const side of ['Left','Right'])assert.ok(p.lastPositions[side+'Foot'].y>=.09);
- }
-}
-console.log('PASS: backwards, sideways, turning and stopping remain finite and above ground');
-function cadence(speed){const puppet=new MotionPuppet(new T.Scene());puppet.bodyFollow=new BodyFollow();let steps=0,last=null;for(let i=0;i<360;i++){const dt=1/120,z=i*speed*dt;puppet.group.position.z=z;puppet.update(dt);puppet.bodyFollow.update(dt,{aim:0,x:0,z,vz:speed});puppet.render(camera);const swing=puppet.bodyFollow.swing;if(swing&&swing!==last)steps++;last=swing;}puppet.dispose();return steps;}
-const normal=cadence(4.4),slow=cadence(2.2),idle=cadence(0);assert.ok(normal<22);assert.ok(slow<normal*.7);assert.equal(idle,0);console.log({normalStepsIn3s:normal,halfSpeedStepsIn3s:slow,idleSteps:idle});
+console.log('PASS: staggered turning, angle limits, original animation preserved, no foot planting or pelvis height correction');

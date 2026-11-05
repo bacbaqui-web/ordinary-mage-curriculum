@@ -290,7 +290,7 @@ let prev=performance.now();function frame(now){requestAnimationFrame(frame);cons
  const previous=u.animationPosition||{x:a.x,z:a.z},speed=step?Math.hypot(a.x-previous.x,a.z-previous.z)/step:0;
  animateWizard(a.g,step,{speed,charging,chargeStage:stage||1,cast:a.castFlash||0});
  u.puppet.bodyFollow??=new BodyFollow();
- u.puppet.bodyFollow.update(step,{aim:Math.atan2(a.dir.x,a.dir.z),x:a.x,z:a.z,vx:step?(a.x-previous.x)/step:0,vz:step?(a.z-previous.z)/step:0,enabled:!(a===player&&roll.active)&&!a.motion.active&&u.puppet.magic.mode!=='release'});
+ u.puppet.bodyFollow.update(step,{aim:Math.atan2(a.dir.x,a.dir.z)});
  u.animationPosition={x:a.x,z:a.z};projectWizard(a.g,camera);
  }renderer.render(scene,camera)}requestAnimationFrame(frame);
 // Read-only diagnostics for input and rendering verification.
