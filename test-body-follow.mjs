@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import * as T from './dist/three.module.js';
 import {BodyFollow,angleDelta} from './dist/body-follow.mjs';
 import {MotionPuppet} from './dist/motion-puppet.mjs';
-const turn=new BodyFollow();turn.update(0,{aim:0,x:0,z:0});turn.update(.03,{aim:1,x:0,z:0});assert.ok(turn.head>turn.chest&&turn.chest>turn.pelvis);
+const turn=new BodyFollow();turn.update(0,{aim:0,x:0,z:0});turn.update(.03,{aim:1,x:0,z:0});assert.ok(turn.head>0);assert.equal(turn.chest,0);assert.equal(turn.pelvis,0);for(let i=0;i<8;i++)turn.update(.016,{aim:1});assert.ok(turn.chest>turn.pelvis);assert.equal(turn.pelvis,0);
 for(let i=0;i<120;i++){turn.update(1/60,{aim:3,x:0,z:0});assert.ok(Math.abs(angleDelta(turn.head,turn.chest))<=.90001);assert.ok(Math.abs(angleDelta(turn.chest,turn.pelvis))<=.70001);}
 const puppet=new MotionPuppet(new T.Scene()),camera=new T.PerspectiveCamera();
 camera.position.set(4,4,4);camera.lookAt(0,1,0);
