@@ -52,14 +52,15 @@ export class MotionPuppet{
   const edited=savedPose(motionName,this.magic.mode!=='idle'?this.magic.elapsed:(this.editorActionTime??this.time),{loop:this.magic.mode==='idle'&&this.editorActionTime===undefined,hold:this.magic.mode==='hold'});
   if(edited){for(const [n,a] of Object.entries(edited))positions[n]=new T.Vector3(...a);positions.LeftToe=positions.LeftFoot.clone().add(new T.Vector3(0,0,.22));positions.RightToe=positions.RightFoot.clone().add(new T.Vector3(0,0,.22));}
   const magicClip=savedMotion('마법 시전');this.magic.releaseDuration=magicClip?Math.max(10/12,magicClip.frames/magicClip.fps):10/12;
+  this.bodyFollow?.apply(positions,this.group);
   for(const n of Object.keys(positions))this.group.localToWorld(positions[n]);
   this.lastPositions=positions;
   const q=camera.getWorldQuaternion(new T.Quaternion()),iq=q.clone().invert(),gq=this.group.getWorldQuaternion(new T.Quaternion()).invert();
   for(const p of this.parts){const a=positions[p.a],b=positions[p.b],delta=a.clone().sub(b).applyQuaternion(iq),len=Math.hypot(delta.x,delta.y);p.mesh.position.copy(this.group.worldToLocal(a.clone().add(b).multiplyScalar(.5)));p.mesh.quaternion.copy(gq).multiply(q).multiply(new T.Quaternion().setFromAxisAngle(new T.Vector3(0,0,1),Math.atan2(-delta.x,delta.y)));p.mesh.scale.set(p.w,Math.max(.001,(len+p.w)*.5),1); // round end caps join adjacent segments
   }
   this.head.position.copy(this.group.worldToLocal(positions.Head.clone()));this.head.quaternion.copy(gq).multiply(q);
-  const forward=new T.Vector3(0,0,1).transformDirection(this.group.matrixWorld),view=camera.getWorldPosition(new T.Vector3()).sub(positions.Head).normalize(),front=forward.dot(view);
-  for(const eye of this.eyes){eye.visible=front>.12;const offset=new T.Vector3(eye.userData.x*Math.max(.25,front),.025,.012).applyQuaternion(q);eye.position.copy(this.group.worldToLocal(positions.Head.clone().add(offset)));eye.quaternion.copy(this.head.quaternion);}
+  const forward=this.bodyFollow?new T.Vector3(Math.sin(this.bodyFollow.head),0,Math.cos(this.bodyFollow.head)):new T.Vector3(0,0,1).transformDirection(this.group.matrixWorld),view=camera.getWorldPosition(new T.Vector3()).sub(positions.Head).normalize(),front=forward.dot(view);
+  for(const eye of this.eyes){eye.visible=front>.12;const offset=new T.Vector3(eye.userData.x*Math.max(.25,front)+(this.bodyFollow?new T.Vector3(Math.sin(this.bodyFollow.head),0,Math.cos(this.bodyFollow.head)).applyQuaternion(iq).x*.09:0),.025,.012).applyQuaternion(q);eye.position.copy(this.group.worldToLocal(positions.Head.clone().add(offset)));eye.quaternion.copy(this.head.quaternion);}
  }
  dispose(){this.mixer.stopAllAction();this.group.traverse(o=>{o.geometry?.dispose();o.material?.dispose();});this.group.removeFromParent();}
 }
