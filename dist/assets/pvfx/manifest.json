@@ -1,0 +1,170 @@
+{
+  "magic-circle": {
+    "size": [
+      96,
+      64
+    ],
+    "pivot": [
+      48,
+      47
+    ],
+    "frames": 20,
+    "frame_ms": 80,
+    "loop": false,
+    "file": "magic-circle.png"
+  },
+  "small-explosion": {
+    "size": [
+      64,
+      64
+    ],
+    "pivot": [
+      32,
+      57
+    ],
+    "frames": 14,
+    "frame_ms": 60,
+    "loop": false,
+    "file": "small-explosion.png"
+  },
+  "shield-bubble": {
+    "size": [
+      72,
+      88
+    ],
+    "pivot": [
+      36,
+      84
+    ],
+    "frames": 16,
+    "frame_ms": 75,
+    "loop": true,
+    "file": "shield-bubble.png"
+  },
+  "frost-nova": {
+    "size": [
+      120,
+      76
+    ],
+    "pivot": [
+      60,
+      50
+    ],
+    "frames": 18,
+    "frame_ms": 80,
+    "loop": false,
+    "file": "frost-nova.png"
+  },
+  "hit-spark": {
+    "size": [
+      64,
+      64
+    ],
+    "pivot": [
+      32,
+      32
+    ],
+    "frames": 8,
+    "frame_ms": 80,
+    "loop": false,
+    "file": "hit-spark.png"
+  },
+  "parry": {
+    "size": [
+      96,
+      80
+    ],
+    "pivot": [
+      48,
+      38
+    ],
+    "frames": 13,
+    "frame_ms": 60,
+    "loop": false,
+    "file": "parry.png"
+  },
+  "lightning-strike": {
+    "size": [
+      96,
+      128
+    ],
+    "pivot": [
+      38,
+      118
+    ],
+    "frames": 18,
+    "frame_ms": 80,
+    "loop": false,
+    "file": "lightning-strike.png"
+  },
+  "static-burst": {
+    "size": [
+      112,
+      112
+    ],
+    "pivot": [
+      56,
+      58
+    ],
+    "frames": 13,
+    "frame_ms": 60,
+    "loop": false,
+    "file": "static-burst.png"
+  },
+  "void-implosion": {
+    "size": [
+      96,
+      96
+    ],
+    "pivot": [
+      48,
+      48
+    ],
+    "frames": 21,
+    "frame_ms": 70,
+    "loop": false,
+    "file": "void-implosion.png"
+  },
+  "dash-dust": {
+    "size": [
+      68,
+      32
+    ],
+    "pivot": [
+      24,
+      28
+    ],
+    "frames": 13,
+    "frame_ms": 60,
+    "loop": false,
+    "file": "dash-dust.png"
+  },
+  "level-up": {
+    "size": [
+      64,
+      96
+    ],
+    "pivot": [
+      32,
+      88
+    ],
+    "frames": 20,
+    "frame_ms": 70,
+    "loop": false,
+    "file": "level-up.png"
+  },
+  "wind-gust": {
+    "size": [
+      96,
+      48
+    ],
+    "pivot": [
+      48,
+      24
+    ],
+    "frames": 9,
+    "frame_ms": 70,
+    "loop": false,
+    "file": "wind-gust.png"
+  }
+}
