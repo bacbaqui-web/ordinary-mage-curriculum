@@ -1,10 +1,11 @@
+import {fireSpec,hasFireRecipe} from './fire-spec.mjs';
 import {BodyFollow} from './body-follow.mjs';
 import {bindMouseControls} from './mouse-controls.mjs';
 import {createWizard,animateWizard,projectWizard} from './wizard.mjs?v=editor-live1';
 import {QueuedCharge} from './queued-charge.mjs';
-import {LiveMagic} from './live-magic.mjs';
-import {spellReach} from './live-spells.mjs';
-import {describe as describeDesign} from './combo-design.mjs';
+import {LiveMagic} from './live-magic.mjs?v=fire1';
+import {spellReach} from './live-spells.mjs?v=fire1';
+import {describe as describeDesign} from './combo-design.mjs?v=fire1';
 import {MeshFeedback} from './mesh-feedback.mjs';
 import {groundSpec,groundPoint,inGround,advanceGround} from './ground.mjs?v=zones1';
 import {projectileAsset,groundAsset} from './effect-map.mjs?v=zones1';
@@ -14,14 +15,14 @@ import {FALL_SECONDS,overheadDelivery,segmentCircleHit} from './delivery.mjs?v=z
 import {createProgress,awardKill,requiredXP,learn,mastery,MAX_LEVEL,MAX_RANK} from './progression.mjs?v=zones1';
 import {ForcedMotion} from './motion.mjs?v=zones1';
 import {LowPolyVFX} from './lowpoly-vfx.mjs';
-import {chooseLoadout,choosePlan,chooseLearnedPlan,spendEnemyPoints,OpponentCharge} from './live-opponent.mjs';
+import {chooseLoadout,choosePlan,chooseLearnedPlan,spendEnemyPoints,OpponentCharge} from './live-opponent.mjs?v=fire1';
 import {forceSpec,wardSpec,displacement,crossesWard,distanceToWard} from './forces.mjs?v=zones1';
 import {elementalSpec,inElementCone,lightningPoint,lightningHits} from './elements.mjs?v=zones1';
 const describeSpell=seq=>describeDesign(seq).steps.join(' ');
 import * as T from './three.module.js';
-import {Charge,ELEMENTS,NAMES,resolveSpell} from './live-charge-spells.mjs';
+import {Charge,ELEMENTS,NAMES,resolveSpell} from './live-charge-spells.mjs?v=fire1';
 import {Roll,ROLL_DURATION,incomingThreat,enemyChargeProgress} from './combat.mjs?v=zones1';
-import {RUNES,KEYS,DEFAULT_LOADOUT,validLoadout,assignRune,mapSequence,spellName,composition} from './live-loadout.mjs';
+import {RUNES,KEYS,DEFAULT_LOADOUT,validLoadout,assignRune,mapSequence,spellName,composition} from './live-loadout.mjs?v=fire1';
 let loadout={...DEFAULT_LOADOUT};try{const saved=JSON.parse(localStorage.getItem('mage-loadout-v1'));if(validLoadout(saved))loadout=saved}catch{}
 let progress=createProgress(loadout),monsters=[],spawnTimer=0,monsterId=0;
 let draft={...loadout},activeSlot='q',selectionReturn=false;
@@ -163,7 +164,7 @@ function updateForces(dt){
  }if(w.life<=0||w.hp<=0){spellVfx.shatter(w.x,w.z,w.width);remove(w.m);wards.splice(i,1);}}
 }
 const liveMagic=new LiveMagic({scene,vfx:spellVfx,remove,targets,hit,applyPayload,clearPath,collides,wallBlocks,get wards(){return wards;}});
-function dispatchSpell(s,caster,dir,aimPoint){liveMagic.cast(s,caster,dir,aimPoint);caster.castFlash=.3;caster.g.userData.puppet.magic.release(s.sequence?.length||1);caster.g.userData.puppet.magic.elapsed=2/12;}
+function dispatchSpell(s,caster,dir,aimPoint){if(s.sequence==='qh'&&caster===player)moveTarget=null;liveMagic.cast(s,caster,dir,aimPoint);caster.castFlash=.3;caster.g.userData.puppet.magic.release(s.sequence?.length||1);caster.g.userData.puppet.magic.elapsed=2/12;}
 
 function cast(result){if(!running||paused||finished)return;const s=resolveSpell(result,loadout);if(s.parts.some(k=>!progress.ranks[k]))return;s.mastery=mastery(progress,s.parts[0]);s.power*=s.mastery;if(player.cool>0){flash('잠깐 기다려 주세요');return}if(bot&&player.mana<s.cost){flash('마력이 부족합니다. 잠시 쉬면 회복됩니다.');return}if(bot)player.mana-=s.cost;player.cool=s.tap?.16:.38;const seq=s.sequence,base=seq.slice(0,2),p=s.power,dir=player.dir.clone(),target=aim.clone();target.sub(new T.Vector3(player.x,0,player.z));if(target.length()>6)target.setLength(6);target.add(new T.Vector3(player.x,0,player.z));const third=seq[2];
  dispatchSpell(s,player,dir,aim);
@@ -212,7 +213,13 @@ const rolling=roll.active;const beforeX=player.x,beforeZ=player.z;if(rolling){co
  if(toastTimer>0){toastTimer-=dt;if(toastTimer<=0)$('toast').classList.remove('show')}
 }
 function label(el,a){const pos=new T.Vector3(a.x,2.65,a.z).project(camera);el.style.display=Math.abs(pos.x)>1||Math.abs(pos.y)>1?'none':'';el.style.left=((pos.x+1)*innerWidth/2)+'px';el.style.top=((-pos.y+1)*innerHeight/2)+'px'}
-function drawTell(caster,seq,fill,border){const spec=describeDesign(seq),reference=caster===player?aim:(enemyTarget||player),range=spellReach(seq);let center={x:caster.x,z:caster.z},radius=1.2+seq.length*.25;
+function drawFireTell(caster,seq,border){const s=fireSpec(seq),target=caster===player?aim:(enemyTarget||player),dir=caster.dir,points=[];let p={x:caster.x,z:caster.z},r=s.radius;
+if(['l','t','g'].includes(s.op)){const d=new T.Vector3(target.x-p.x,0,target.z-p.z);if(d.length()>s.range)d.setLength(s.range);p={x:p.x+d.x,z:p.z+d.z};}if(s.op==='e')r=2;if(s.op==='l')r=1.5;if(s.op==='g')r=2.3;
+if(['w','s','h'].includes(s.op)){const side=new T.Vector3(-dir.z,0,dir.x).multiplyScalar(s.op==='s'?1.4:s.op==='h'?.65:s.orbRadius),a=new T.Vector3(p.x,0,p.z),b=a.clone().addScaledVector(dir,s.op==='h'?3:s.range);points.push(a.clone().add(side),b.clone().add(side),b.clone().sub(side),a.clone().sub(side),a.clone().add(side));}
+else if(['q','i','d','p'].includes(s.op)){points.push(new T.Vector3(p.x,0,p.z));for(let i=0;i<=40;i++){const a=Math.atan2(dir.z,dir.x)-Math.PI/3+i/40*Math.PI*2/3;points.push(new T.Vector3(p.x+Math.cos(a)*r,0,p.z+Math.sin(a)*r));}points.push(new T.Vector3(p.x,0,p.z));}
+else for(let i=0;i<=48;i++){const a=i/48*Math.PI*2;points.push(new T.Vector3(p.x+Math.cos(a)*r,0,p.z+Math.sin(a)*r));}
+border.geometry.dispose();border.geometry=new T.BufferGeometry().setFromPoints(points);border.material.color.set(s.op==='i'?0xaaaaaa:s.op==='p'?0x9cba39:0xff5436);border.visible=true;}
+function drawTell(caster,seq,fill,border){if(hasFireRecipe(seq)){drawFireTell(caster,seq,border);return;}const spec=describeDesign(seq),reference=caster===player?aim:(enemyTarget||player),range=spellReach(seq);let center={x:caster.x,z:caster.z},radius=1.2+seq.length*.25;
 if(['field','wall','strike','coat'].includes(spec.shape)||spec.motion==='fall'||spec.motion==='pull'){const d=new T.Vector3(reference.x-caster.x,0,reference.z-caster.z);if(d.length()>range)d.setLength(range);center={x:caster.x+d.x,z:caster.z+d.z};}
 if(spec.shape==='spread')radius*=1.6;if(spec.shape==='condensed')radius*=.6;
 const points=[];if(spec.motion==='forward'){const side=new T.Vector3(-caster.dir.z,0,caster.dir.x).multiplyScalar(.55),start=new T.Vector3(caster.x,0,caster.z),end=start.clone().addScaledVector(caster.dir,range);points.push(start.clone().add(side),end.clone().add(side),end.clone().sub(side),start.clone().sub(side),start.clone().add(side));}else if(spec.shape==='wall'){const side=new T.Vector3(-caster.dir.z,0,caster.dir.x).multiplyScalar(1.6),normal=caster.dir.clone().multiplyScalar(.15),p=new T.Vector3(center.x,0,center.z);points.push(p.clone().add(side).add(normal),p.clone().sub(side).add(normal),p.clone().sub(side).sub(normal),p.clone().add(side).sub(normal),p.clone().add(side).add(normal));}else if(['q','i','w','g'].includes(seq[0])&&spec.motion==='still'&&['spread','condensed'].includes(spec.shape)){points.push(new T.Vector3(center.x,0,center.z));for(let i=0;i<=32;i++){const angle=Math.atan2(caster.dir.z,caster.dir.x)-1.1+i/32*2.2;points.push(new T.Vector3(center.x+Math.cos(angle)*radius,0,center.z+Math.sin(angle)*radius));}points.push(new T.Vector3(center.x,0,center.z));}else for(let i=0;i<=48;i++){const angle=i/48*Math.PI*2;points.push(new T.Vector3(center.x+Math.cos(angle)*radius,0,center.z+Math.sin(angle)*radius));}

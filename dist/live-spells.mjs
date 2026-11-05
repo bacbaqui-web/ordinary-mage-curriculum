@@ -1,4 +1,4 @@
-import {RUNES,valid} from './combo-design.mjs';
+import {RUNES,valid} from './combo-design.mjs?v=fire1';
 // Ordered operations retain a payload tree: delivery happens before the inner effect.
 export function compileSpell(sequence,power=1){
  if(!valid(sequence))throw Error('잘못된 주문');const kind=sequence[0];let node={op:'base',kind,power,depth:1};const ops=sequence.length===1?sequence:sequence.slice(1);for(const op of ops)node={op,inner:node,kind,power,depth:sequence.length};return node;

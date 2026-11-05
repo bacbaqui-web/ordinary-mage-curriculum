@@ -1,8 +1,8 @@
 import * as T from './three.module.js';
-import {createPublishedWizard} from './atlas-wizard.mjs';
+import {createWizard,animateWizard,projectWizard} from './wizard.mjs?v=editor-live1';
 import {LowPolyVFX} from './lowpoly-vfx.mjs';
-import {LiveMagic} from './live-magic.mjs';
-import {RUNES} from './combo-design.mjs';
+import {LiveMagic} from './live-magic.mjs?v=fire1';
+import {RUNES} from './combo-design.mjs?v=fire1';
 import {advanceMovingWard} from './moving-ward.mjs';
 import {ForcedMotion} from './motion.mjs';
 export function mountAtlasPreview(host,seq){
@@ -11,18 +11,19 @@ export function mountAtlasPreview(host,seq){
  renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setClearColor(0x203039);renderer.outputColorSpace=T.SRGBColorSpace;renderer.shadowMap.enabled=true;
  const scene=new T.Scene(),camera=new T.PerspectiveCamera(38,1,.1,80),vfx=new LowPolyVFX(scene),wards=[];scene.add(new T.HemisphereLight(0xd5eaff,0x58644e,2.2));const sun=new T.DirectionalLight(0xffe8c3,3);sun.position.set(-4,10,6);sun.castShadow=true;scene.add(sun);
  const floor=new T.Mesh(new T.PlaneGeometry(28,22),new T.MeshStandardMaterial({color:0x697565,roughness:1}));floor.rotation.x=-Math.PI/2;floor.receiveShadow=true;scene.add(floor);const grid=new T.GridHelper(24,24,0x7b8778,0x65735f);grid.position.y=.01;scene.add(grid);
- const caster={x:-2.4,z:0,g:createPublishedWizard(scene,0x394351,0xe7b367)},target={x:0,z:0,hp:100,shield:0,motion:new ForcedMotion(),g:createPublishedWizard(scene,0x71566b,0xc2d6df)};caster.g.rotation.y=Math.PI/2;target.g.rotation.y=-Math.PI/2;
+ const caster={x:-2.4,z:0,g:createWizard(scene,0x394351,0xe7b367)},target={x:0,z:0,hp:100,shield:0,motion:new ForcedMotion(),g:createWizard(scene,0x71566b,0xc2d6df)};caster.g.rotation.y=Math.PI/2;target.g.rotation.y=-Math.PI/2;
  const remove=mesh=>{scene.remove(mesh);mesh.traverse(o=>{o.geometry?.dispose();o.material?.dispose();});};
- const magic=new LiveMagic({scene,vfx,wards,remove,targets:()=>[target],hit:(v,d,dir,force)=>{v.hp=Math.max(0,v.hp-d);v.flash=.25;if(force)v.motion.start(dir.x,dir.z,force);return true},applyPayload:(v,p)=>{v.burn=p.burn||0;v.slow=p.slow||0},clearPath:()=>true,collides:(x,z)=>Math.abs(x)>10||Math.abs(z)>8,wallBlocks:()=>false});
+ const magic=new LiveMagic({scene,vfx,wards,remove,targets:()=>[target],hit:(v,d,dir,force)=>{v.hp=Math.max(0,v.hp-d);v.flash=.25;if(force)v.motion.start(dir.x,dir.z,force);return true},applyPayload:(v,p)=>{v.burn=Math.max(v.burn||0,p.burn||0);v.burnDamage=p.burnDamage||2;v.burnTick=v.burnTick||.5;v.slow=Math.max(v.slow||0,p.slow||0)},clearPath:()=>true,collides:(x,z)=>Math.abs(x)>10||Math.abs(z)>8,wallBlocks:()=>false});
  const rings=[...seq].map((k,i)=>{const m=new T.Mesh(new T.TorusGeometry(.12,.025,6,24),new T.MeshBasicMaterial({color:RUNES[k].color}));m.position.set(caster.x+(i-(seq.length-1)/2)*.35,2.85,0);scene.add(m);return m;});
  let elapsed=0,last=performance.now(),paused=matchMedia('(prefers-reduced-motion: reduce)').matches,cast=false,angle=0,disposed=false,raf;const charge=seq.length*1.2,pause=host.querySelector('[data-action=pause]');pause.textContent=paused?'재생':'일시정지';
  function view(){camera.position.set(angle?0:6,angle?14:8,angle?.01:12);camera.lookAt(0,.7,0);}view();
- function reset(){elapsed=0;cast=false;magic.clear();vfx.clear();for(const w of wards)remove(w.m);wards.length=0;target.hp=100;target.x=0;target.z=0;target.motion.clear();}
+ function reset(){elapsed=0;cast=false;magic.clear();vfx.clear();for(const w of wards)remove(w.m);wards.length=0;caster.x=-2.4;caster.z=0;target.burn=0;target.slow=0;target.hp=100;target.x=0;target.z=0;target.motion.clear();}
  pause.onclick=()=>{paused=!paused;pause.textContent=paused?'재생':'일시정지';};host.querySelector('[data-action=restart]').onclick=()=>{reset();paused=false;pause.textContent='일시정지';};host.querySelector('[data-action=view]').onclick=()=>{angle=1-angle;view();};
  function frame(now){if(disposed)return;raf=requestAnimationFrame(frame);const dt=Math.min(.05,(now-last)/1000);last=now;const w=Math.max(180,host.clientWidth),h=Math.round(w*.72);if(canvas.width!==Math.round(w*renderer.getPixelRatio())||canvas.height!==Math.round(h*renderer.getPixelRatio())){renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}
- if(!paused){elapsed+=dt;if(elapsed>charge+7)reset();if(elapsed>=charge&&!cast){cast=true;magic.cast({sequence:seq,power:1+(seq.length-1)*.48+.28},caster,new T.Vector3(1,0,0),new T.Vector3(target.x,0,target.z));}magic.update(dt);vfx.update(dt);const step=target.motion.tick(dt);target.x+=step.x;target.z+=step.z;for(let i=wards.length-1;i>=0;i--){advanceMovingWard(wards[i],dt,{actors:[caster,target],collides:()=>false,wards});wards[i].m.position.set(wards[i].x,1.2,wards[i].z);wards[i].life-=dt;if(wards[i].life<=0){remove(wards[i].m);wards.splice(i,1);}}}
- caster.g.position.set(caster.x,0,caster.z);target.g.position.set(target.x,0,target.z);caster.g.userData.body.rotation.z=cast?-.12*Math.exp(-(elapsed-charge)*3):Math.sin(elapsed*4)*.035;caster.g.userData.arm.rotation.x=cast?-.5*Math.exp(-(elapsed-charge)*3):-.65;
- rings.forEach((m,i)=>{m.visible=!cast;m.quaternion.copy(camera.quaternion);m.scale.setScalar(Math.max(.04,Math.min(1,elapsed/1.2-i)));});status.textContent=paused?'일시정지':!cast?`충전 ${Math.min(seq.length,Math.floor(elapsed/1.2)+1)} / ${seq.length}`:`시전 · 상대 체력 ${Math.round(target.hp)}`;renderer.render(scene,camera);
+ if(!paused){elapsed+=dt;if(elapsed>charge+7)reset();if(elapsed>=charge&&!cast){cast=true;caster.g.userData.puppet.magic.release(seq.length);magic.cast({sequence:seq,power:1+(seq.length-1)*.48+.28},caster,new T.Vector3(1,0,0),new T.Vector3(target.x,0,target.z));}magic.update(dt);vfx.update(dt);if(target.burn>0){target.burn-=dt;target.burnTick-=dt;if(target.burnTick<=0){target.burnTick=.5;target.hp=Math.max(0,target.hp-target.burnDamage);}}target.slow=Math.max(0,(target.slow||0)-dt);const step=target.motion.tick(dt);target.x+=step.x;target.z+=step.z;for(let i=wards.length-1;i>=0;i--){advanceMovingWard(wards[i],dt,{actors:[caster,target],collides:()=>false,wards});wards[i].m.position.set(wards[i].x,1.2,wards[i].z);wards[i].life-=dt;if(wards[i].life<=0){remove(wards[i].m);wards.splice(i,1);}}}
+ caster.g.position.set(caster.x,0,caster.z);target.g.position.set(target.x,0,target.z);animateWizard(caster.g,paused?0:dt,{charging:!cast,chargeStage:Math.min(seq.length,Math.floor(elapsed/1.2)+1),cast:cast?Math.max(0,.3-(elapsed-charge)):0,speed:cast&&seq==='qh'&&elapsed-charge<.4?7.5:0});animateWizard(target.g,paused?0:dt,{});projectWizard(caster.g,camera);projectWizard(target.g,camera);for(const entry of target.g.userData.palette){entry.material.color.copy(entry.color);if(target.burn>0)entry.material.color.lerp(new T.Color(0xff5436),.4);else if(target.slow>0)entry.material.color.lerp(new T.Color(0x479eff),.4);}
+
+ rings.forEach((m,i)=>{m.visible=!cast;m.quaternion.copy(camera.quaternion);m.scale.setScalar(Math.max(.04,Math.min(1,elapsed/1.2-i)));});status.textContent=paused?'일시정지':!cast?`충전 ${Math.min(seq.length,Math.floor(elapsed/1.2)+1)} / ${seq.length}`:`시전 · 상대 체력 ${Math.round(target.hp)}${target.burn>0?' · 화상':''}${target.slow>0?' · 감속':''}`;renderer.render(scene,camera);
  }raf=requestAnimationFrame(frame);
  return()=>{disposed=true;cancelAnimationFrame(raf);magic.clear();vfx.clear();scene.traverse(o=>{o.geometry?.dispose();if(o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>m.dispose());});renderer.dispose();renderer.forceContextLoss();};
 }
