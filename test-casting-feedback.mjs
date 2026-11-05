@@ -27,3 +27,12 @@ const compound=runeLayout(3,palette);assert.equal(compound.rings.length,4);asser
 feedback.charge(actor,true,3,palette,hands,view);assert.equal(a.links.filter(l=>l.visible).length,2);assert.equal(a.rings[2].children[2].material.color.getHexString(),'8fe2ff');assert.equal(a.rings[3].children[2].material.color.getHexString(),'c4b5ff');
 feedback.charge(actor,true,1,palette,hands,view);assert.equal(a.rings[0].children[2].material.color.getHexString(),'ffffff');assert.equal(a.links.filter(l=>l.visible).length,0);
 console.log('PASS: single white circle, main concentric circles, per-skill colors and connected compound diagram');
+const {RUNE_STROKE}=await import('./dist/casting-feedback.mjs');
+let destination=new T.Vector3(3,1,2),moving=true;
+const beam=feedback.beam(new T.Vector3(0,1,0),()=>({point:destination,active:moving}),palette,()=>true,2);
+assert.equal(beam.segments.length,8);assert.equal(beam.segments[0][1].geometry.parameters.radiusTop*2,RUNE_STROKE);
+assert.deepEqual(beam.end.toArray(),[3,1,2]);destination=new T.Vector3(5,1,3);feedback.update(.1);assert.deepEqual(beam.end.toArray(),[5,1,3]);assert.equal(beam.fade,null);
+moving=false;feedback.update(.1);feedback.update(.2);assert.equal(feedback.beams.length,0);
+for(let i=0;i<20;i++)feedback.beam(new T.Vector3(),()=>({point:destination,active:true}),palette);
+assert.equal(feedback.beams.length,12);feedback.clear();assert.equal(feedback.beams.length,0);
+console.log('PASS: single connected beam, matching rune stroke, moving endpoint, impact fade, beam cap and cleanup');
