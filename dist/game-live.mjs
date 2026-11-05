@@ -1,11 +1,11 @@
 import {fireSpec,hasFireRecipe} from './fire-spec.mjs';
-import {BodyFollow} from './body-follow.mjs';
+import {BodyFollow} from './body-follow.mjs?v=stride2';
 import {bindMouseControls} from './mouse-controls.mjs';
 import {createWizard,animateWizard,projectWizard} from './wizard.mjs?v=editor-live1';
 import {QueuedCharge} from './queued-charge.mjs';
-import {LiveMagic} from './live-magic.mjs?v=fire1';
-import {spellReach} from './live-spells.mjs?v=fire1';
-import {describe as describeDesign} from './combo-design.mjs?v=fire1';
+import {LiveMagic} from './live-magic.mjs?v=ember2';
+import {spellReach} from './live-spells.mjs?v=ember2';
+import {describe as describeDesign} from './combo-design.mjs?v=ember2';
 import {MeshFeedback} from './mesh-feedback.mjs';
 import {groundSpec,groundPoint,inGround,advanceGround} from './ground.mjs?v=zones1';
 import {projectileAsset,groundAsset} from './effect-map.mjs?v=zones1';
@@ -15,14 +15,14 @@ import {FALL_SECONDS,overheadDelivery,segmentCircleHit} from './delivery.mjs?v=z
 import {createProgress,awardKill,requiredXP,learn,mastery,MAX_LEVEL,MAX_RANK} from './progression.mjs?v=zones1';
 import {ForcedMotion} from './motion.mjs?v=zones1';
 import {LowPolyVFX} from './lowpoly-vfx.mjs';
-import {chooseLoadout,choosePlan,chooseLearnedPlan,spendEnemyPoints,OpponentCharge} from './live-opponent.mjs?v=fire1';
+import {chooseLoadout,choosePlan,chooseLearnedPlan,spendEnemyPoints,OpponentCharge} from './live-opponent.mjs?v=ember2';
 import {forceSpec,wardSpec,displacement,crossesWard,distanceToWard} from './forces.mjs?v=zones1';
 import {elementalSpec,inElementCone,lightningPoint,lightningHits} from './elements.mjs?v=zones1';
 const describeSpell=seq=>describeDesign(seq).steps.join(' ');
 import * as T from './three.module.js';
-import {Charge,ELEMENTS,NAMES,resolveSpell} from './live-charge-spells.mjs?v=fire1';
+import {Charge,ELEMENTS,NAMES,resolveSpell} from './live-charge-spells.mjs?v=ember2';
 import {Roll,ROLL_DURATION,incomingThreat,enemyChargeProgress} from './combat.mjs?v=zones1';
-import {RUNES,KEYS,DEFAULT_LOADOUT,validLoadout,assignRune,mapSequence,spellName,composition} from './live-loadout.mjs?v=fire1';
+import {RUNES,KEYS,DEFAULT_LOADOUT,validLoadout,assignRune,mapSequence,spellName,composition} from './live-loadout.mjs?v=ember2';
 let loadout={...DEFAULT_LOADOUT};try{const saved=JSON.parse(localStorage.getItem('mage-loadout-v1'));if(validLoadout(saved))loadout=saved}catch{}
 let progress=createProgress(loadout),monsters=[],spawnTimer=0,monsterId=0;
 let draft={...loadout},activeSlot='q',selectionReturn=false;
@@ -290,7 +290,7 @@ let prev=performance.now();function frame(now){requestAnimationFrame(frame);cons
  const previous=u.animationPosition||{x:a.x,z:a.z},speed=step?Math.hypot(a.x-previous.x,a.z-previous.z)/step:0;
  animateWizard(a.g,step,{speed,charging,chargeStage:stage||1,cast:a.castFlash||0});
  u.puppet.bodyFollow??=new BodyFollow();
- u.puppet.bodyFollow.update(step,{aim:Math.atan2(a.dir.x,a.dir.z),x:a.x,z:a.z,vx:step?(a.x-previous.x)/step:0,vz:step?(a.z-previous.z)/step:0,enabled:!(a===player&&roll.active)&&!a.motion.active&&u.puppet.magic.mode==='idle'});
+ u.puppet.bodyFollow.update(step,{aim:Math.atan2(a.dir.x,a.dir.z),x:a.x,z:a.z,vx:step?(a.x-previous.x)/step:0,vz:step?(a.z-previous.z)/step:0,enabled:!(a===player&&roll.active)&&!a.motion.active&&u.puppet.magic.mode!=='release'});
  u.animationPosition={x:a.x,z:a.z};projectWizard(a.g,camera);
  }renderer.render(scene,camera)}requestAnimationFrame(frame);
 // Read-only diagnostics for input and rendering verification.

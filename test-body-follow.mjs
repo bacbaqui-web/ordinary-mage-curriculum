@@ -23,3 +23,5 @@ for(const [vx,vz] of [[0,-3],[3,0],[-3,0],[0,0]]){
  }
 }
 console.log('PASS: backwards, sideways, turning and stopping remain finite and above ground');
+function cadence(speed){const puppet=new MotionPuppet(new T.Scene());puppet.bodyFollow=new BodyFollow();let steps=0,last=null;for(let i=0;i<360;i++){const dt=1/120,z=i*speed*dt;puppet.group.position.z=z;puppet.update(dt);puppet.bodyFollow.update(dt,{aim:0,x:0,z,vz:speed});puppet.render(camera);const swing=puppet.bodyFollow.swing;if(swing&&swing!==last)steps++;last=swing;}puppet.dispose();return steps;}
+const normal=cadence(4.4),slow=cadence(2.2),idle=cadence(0);assert.ok(normal<22);assert.ok(slow<normal*.7);assert.equal(idle,0);console.log({normalStepsIn3s:normal,halfSpeedStepsIn3s:slow,idleSteps:idle});

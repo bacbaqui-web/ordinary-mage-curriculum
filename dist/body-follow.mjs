@@ -34,11 +34,11 @@ export class BodyFollow{
    const needs=side=>this.feet[side].distanceTo(nominal[side])>.16||Math.abs(angleDelta(this.footYaw[side],this.pelvis))>.4;
    if(this.speed>.1||needs('Left')||needs('Right')){
     let side=this.next;if(this.speed>.1){const delta=this.feet.Left.clone().sub(this.feet.Right).dot(new Vector3(vx,0,vz));side=delta<0?'Left':'Right';}else if(!needs(side))side=side==='Left'?'Right':'Left';
-    const duration=clamp(.44/Math.max(.1,this.speed),.10,.25),target=nominal[side].clone().add(new Vector3(vx,0,vz).multiplyScalar(duration*1.5));
+    const duration=clamp(.72/Math.max(.1,this.speed),.15,.55),target=nominal[side].clone().add(new Vector3(vx,0,vz).multiplyScalar(duration));
     this.swing={side,from:this.feet[side].clone(),target,elapsed:0,duration,yaw:this.footYaw[side],targetYaw:this.pelvis};this.next=side==='Left'?'Right':'Left';
    }
   }
-  if(this.swing){const s=this.swing;s.elapsed+=dt;const t=clamp(s.elapsed/s.duration,0,1),u=t*t*(3-2*t);this.feet[s.side].lerpVectors(s.from,s.target,u);this.feet[s.side].y+=Math.sin(Math.PI*t)*.13;this.footYaw[s.side]=s.yaw+angleDelta(s.targetYaw,s.yaw)*u;if(t>=1)this.swing=null;}
+  if(this.swing){const s=this.swing;s.elapsed+=dt;const t=clamp(s.elapsed/s.duration,0,1),u=t*t*(3-2*t);this.feet[s.side].lerpVectors(s.from,s.target,u);this.feet[s.side].y+=Math.sin(Math.PI*t)*.09;this.footYaw[s.side]=s.yaw+angleDelta(s.targetYaw,s.yaw)*u;if(t>=1)this.swing=null;}
   // Lower the hips slightly when a planted leg would otherwise overextend.
   let settle=0;
   for(const side of ['Left','Right']){
