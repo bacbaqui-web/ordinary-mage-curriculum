@@ -19,3 +19,11 @@ impactFeedback(victim,5,new T.Vector3(1,0,0),0);assert.equal(victim.hitFlash,.12
 victim.motion.clear();impactFeedback(victim,5,new T.Vector3(1,0,0),-2);assert.equal(victim.motion.x,-1);assert.equal(victim.motion.distance,2);
 victim.motion.clear();impactFeedback(victim,2,new T.Vector3(),0);assert.equal(victim.motion.active,false);
 console.log('PASS: white hit flash, short recoil, pull preservation, no directional recoil on damage over time');
+const {runeLayout}=await import('./dist/casting-feedback.mjs');
+const palette=['#ff9869','#8fe2ff','#c4b5ff'];
+const single=runeLayout(1,palette);assert.equal(single.rings.length,1);assert.equal(single.rings[0].white,true);
+const double=runeLayout(2,palette);assert.equal(double.rings.length,3);assert.equal(double.rings[0].color,palette[0]);assert.equal(double.rings[1].color,palette[0]);assert.equal(double.rings[2].color,palette[1]);assert.equal(double.rings[0].x,double.rings[1].x);
+const compound=runeLayout(3,palette);assert.equal(compound.rings.length,4);assert.equal(compound.rings[3].color,palette[2]);assert.deepEqual(compound.links,[[0,2],[2,3]]);
+feedback.charge(actor,true,3,palette,hands,view);assert.equal(a.links.filter(l=>l.visible).length,2);assert.equal(a.rings[2].children[2].material.color.getHexString(),'8fe2ff');assert.equal(a.rings[3].children[2].material.color.getHexString(),'c4b5ff');
+feedback.charge(actor,true,1,palette,hands,view);assert.equal(a.rings[0].children[2].material.color.getHexString(),'ffffff');assert.equal(a.links.filter(l=>l.visible).length,0);
+console.log('PASS: single white circle, main concentric circles, per-skill colors and connected compound diagram');
