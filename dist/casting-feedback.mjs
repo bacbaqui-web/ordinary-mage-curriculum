@@ -7,7 +7,7 @@ export class ChargeCamera{
   this.time+=dt;const target=active?Math.min(3,tier+progress*.25):0;
   this.level+=(target-this.level)*(1-Math.exp(-dt/(active?.35:.5)));
   this.kick*=Math.exp(-dt*14);this.flash=Math.max(0,this.flash-dt*1.8);
-  const chargeShake=Math.min(1,Math.max(0,this.level-1))*.003+Math.max(0,this.level-2)*.005;
+  const chargeShake=Math.min(1,Math.max(0,this.level-1))*.0039+Math.max(0,this.level-2)*.0065;
   const shake=chargeShake+this.kick;
   return {distance:1-this.level*.115+this.kick*.07,fov:38+this.level*3.2,
    x:(Math.sin(this.time*43)+Math.sin(this.time*71)*.3)*shake,
