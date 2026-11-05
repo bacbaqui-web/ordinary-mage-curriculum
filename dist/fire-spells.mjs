@@ -1,6 +1,6 @@
 import * as T from './three.module.js';
 import {crossesWard} from './forces.mjs';
-import {fireSpec} from './fire-spec.mjs?v=ash11';
+import {fireSpec} from './fire-spec.mjs?v=ash12';
 // Every visible part is 3D geometry. Soft edge shading makes overlapping volumes read as mist.
 export class FireSpells{
  constructor(api){this.a=api;this.effects=[];}
@@ -11,7 +11,7 @@ export class FireSpells{
  const profile=[new T.Vector2(0,0),new T.Vector2(.55,.04),new T.Vector2(1,.18),new T.Vector2(.88,.38),new T.Vector2(.55,.62),new T.Vector2(.22,.84),new T.Vector2(0,1)];
  const material=new T.ShaderMaterial({uniforms:{time:{value:0},seed:{value:seed},alpha:{value:1},poison:{value:poison?1:0},ash:{value:ash?1:0}},transparent:true,depthWrite:false,side:T.DoubleSide,
  vertexShader:`uniform float time;uniform float seed;varying float h;varying vec3 n;varying vec3 eye;void main(){h=position.y;vec3 p=position;float wave=sin(time*9.0+seed+h*6.0)+.4*sin(time*17.0+seed*2.0+h*11.0);p.x+=wave*h*h*.27;p.z+=cos(time*7.0+seed+h*7.0)*h*h*.18;p.y*=.86+.14*sin(time*11.0+seed);vec4 v=modelViewMatrix*vec4(p,1.0);n=normalize(normalMatrix*normal);eye=normalize(-v.xyz);gl_Position=projectionMatrix*v;}`,
- fragmentShader:`uniform float alpha;uniform float poison;uniform float ash;varying float h;varying vec3 n;varying vec3 eye;void main(){float core=pow(abs(dot(normalize(n),normalize(eye))),1.3);vec3 gold=vec3(1.0,.74,.075);vec3 orange=vec3(1.0,.18,.008);vec3 red=vec3(.72,.018,.002);vec3 c=mix(gold,orange,smoothstep(.12,.65,h));c=mix(c,red,smoothstep(.58,1.0,h));c=mix(c,vec3(1.0,.96,.53),core*(1.0-smoothstep(.12,.62,h))*.88);c=mix(c,vec3(.36,.9,.018),poison*.92);vec3 coal=mix(vec3(.055,.035,.03),vec3(.008,.006,.006),smoothstep(.12,.85,h));float ember=pow(core,5.0)*(1.0-smoothstep(.04,.25,h))*.38;coal=mix(coal,vec3(.7,.075,.012),ember);c=mix(c,coal,ash);float edge=smoothstep(.02,.3,core);gl_FragColor=vec4(c,alpha*edge*(1.0-smoothstep(.9,1.0,h)));}`});
+ fragmentShader:`uniform float alpha;uniform float poison;uniform float ash;varying float h;varying vec3 n;varying vec3 eye;void main(){float core=pow(abs(dot(normalize(n),normalize(eye))),1.3);vec3 gold=vec3(1.0,.74,.075);vec3 orange=vec3(1.0,.18,.008);vec3 red=vec3(.72,.018,.002);vec3 c=mix(gold,orange,smoothstep(.12,.65,h));c=mix(c,red,smoothstep(.58,1.0,h));c=mix(c,vec3(1.0,.96,.53),core*(1.0-smoothstep(.12,.62,h))*.88);c=mix(c,vec3(.36,.9,.018),poison*.92);vec3 coal=mix(vec3(.19,.065,.04),vec3(.045,.025,.023),smoothstep(.12,.85,h));float ember=pow(core,1.7)*(1.0-smoothstep(.15,.88,h))*.85;coal=mix(coal,vec3(1.0,.19,.035),ember);c=mix(c,coal,ash);float edge=smoothstep(.02,.3,core);gl_FragColor=vec4(c,alpha*edge*(1.0-smoothstep(.9,1.0,h)));}`});
  const m=new T.Mesh(new T.LatheGeometry(profile,10),material);m.userData.flame=true;return m;
  }
  cloud(s,r,form='cone'){
@@ -22,8 +22,8 @@ export class FireSpells{
  this.a.scene.add(g);return g;}
  add(type,mesh,s,owner,point,dir,life,extra={}){mesh.position.set(point.x,.04,point.z);const e={type,mesh,s,owner,point:{...point},dir:dir.clone(),life,max:life,age:0,tick:0,...extra};this.effects.push(e);return e;}
  embers(e,count=12){const s=e.s;for(let i=0;i<count;i++){const angle=e.type==='cone'?Math.atan2(e.dir.z,e.dir.x)+(Math.random()-.5)*2.1:Math.random()*Math.PI*2,d=Math.sqrt(Math.random())*(e.radius||s.radius);const x=e.point.x+Math.cos(angle)*d,z=e.point.z+Math.sin(angle)*d;
- if(s.op==='i')continue;const ash=i%5===0||s.op==='d'&&i%4!==0,color=ash?0x171311:s.op==='p'&&i%3!==0?0x72d735:0xffe04c;
- this.a.vfx.particle('chunk',[x,.25+Math.random()*.8,z],[Math.cos(angle)*.5,ash?.4:1.5,Math.sin(angle)*.5],ash?.06:.025+Math.random()*.025,color,.55+Math.random()*.35,{gravity:ash?1:0});}}
+ if(s.op==='i')continue;const ash=i%5===0||s.op==='d'&&i%4!==0,color=ash?(s.op==='d'?[0x99958f,0xb8b2a7,0x696762][i%3]:0x171311):s.op==='p'&&i%3!==0?0x72d735:0xffe04c;
+ this.a.vfx.particle('chunk',[x,.25+Math.random()*.8,z],[Math.cos(angle)*(ash?1.1:.5),ash?.8+Math.random()*.8:1.5,Math.sin(angle)*(ash?1.1:.5)],ash?.035+Math.random()*.035:.025+Math.random()*.025,color,ash?1.1+Math.random()*.6:.55+Math.random()*.35,{gravity:ash?.35:0});}}
  damage(e,point,radius,{cone=false,ring=false,once=false}={}){for(const v of this.a.targets(e.owner)){const dx=v.x-point.x,dz=v.z-point.z,d=Math.hypot(dx,dz);if(d>radius+.35||(ring&&d<radius-.6)||(!ring&&!this.a.clearPath(point,v)))continue;if(cone&&d>.01&&(dx*e.dir.x+dz*e.dir.z)/d<.5)continue;if(once&&e.hit.has(v))continue;
  if(this.a.hit(v,e.s.damage,e.dir,e.s.op==='h'?e.s.knockback:0,e.owner)){this.a.applyPayload(v,e.s,e.owner);if(once)e.hit.add(v);}}}
  cast(seq,power,owner,dir,target,emission=null){if(this.effects.length>55)return;const s=fireSpec(seq,power),origin=emission?{x:emission.x,z:emission.z}:{x:owner.x,z:owner.z},delta=new T.Vector3(target.x-owner.x,0,target.z-owner.z);if(delta.length()>s.range)delta.setLength(s.range);const point={x:owner.x+delta.x,z:owner.z+delta.z};let e;

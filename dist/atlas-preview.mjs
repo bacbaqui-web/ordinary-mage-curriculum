@@ -1,16 +1,16 @@
-import {fireSpec,hasFireRecipe} from './fire-spec.mjs?v=ash11';
-import {BurnVisuals,applyBurnVisual} from './burn-visuals.mjs?v=ash11';
+import {fireSpec,hasFireRecipe} from './fire-spec.mjs?v=ash12';
+import {BurnVisuals,applyBurnVisual} from './burn-visuals.mjs?v=ash12';
 import {crossesWard,distanceToWard} from './forces.mjs';
 import {CastingFeedback,ChargeCamera,impactFeedback} from './casting-feedback.mjs?v=charge13';
-import {castWithPresentation,renderCastPresentation} from './cast-presentation.mjs?v=ash11';
+import {castWithPresentation,renderCastPresentation} from './cast-presentation.mjs?v=ash12';
 import {CastRecoil} from './combat-response.mjs?v=rim9';
 import {BodyFollow} from './body-follow.mjs';
 import {canSee} from './vision.mjs';
 import * as T from './three.module.js';
 import {createWizard,animateWizard,projectWizard} from './wizard.mjs?v=editor-live1';
 import {LowPolyVFX} from './lowpoly-vfx.mjs';
-import {LiveMagic} from './live-magic.mjs?v=ash11';
-import {RUNES} from './combo-design.mjs?v=ash11';
+import {LiveMagic} from './live-magic.mjs?v=ash12';
+import {RUNES} from './combo-design.mjs?v=ash12';
 import {advanceMovingWard} from './moving-ward.mjs';
 import {ForcedMotion} from './motion.mjs';
 export function mountAtlasPreview(host,seq){

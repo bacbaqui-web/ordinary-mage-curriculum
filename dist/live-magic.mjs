@@ -1,8 +1,8 @@
-import {hasFireRecipe} from './fire-spec.mjs?v=ash11';
-import {FireSpells} from './fire-spells.mjs?v=ash11';
+import {hasFireRecipe} from './fire-spec.mjs?v=ash12';
+import {FireSpells} from './fire-spells.mjs?v=ash12';
 import * as T from './three.module.js';
-import {compileSpell,spellReach,spellPayload} from './live-spells.mjs?v=ash11';
-import {RUNES} from './combo-design.mjs?v=ash11';
+import {compileSpell,spellReach,spellPayload} from './live-spells.mjs?v=ash12';
+import {RUNES} from './combo-design.mjs?v=ash12';
 import {crossesWard,distanceToWard} from './forces.mjs';
 import {segmentCircleHit} from './delivery.mjs';
 export class LiveMagic {
