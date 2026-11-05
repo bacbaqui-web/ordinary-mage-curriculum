@@ -1,4 +1,5 @@
 import {bindMouseControls} from './mouse-controls.mjs';
+import {createWizard,animateWizard,projectWizard} from './wizard.mjs?v=editor-live1';
 import {QueuedCharge} from './queued-charge.mjs';
 import {LiveMagic} from './live-magic.mjs';
 import {spellReach} from './live-spells.mjs';
@@ -44,7 +45,7 @@ const grass=mat(0x667955);for(let i=0;i<95;i++){let x=(rand()-.5)*25,z=(rand()-.
 for(const x of[-9,8]){box(x,1.8,-11, .13,3.6,.13,mat(0x514838));const flag=box(x+.52,2.8,-11,1,.95,.05,mat(0x37596b));flag.rotation.z=-.08;}
 // Ground markings are actual geometry and remain readable beneath spells.
 const emblem=mesh(new T.RingGeometry(2.1,2.15,64),mat(0xb7bca6,{transparent:true,opacity:.45}),0,.045,0);emblem.rotation.x=-Math.PI/2;emblem.castShadow=false;
-function wizard(color,trim){const g=new T.Group();const robe=mat(color),edge=mat(trim),skin=mat(0xe1c4a1),dark=mat(0x26313c);mesh(new T.ConeGeometry(.48,1.1,7),robe,0,.85,0,g);mesh(new T.CylinderGeometry(.43,.49,.08,7),edge,0,.34,0,g);mesh(new T.SphereGeometry(.23,8,6),skin,0,1.5,0,g);mesh(new T.CylinderGeometry(.56,.56,.065,10),dark,0,1.72,0,g);mesh(new T.ConeGeometry(.34,.77,7),robe,-.07,2.08,0,g);mesh(new T.CylinderGeometry(.33,.35,.075,7),edge,0,1.79,0,g);box(-.2,.2,.08,.19,.34,.36,dark,g);box(.2,.2,.08,.19,.34,.36,dark,g);const arm=box(.4,1.15,.22,.22,.23,.68,robe,g);mesh(new T.SphereGeometry(.13,7,5),skin,.4,1.15,.58,g);box(-.4,.95,0,.2,.6,.22,robe,g);const selection=mesh(new T.RingGeometry(.62,.67,40),new T.MeshBasicMaterial({color:trim,transparent:true,opacity:.65,side:T.DoubleSide}),0,.065,0,g);selection.rotation.x=-Math.PI/2;selection.castShadow=false;const body=new T.Group();body.position.y=.95;for(const child of [...g.children]){if(child===selection)continue;g.remove(child);child.position.y-=.95;body.add(child)}g.add(body);g.userData.body=body;g.userData.arm=arm;g.userData.palette=[...new Set([robe,edge,skin,dark])].map(material=>({material,color:material.color.clone()}));scene.add(g);return g}
+function wizard(color,trim){return createWizard(scene,color,trim);}
 const player={g:wizard(0x394351,0xe7b367),x:-5,z:4,hp:100,mana:100,shield:0,shieldTime:0,shieldHeat:false,dir:new T.Vector3(1,0,-1).normalize(),cool:0};
 const enemy={g:wizard(0x73899c,0xc2d6df),x:5,z:-4,hp:100,mana:100,shield:0,shieldTime:0,dir:new T.Vector3(-1,0,1).normalize(),cool:2,wind:0};
 player.motion=new ForcedMotion();enemy.motion=new ForcedMotion();
@@ -161,7 +162,7 @@ function updateForces(dt){
  }if(w.life<=0||w.hp<=0){spellVfx.shatter(w.x,w.z,w.width);remove(w.m);wards.splice(i,1);}}
 }
 const liveMagic=new LiveMagic({scene,vfx:spellVfx,remove,targets,hit,applyPayload,clearPath,collides,wallBlocks,get wards(){return wards;}});
-function dispatchSpell(s,caster,dir,aimPoint){liveMagic.cast(s,caster,dir,aimPoint);caster.castFlash=.3;}
+function dispatchSpell(s,caster,dir,aimPoint){liveMagic.cast(s,caster,dir,aimPoint);caster.castFlash=.3;caster.g.userData.puppet.magic.release(s.sequence?.length||1);caster.g.userData.puppet.magic.elapsed=2/12;}
 
 function cast(result){if(!running||paused||finished)return;const s=resolveSpell(result,loadout);if(s.parts.some(k=>!progress.ranks[k]))return;s.mastery=mastery(progress,s.parts[0]);s.power*=s.mastery;if(player.cool>0){flash('잠깐 기다려 주세요');return}if(bot&&player.mana<s.cost){flash('마력이 부족합니다. 잠시 쉬면 회복됩니다.');return}if(bot)player.mana-=s.cost;player.cool=s.tap?.16:.38;const seq=s.sequence,base=seq.slice(0,2),p=s.power,dir=player.dir.clone(),target=aim.clone();target.sub(new T.Vector3(player.x,0,player.z));if(target.length()>6)target.setLength(6);target.add(new T.Vector3(player.x,0,player.z));const third=seq[2];
  dispatchSpell(s,player,dir,aim);
@@ -274,6 +275,13 @@ function renderHunt(){const need=requiredXP(progress.level);$('xpText').textCont
 for(const k of KEYS){$('learn-'+k).onclick=()=>{if(!running||paused||finished)return;if(learn(progress,k)){charge.clear();renderProgress();flash(RUNES[loadout[k]].name+(progress.ranks[k]===1?' 습득 · '+k.toUpperCase()+'로 사용':' 숙련도 상승'));}};}
  syncLoadout();renderProgress();renderSelection();
 function resize(){renderer.setSize(innerWidth,innerHeight);camera.aspect=innerWidth/innerHeight;camera.fov=38;const fit=Math.max(1,1.4/camera.aspect);camera.position.set(player.x+12*fit,17*fit,player.z+15*fit);camera.far=140*fit;camera.lookAt(player.x,0,player.z);camera.updateProjectionMatrix()}window.addEventListener('resize',resize);resize();
-let prev=performance.now();function frame(now){requestAnimationFrame(frame);const dt=Math.min(.04,(now-prev)/1000);prev=now;if(running&&!paused&&!finished)update(dt);if(!paused)for(let i=fx.length-1;i>=0;i--){const f=fx[i];f.life-=dt;if(f.ring){f.m.scale.setScalar(f.r*(.55+.45*(1-f.life/f.max)));f.m.material.opacity=Math.max(0,f.life/f.max*.65)}else if(f.v){f.m.position.addScaledVector(f.v,dt);f.v.y-=dt*8}else if(f.m.material.transparent)f.m.material.opacity=Math.max(0,f.life/f.max*.5);if(f.life<=0){remove(f.m);fx.splice(i,1)}}if(!paused){spellVfx.update(dt);pixelVfx.update(dt);}ui();renderer.render(scene,camera)}requestAnimationFrame(frame);
+let prev=performance.now();function frame(now){requestAnimationFrame(frame);const dt=Math.min(.04,(now-prev)/1000);prev=now;if(running&&!paused&&!finished)update(dt);if(!paused)for(let i=fx.length-1;i>=0;i--){const f=fx[i];f.life-=dt;if(f.ring){f.m.scale.setScalar(f.r*(.55+.45*(1-f.life/f.max)));f.m.material.opacity=Math.max(0,f.life/f.max*.65)}else if(f.v){f.m.position.addScaledVector(f.v,dt);f.v.y-=dt*8}else if(f.m.material.transparent)f.m.material.opacity=Math.max(0,f.life/f.max*.5);if(f.life<=0){remove(f.m);fx.splice(i,1)}}if(!paused){spellVfx.update(dt);pixelVfx.update(dt);}ui();for(const a of [player,enemy]){
+ const u=a.g.userData,active=running&&!paused&&!finished,step=active?dt:0;
+ const charging=active&&(a===player?charge.active:enemyCharge.active),stage=a===player?charge.parts.length:enemyCharge.charge.parts.length;
+ if(!charging&&u.puppet.magic.mode==='hold')u.puppet.magic.reset();
+ const previous=u.animationPosition||{x:a.x,z:a.z},speed=step?Math.hypot(a.x-previous.x,a.z-previous.z)/step:0;
+ animateWizard(a.g,step,{speed,charging,chargeStage:stage||1,cast:a.castFlash||0});
+ u.animationPosition={x:a.x,z:a.z};projectWizard(a.g,camera);
+ }renderer.render(scene,camera)}requestAnimationFrame(frame);
 // Read-only diagnostics for input and rendering verification.
 window.mageDebug=()=>({loadout:{...loadout},running,paused,bot,finished,charge:{queue:[...charge.queue],active:charge.active,parts:[...charge.parts],held:[...charge.held],progress:charge.progress},history:[...history],roll:{active:roll.active,cooldown:roll.cooldown,invulnerable:roll.invulnerable},progress:structuredClone(progress),monsters:monsters.filter(m=>!m.dead).map(m=>({id:m.id,x:m.x,z:m.z,hp:m.hp})),player:{x:player.x,z:player.z,hp:player.hp,mana:player.mana},enemy:{progress:structuredClone(enemyProgress),target:enemyTarget?.monster?'monster':enemyTarget?'player':null,x:enemy.x,z:enemy.z,hp:enemy.hp,mana:enemy.mana,loadout:{...enemyLoadout},charge:{parts:[...enemyCharge.charge.parts],progress:enemyCharge.charge.progress,remaining:enemyCharge.remaining},lastSpell:enemy.lastSpell},groundZones:fields.filter(f=>f.ground).map(f=>({x:f.x,z:f.z,radius:f.r,life:f.life})),projectiles:shots.map(s=>({kind:s.spec.kind,radius:s.spec.radius,speed:s.spec.speed,distance:s.distance})),walls:wards.map(w=>({x:w.x,z:w.z,moving:w.speed>0,travelled:w.travelled})),vfx:spellVfx.stats(),pixelVfx:pixelVfx.stats(),objects:scene.children.length});

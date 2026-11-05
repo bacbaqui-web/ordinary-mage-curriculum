@@ -1,0 +1,2022 @@
+[
+  {
+    "number": 1,
+    "key": "arcane-beam",
+    "name": "마법 광선",
+    "original": "Arcane beam",
+    "category": "arcane",
+    "used": false,
+    "file": "assets/library/arcane-beam.png",
+    "size": [
+      168,
+      64
+    ],
+    "pivot": [
+      18,
+      32
+    ],
+    "frames": 8,
+    "frame_ms": 75,
+    "loop": true
+  },
+  {
+    "number": 2,
+    "key": "arcane-orb-projectile",
+    "name": "마법 구체",
+    "original": "Arcane orb projectile",
+    "category": "arcane",
+    "used": false,
+    "file": "assets/library/arcane-orb-projectile.png",
+    "size": [
+      128,
+      52
+    ],
+    "pivot": [
+      104,
+      26
+    ],
+    "frames": 23,
+    "frame_ms": 60,
+    "loop": false
+  },
+  {
+    "number": 3,
+    "key": "blink-dash",
+    "name": "순간이동 돌진",
+    "original": "Blink dash",
+    "category": "arcane",
+    "used": false,
+    "file": "assets/library/blink-dash.png",
+    "size": [
+      128,
+      48
+    ],
+    "pivot": [
+      64,
+      24
+    ],
+    "frames": 22,
+    "frame_ms": 60,
+    "loop": false
+  },
+  {
+    "number": 4,
+    "key": "blink-out",
+    "name": "순간이동 소멸",
+    "original": "Blink out",
+    "category": "arcane",
+    "used": false,
+    "file": "assets/library/blink-out.png",
+    "size": [
+      64,
+      80
+    ],
+    "pivot": [
+      32,
+      72
+    ],
+    "frames": 19,
+    "frame_ms": 60,
+    "loop": false
+  },
+  {
+    "number": 5,
+    "key": "magic-circle",
+    "name": "마법진",
+    "original": "Magic circle summon",
+    "category": "arcane",
+    "used": true,
+    "file": "assets/pvfx/magic-circle.png",
+    "size": [
+      96,
+      64
+    ],
+    "pivot": [
+      48,
+      47
+    ],
+    "frames": 20,
+    "frame_ms": 80,
+    "loop": false
+  },
+  {
+    "number": 6,
+    "key": "portal-summon",
+    "name": "차원문 소환",
+    "original": "Portal summon",
+    "category": "arcane",
+    "used": false,
+    "file": "assets/library/portal-summon.png",
+    "size": [
+      108,
+      128
+    ],
+    "pivot": [
+      54,
+      108
+    ],
+    "frames": 22,
+    "frame_ms": 80,
+    "loop": false
+  },
+  {
+    "number": 7,
+    "key": "rune-trap",
+    "name": "룬 함정",
+    "original": "Rune trap",
+    "category": "arcane",
+    "used": false,
+    "file": "assets/library/rune-trap.png",
+    "size": [
+      64,
+      48
+    ],
+    "pivot": [
+      32,
+      39
+    ],
+    "frames": 19,
+    "frame_ms": 65,
+    "loop": false
+  },
+  {
+    "number": 8,
+    "key": "shield-shatter",
+    "name": "보호막 파괴",
+    "original": "Shield shatter",
+    "category": "arcane",
+    "used": true,
+    "file": "assets/pvfx/shield-shatter.png",
+    "size": [
+      64,
+      64
+    ],
+    "pivot": [
+      0,
+      0
+    ],
+    "frames": 17,
+    "frame_ms": 60,
+    "loop": false
+  },
+  {
+    "number": 9,
+    "key": "teleport-in",
+    "name": "순간이동 등장",
+    "original": "Teleport in",
+    "category": "arcane",
+    "used": false,
+    "file": "assets/library/teleport-in.png",
+    "size": [
+      40,
+      64
+    ],
+    "pivot": [
+      20,
+      57
+    ],
+    "frames": 19,
+    "frame_ms": 60,
+    "loop": false
+  },
+  {
+    "number": 10,
+    "key": "arcane-burst",
+    "name": "마력 폭발",
+    "original": "Arcane burst",
+    "category": "explosions",
+    "used": false,
+    "file": "assets/library/arcane-burst.png",
+    "size": [
+      72,
+      72
+    ],
+    "pivot": [
+      36,
+      38
+    ],
+    "frames": 20,
+    "frame_ms": 65,
+    "loop": false
+  },
+  {
+    "number": 11,
+    "key": "big-explosion",
+    "name": "대폭발",
+    "original": "Big explosion",
+    "category": "explosions",
+    "used": false,
+    "file": "assets/library/big-explosion.png",
+    "size": [
+      128,
+      128
+    ],
+    "pivot": [
+      64,
+      113
+    ],
+    "frames": 18,
+    "frame_ms": 70,
+    "loop": false
+  },
+  {
+    "number": 12,
+    "key": "fire-nova",
+    "name": "화염 고리",
+    "original": "Fire nova",
+    "category": "explosions",
+    "used": false,
+    "file": "assets/library/fire-nova.png",
+    "size": [
+      96,
+      64
+    ],
+    "pivot": [
+      48,
+      44
+    ],
+    "frames": 19,
+    "frame_ms": 60,
+    "loop": false
+  },
+  {
+    "number": 13,
+    "key": "firework-burst",
+    "name": "불꽃 폭죽",
+    "original": "Firework burst",
+    "category": "explosions",
+    "used": false,
+    "file": "assets/library/firework-burst.png",
+    "size": [
+      64,
+      80
+    ],
+    "pivot": [
+      32,
+      30
+    ],
+    "frames": 23,
+    "frame_ms": 65,
+    "loop": false
+  },
+  {
+    "number": 14,
+    "key": "implosion",
+    "name": "압축 폭발",
+    "original": "Implosion",
+    "category": "explosions",
+    "used": false,
+    "file": "assets/library/implosion.png",
+    "size": [
+      96,
+      96
+    ],
+    "pivot": [
+      48,
+      48
+    ],
+    "frames": 28,
+    "frame_ms": 70,
+    "loop": false
+  },
+  {
+    "number": 15,
+    "key": "small-explosion",
+    "name": "작은 폭발",
+    "original": "Small explosion",
+    "category": "explosions",
+    "used": true,
+    "file": "assets/pvfx/small-explosion.png",
+    "size": [
+      64,
+      64
+    ],
+    "pivot": [
+      32,
+      57
+    ],
+    "frames": 14,
+    "frame_ms": 60,
+    "loop": false
+  },
+  {
+    "number": 16,
+    "key": "campfire",
+    "name": "모닥불",
+    "original": "Campfire",
+    "category": "fire",
+    "used": false,
+    "file": "assets/library/campfire.png",
+    "size": [
+      40,
+      56
+    ],
+    "pivot": [
+      20,
+      50
+    ],
+    "frames": 12,
+    "frame_ms": 75,
+    "loop": true
+  },
+  {
+    "number": 17,
+    "key": "fire-pillar",
+    "name": "불기둥",
+    "original": "Fire pillar",
+    "category": "fire",
+    "used": false,
+    "file": "assets/library/fire-pillar.png",
+    "size": [
+      64,
+      112
+    ],
+    "pivot": [
+      32,
+      102
+    ],
+    "frames": 24,
+    "frame_ms": 70,
+    "loop": false
+  },
+  {
+    "number": 18,
+    "key": "fire-tornado",
+    "name": "화염 회오리",
+    "original": "Fire tornado",
+    "category": "fire",
+    "used": false,
+    "file": "assets/library/fire-tornado.png",
+    "size": [
+      48,
+      80
+    ],
+    "pivot": [
+      24,
+      74
+    ],
+    "frames": 16,
+    "frame_ms": 70,
+    "loop": true
+  },
+  {
+    "number": 19,
+    "key": "fireball-impact",
+    "name": "화염구 충돌",
+    "original": "Fireball impact",
+    "category": "fire",
+    "used": false,
+    "file": "assets/library/fireball-impact.png",
+    "size": [
+      96,
+      64
+    ],
+    "pivot": [
+      72,
+      38
+    ],
+    "frames": 15,
+    "frame_ms": 70,
+    "loop": false
+  },
+  {
+    "number": 20,
+    "key": "flamethrower",
+    "name": "화염 방사",
+    "original": "Flamethrower",
+    "category": "fire",
+    "used": true,
+    "file": "assets/pvfx/flamethrower.png",
+    "size": [
+      128,
+      48
+    ],
+    "pivot": [
+      6,
+      32
+    ],
+    "frames": 16,
+    "frame_ms": 60,
+    "loop": true
+  },
+  {
+    "number": 21,
+    "key": "ground-flames",
+    "name": "바닥 불길",
+    "original": "Ground flames",
+    "category": "fire",
+    "used": true,
+    "file": "assets/pvfx/ground-flames.png",
+    "size": [
+      64,
+      40
+    ],
+    "pivot": [
+      32,
+      33
+    ],
+    "frames": 16,
+    "frame_ms": 75,
+    "loop": true
+  },
+  {
+    "number": 22,
+    "key": "lava-burst",
+    "name": "용암 분출",
+    "original": "Lava burst",
+    "category": "fire",
+    "used": false,
+    "file": "assets/library/lava-burst.png",
+    "size": [
+      64,
+      72
+    ],
+    "pivot": [
+      32,
+      62
+    ],
+    "frames": 23,
+    "frame_ms": 70,
+    "loop": false
+  },
+  {
+    "number": 23,
+    "key": "meteor-strike",
+    "name": "운석 낙하",
+    "original": "Meteor strike",
+    "category": "fire",
+    "used": false,
+    "file": "assets/library/meteor-strike.png",
+    "size": [
+      96,
+      96
+    ],
+    "pivot": [
+      47,
+      82
+    ],
+    "frames": 26,
+    "frame_ms": 60,
+    "loop": false
+  },
+  {
+    "number": 24,
+    "key": "angel-feathers",
+    "name": "천사 깃털",
+    "original": "Angel feathers",
+    "category": "holy",
+    "used": false,
+    "file": "assets/library/angel-feathers.png",
+    "size": [
+      56,
+      72
+    ],
+    "pivot": [
+      28,
+      17
+    ],
+    "frames": 21,
+    "frame_ms": 70,
+    "loop": false
+  },
+  {
+    "number": 25,
+    "key": "barrier-block",
+    "name": "방어 성공",
+    "original": "Barrier block",
+    "category": "holy",
+    "used": false,
+    "file": "assets/library/barrier-block.png",
+    "size": [
+      40,
+      56
+    ],
+    "pivot": [
+      0,
+      0
+    ],
+    "frames": 16,
+    "frame_ms": 55,
+    "loop": false
+  },
+  {
+    "number": 26,
+    "key": "divine-beam",
+    "name": "신성 광선",
+    "original": "Divine beam",
+    "category": "holy",
+    "used": false,
+    "file": "assets/library/divine-beam.png",
+    "size": [
+      48,
+      96
+    ],
+    "pivot": [
+      24,
+      88
+    ],
+    "frames": 19,
+    "frame_ms": 70,
+    "loop": false
+  },
+  {
+    "number": 27,
+    "key": "holy-heal",
+    "name": "신성 치유",
+    "original": "Holy heal",
+    "category": "holy",
+    "used": false,
+    "file": "assets/library/holy-heal.png",
+    "size": [
+      64,
+      96
+    ],
+    "pivot": [
+      32,
+      86
+    ],
+    "frames": 21,
+    "frame_ms": 80,
+    "loop": false
+  },
+  {
+    "number": 28,
+    "key": "holy-smite",
+    "name": "신성 강타",
+    "original": "Holy smite",
+    "category": "holy",
+    "used": false,
+    "file": "assets/library/holy-smite.png",
+    "size": [
+      80,
+      120
+    ],
+    "pivot": [
+      40,
+      108
+    ],
+    "frames": 14,
+    "frame_ms": 80,
+    "loop": false
+  },
+  {
+    "number": 29,
+    "key": "regen-aura",
+    "name": "회복 기운",
+    "original": "Regen aura",
+    "category": "holy",
+    "used": false,
+    "file": "assets/library/regen-aura.png",
+    "size": [
+      48,
+      64
+    ],
+    "pivot": [
+      24,
+      57
+    ],
+    "frames": 16,
+    "frame_ms": 80,
+    "loop": true
+  },
+  {
+    "number": 30,
+    "key": "resurrect",
+    "name": "부활",
+    "original": "Resurrect",
+    "category": "holy",
+    "used": false,
+    "file": "assets/library/resurrect.png",
+    "size": [
+      48,
+      80
+    ],
+    "pivot": [
+      24,
+      72
+    ],
+    "frames": 21,
+    "frame_ms": 70,
+    "loop": false
+  },
+  {
+    "number": 31,
+    "key": "shield-bubble",
+    "name": "보호막 구체",
+    "original": "Shield bubble",
+    "category": "holy",
+    "used": true,
+    "file": "assets/pvfx/shield-bubble.png",
+    "size": [
+      72,
+      88
+    ],
+    "pivot": [
+      36,
+      84
+    ],
+    "frames": 16,
+    "frame_ms": 75,
+    "loop": true
+  },
+  {
+    "number": 32,
+    "key": "blizzard",
+    "name": "눈보라",
+    "original": "Blizzard",
+    "category": "ice",
+    "used": false,
+    "file": "assets/library/blizzard.png",
+    "size": [
+      80,
+      56
+    ],
+    "pivot": [
+      40,
+      50
+    ],
+    "frames": 16,
+    "frame_ms": 70,
+    "loop": true
+  },
+  {
+    "number": 33,
+    "key": "freeze-encase",
+    "name": "얼음 봉인",
+    "original": "Freeze encase",
+    "category": "ice",
+    "used": false,
+    "file": "assets/library/freeze-encase.png",
+    "size": [
+      56,
+      64
+    ],
+    "pivot": [
+      28,
+      57
+    ],
+    "frames": 20,
+    "frame_ms": 70,
+    "loop": false
+  },
+  {
+    "number": 34,
+    "key": "frost-breath",
+    "name": "냉기 숨결",
+    "original": "Frost breath",
+    "category": "ice",
+    "used": true,
+    "file": "assets/pvfx/frost-breath.png",
+    "size": [
+      96,
+      40
+    ],
+    "pivot": [
+      4,
+      21
+    ],
+    "frames": 14,
+    "frame_ms": 65,
+    "loop": true
+  },
+  {
+    "number": 35,
+    "key": "frost-nova",
+    "name": "서리 고리",
+    "original": "Frost nova",
+    "category": "ice",
+    "used": true,
+    "file": "assets/pvfx/frost-nova.png",
+    "size": [
+      120,
+      76
+    ],
+    "pivot": [
+      60,
+      50
+    ],
+    "frames": 18,
+    "frame_ms": 80,
+    "loop": false
+  },
+  {
+    "number": 36,
+    "key": "ice-spike",
+    "name": "얼음 가시",
+    "original": "Ice spike",
+    "category": "ice",
+    "used": false,
+    "file": "assets/library/ice-spike.png",
+    "size": [
+      96,
+      80
+    ],
+    "pivot": [
+      46,
+      68
+    ],
+    "frames": 26,
+    "frame_ms": 70,
+    "loop": false
+  },
+  {
+    "number": 37,
+    "key": "ice-wall",
+    "name": "얼음 장벽",
+    "original": "Ice wall",
+    "category": "ice",
+    "used": true,
+    "file": "assets/pvfx/ice-wall.png",
+    "size": [
+      80,
+      56
+    ],
+    "pivot": [
+      40,
+      48
+    ],
+    "frames": 21,
+    "frame_ms": 70,
+    "loop": false
+  },
+  {
+    "number": 38,
+    "key": "snowball-impact",
+    "name": "눈덩이 충돌",
+    "original": "Snowball impact",
+    "category": "ice",
+    "used": false,
+    "file": "assets/library/snowball-impact.png",
+    "size": [
+      80,
+      48
+    ],
+    "pivot": [
+      62,
+      26
+    ],
+    "frames": 20,
+    "frame_ms": 65,
+    "loop": false
+  },
+  {
+    "number": 39,
+    "key": "blood-splat",
+    "name": "핏자국",
+    "original": "Blood splat",
+    "category": "impacts",
+    "used": false,
+    "file": "assets/library/blood-splat.png",
+    "size": [
+      128,
+      120
+    ],
+    "pivot": [
+      28,
+      62
+    ],
+    "frames": 16,
+    "frame_ms": 70,
+    "loop": false
+  },
+  {
+    "number": 40,
+    "key": "crit-hit",
+    "name": "치명타",
+    "original": "Crit hit",
+    "category": "impacts",
+    "used": false,
+    "file": "assets/library/crit-hit.png",
+    "size": [
+      96,
+      80
+    ],
+    "pivot": [
+      48,
+      40
+    ],
+    "frames": 11,
+    "frame_ms": 70,
+    "loop": false
+  },
+  {
+    "number": 41,
+    "key": "ground-slam",
+    "name": "지면 강타",
+    "original": "Ground slam shockwave",
+    "category": "impacts",
+    "used": false,
+    "file": "assets/library/ground-slam.png",
+    "size": [
+      128,
+      64
+    ],
+    "pivot": [
+      64,
+      44
+    ],
+    "frames": 19,
+    "frame_ms": 70,
+    "loop": false
+  },
+  {
+    "number": 42,
+    "key": "hit-spark",
+    "name": "타격 불꽃",
+    "original": "Hit spark",
+    "category": "impacts",
+    "used": true,
+    "file": "assets/pvfx/hit-spark.png",
+    "size": [
+      64,
+      64
+    ],
+    "pivot": [
+      32,
+      32
+    ],
+    "frames": 8,
+    "frame_ms": 80,
+    "loop": false
+  },
+  {
+    "number": 43,
+    "key": "parry",
+    "name": "튕겨내기",
+    "original": "Parry",
+    "category": "impacts",
+    "used": true,
+    "file": "assets/pvfx/parry.png",
+    "size": [
+      96,
+      80
+    ],
+    "pivot": [
+      48,
+      38
+    ],
+    "frames": 13,
+    "frame_ms": 60,
+    "loop": false
+  },
+  {
+    "number": 44,
+    "key": "punch-hit",
+    "name": "주먹 타격",
+    "original": "Punch hit",
+    "category": "impacts",
+    "used": false,
+    "file": "assets/library/punch-hit.png",
+    "size": [
+      48,
+      40
+    ],
+    "pivot": [
+      17,
+      21
+    ],
+    "frames": 11,
+    "frame_ms": 60,
+    "loop": false
+  },
+  {
+    "number": 45,
+    "key": "rock-shatter",
+    "name": "바위 파괴",
+    "original": "Rock shatter",
+    "category": "impacts",
+    "used": false,
+    "file": "assets/library/rock-shatter.png",
+    "size": [
+      64,
+      56
+    ],
+    "pivot": [
+      30,
+      44
+    ],
+    "frames": 18,
+    "frame_ms": 60,
+    "loop": false
+  },
+  {
+    "number": 46,
+    "key": "shockwave-ring",
+    "name": "충격파 고리",
+    "original": "Shockwave ring",
+    "category": "impacts",
+    "used": false,
+    "file": "assets/library/shockwave-ring.png",
+    "size": [
+      120,
+      52
+    ],
+    "pivot": [
+      60,
+      30
+    ],
+    "frames": 16,
+    "frame_ms": 70,
+    "loop": false
+  },
+  {
+    "number": 47,
+    "key": "ball-lightning",
+    "name": "전기 구체",
+    "original": "Ball lightning",
+    "category": "lightning",
+    "used": true,
+    "file": "assets/pvfx/ball-lightning.png",
+    "size": [
+      96,
+      48
+    ],
+    "pivot": [
+      0,
+      24
+    ],
+    "frames": 20,
+    "frame_ms": 60,
+    "loop": false
+  },
+  {
+    "number": 48,
+    "key": "chain-lightning",
+    "name": "연쇄 번개",
+    "original": "Chain lightning",
+    "category": "lightning",
+    "used": false,
+    "file": "assets/library/chain-lightning.png",
+    "size": [
+      180,
+      72
+    ],
+    "pivot": [
+      10,
+      40
+    ],
+    "frames": 14,
+    "frame_ms": 70,
+    "loop": false
+  },
+  {
+    "number": 49,
+    "key": "lightning-strike",
+    "name": "낙뢰",
+    "original": "Lightning strike",
+    "category": "lightning",
+    "used": true,
+    "file": "assets/pvfx/lightning-strike.png",
+    "size": [
+      96,
+      128
+    ],
+    "pivot": [
+      38,
+      118
+    ],
+    "frames": 18,
+    "frame_ms": 80,
+    "loop": false
+  },
+  {
+    "number": 50,
+    "key": "static-burst",
+    "name": "방전 폭발",
+    "original": "Static burst",
+    "category": "lightning",
+    "used": true,
+    "file": "assets/pvfx/static-burst.png",
+    "size": [
+      112,
+      112
+    ],
+    "pivot": [
+      56,
+      58
+    ],
+    "frames": 13,
+    "frame_ms": 60,
+    "loop": false
+  },
+  {
+    "number": 51,
+    "key": "thunder-cloud",
+    "name": "먹구름",
+    "original": "Thunder cloud",
+    "category": "lightning",
+    "used": false,
+    "file": "assets/library/thunder-cloud.png",
+    "size": [
+      56,
+      72
+    ],
+    "pivot": [
+      28,
+      69
+    ],
+    "frames": 24,
+    "frame_ms": 70,
+    "loop": true
+  },
+  {
+    "number": 52,
+    "key": "axe-smear",
+    "name": "도끼 궤적",
+    "original": "Axe smear",
+    "category": "melee",
+    "used": false,
+    "file": "assets/library/axe-smear.png",
+    "size": [
+      128,
+      104
+    ],
+    "pivot": [
+      66,
+      50
+    ],
+    "frames": 9,
+    "frame_ms": 80,
+    "loop": false
+  },
+  {
+    "number": 53,
+    "key": "hammer-smash",
+    "name": "망치 강타",
+    "original": "Hammer smash",
+    "category": "melee",
+    "used": false,
+    "file": "assets/library/hammer-smash.png",
+    "size": [
+      84,
+      56
+    ],
+    "pivot": [
+      44,
+      44
+    ],
+    "frames": 15,
+    "frame_ms": 60,
+    "loop": false
+  },
+  {
+    "number": 54,
+    "key": "shadow-claw",
+    "name": "그림자 발톱",
+    "original": "Shadow claw",
+    "category": "melee",
+    "used": false,
+    "file": "assets/library/shadow-claw.png",
+    "size": [
+      56,
+      56
+    ],
+    "pivot": [
+      28,
+      28
+    ],
+    "frames": 12,
+    "frame_ms": 50,
+    "loop": false
+  },
+  {
+    "number": 55,
+    "key": "spear-thrust",
+    "name": "창 찌르기",
+    "original": "Spear thrust",
+    "category": "melee",
+    "used": false,
+    "file": "assets/library/spear-thrust.png",
+    "size": [
+      72,
+      32
+    ],
+    "pivot": [
+      12,
+      16
+    ],
+    "frames": 10,
+    "frame_ms": 60,
+    "loop": false
+  },
+  {
+    "number": 56,
+    "key": "sword-combo",
+    "name": "연속 검격",
+    "original": "Sword combo",
+    "category": "melee",
+    "used": false,
+    "file": "assets/library/sword-combo.png",
+    "size": [
+      104,
+      64
+    ],
+    "pivot": [
+      52,
+      30
+    ],
+    "frames": 14,
+    "frame_ms": 70,
+    "loop": false
+  },
+  {
+    "number": 57,
+    "key": "acid-spit",
+    "name": "산성 침",
+    "original": "Acid spit",
+    "category": "nature",
+    "used": false,
+    "file": "assets/library/acid-spit.png",
+    "size": [
+      80,
+      40
+    ],
+    "pivot": [
+      74,
+      26
+    ],
+    "frames": 20,
+    "frame_ms": 60,
+    "loop": false
+  },
+  {
+    "number": 58,
+    "key": "acid-splash",
+    "name": "산성 액체 충돌",
+    "original": "Acid splash",
+    "category": "nature",
+    "used": false,
+    "file": "assets/library/acid-splash.png",
+    "size": [
+      96,
+      72
+    ],
+    "pivot": [
+      48,
+      64
+    ],
+    "frames": 27,
+    "frame_ms": 70,
+    "loop": false
+  },
+  {
+    "number": 59,
+    "key": "bloom-heal",
+    "name": "꽃 치유",
+    "original": "Bloom heal",
+    "category": "nature",
+    "used": false,
+    "file": "assets/library/bloom-heal.png",
+    "size": [
+      56,
+      64
+    ],
+    "pivot": [
+      28,
+      55
+    ],
+    "frames": 22,
+    "frame_ms": 70,
+    "loop": false
+  },
+  {
+    "number": 60,
+    "key": "boulder-toss",
+    "name": "바위 던지기",
+    "original": "Boulder toss",
+    "category": "nature",
+    "used": false,
+    "file": "assets/library/boulder-toss.png",
+    "size": [
+      80,
+      56
+    ],
+    "pivot": [
+      50,
+      46
+    ],
+    "frames": 22,
+    "frame_ms": 65,
+    "loop": false
+  },
+  {
+    "number": 61,
+    "key": "earth-spike",
+    "name": "땅 가시",
+    "original": "Earth spike row",
+    "category": "nature",
+    "used": false,
+    "file": "assets/library/earth-spike.png",
+    "size": [
+      128,
+      64
+    ],
+    "pivot": [
+      62,
+      54
+    ],
+    "frames": 22,
+    "frame_ms": 70,
+    "loop": false
+  },
+  {
+    "number": 62,
+    "key": "fissure",
+    "name": "지면 균열",
+    "original": "Ground fissure",
+    "category": "nature",
+    "used": false,
+    "file": "assets/library/fissure.png",
+    "size": [
+      112,
+      40
+    ],
+    "pivot": [
+      8,
+      27
+    ],
+    "frames": 21,
+    "frame_ms": 60,
+    "loop": false
+  },
+  {
+    "number": 63,
+    "key": "leaf-storm",
+    "name": "나뭇잎 폭풍",
+    "original": "Leaf storm",
+    "category": "nature",
+    "used": false,
+    "file": "assets/library/leaf-storm.png",
+    "size": [
+      80,
+      56
+    ],
+    "pivot": [
+      0,
+      0
+    ],
+    "frames": 18,
+    "frame_ms": 65,
+    "loop": false
+  },
+  {
+    "number": 64,
+    "key": "poison-cloud",
+    "name": "독 구름",
+    "original": "Poison cloud",
+    "category": "nature",
+    "used": false,
+    "file": "assets/library/poison-cloud.png",
+    "size": [
+      64,
+      48
+    ],
+    "pivot": [
+      32,
+      45
+    ],
+    "frames": 24,
+    "frame_ms": 80,
+    "loop": true
+  },
+  {
+    "number": 65,
+    "key": "spore-burst",
+    "name": "포자 폭발",
+    "original": "Spore burst",
+    "category": "nature",
+    "used": false,
+    "file": "assets/library/spore-burst.png",
+    "size": [
+      64,
+      56
+    ],
+    "pivot": [
+      32,
+      52
+    ],
+    "frames": 20,
+    "frame_ms": 70,
+    "loop": false
+  },
+  {
+    "number": 66,
+    "key": "vine-snare",
+    "name": "덩굴 속박",
+    "original": "Vine snare",
+    "category": "nature",
+    "used": false,
+    "file": "assets/library/vine-snare.png",
+    "size": [
+      56,
+      56
+    ],
+    "pivot": [
+      28,
+      46
+    ],
+    "frames": 19,
+    "frame_ms": 70,
+    "loop": false
+  },
+  {
+    "number": 67,
+    "key": "arrow-impact",
+    "name": "화살 충돌",
+    "original": "Arrow impact",
+    "category": "projectiles",
+    "used": false,
+    "file": "assets/library/arrow-impact.png",
+    "size": [
+      64,
+      32
+    ],
+    "pivot": [
+      50,
+      17
+    ],
+    "frames": 17,
+    "frame_ms": 60,
+    "loop": false
+  },
+  {
+    "number": 68,
+    "key": "ice-shard",
+    "name": "얼음 파편탄",
+    "original": "Ice shard",
+    "category": "projectiles",
+    "used": true,
+    "file": "assets/pvfx/ice-shard.png",
+    "size": [
+      112,
+      48
+    ],
+    "pivot": [
+      92,
+      24
+    ],
+    "frames": 19,
+    "frame_ms": 70,
+    "loop": false
+  },
+  {
+    "number": 69,
+    "key": "magic-missile",
+    "name": "마법 유도탄",
+    "original": "Magic missile",
+    "category": "projectiles",
+    "used": true,
+    "file": "assets/pvfx/magic-missile.png",
+    "size": [
+      156,
+      60
+    ],
+    "pivot": [
+      128,
+      30
+    ],
+    "frames": 28,
+    "frame_ms": 70,
+    "loop": false
+  },
+  {
+    "number": 70,
+    "key": "poison-dart",
+    "name": "독침",
+    "original": "Poison dart",
+    "category": "projectiles",
+    "used": false,
+    "file": "assets/library/poison-dart.png",
+    "size": [
+      96,
+      40
+    ],
+    "pivot": [
+      80,
+      18
+    ],
+    "frames": 18,
+    "frame_ms": 60,
+    "loop": false
+  },
+  {
+    "number": 71,
+    "key": "curse",
+    "name": "저주",
+    "original": "Curse",
+    "category": "shadow",
+    "used": false,
+    "file": "assets/library/curse.png",
+    "size": [
+      96,
+      112
+    ],
+    "pivot": [
+      48,
+      66
+    ],
+    "frames": 27,
+    "frame_ms": 80,
+    "loop": false
+  },
+  {
+    "number": 72,
+    "key": "shadow-bolt",
+    "name": "그림자 탄",
+    "original": "Shadow bolt",
+    "category": "shadow",
+    "used": false,
+    "file": "assets/library/shadow-bolt.png",
+    "size": [
+      112,
+      56
+    ],
+    "pivot": [
+      86,
+      30
+    ],
+    "frames": 19,
+    "frame_ms": 70,
+    "loop": false
+  },
+  {
+    "number": 73,
+    "key": "shadow-tendrils",
+    "name": "그림자 촉수",
+    "original": "Shadow tendrils",
+    "category": "shadow",
+    "used": false,
+    "file": "assets/library/shadow-tendrils.png",
+    "size": [
+      64,
+      56
+    ],
+    "pivot": [
+      32,
+      46
+    ],
+    "frames": 21,
+    "frame_ms": 70,
+    "loop": false
+  },
+  {
+    "number": 74,
+    "key": "soul-drain",
+    "name": "영혼 흡수",
+    "original": "Soul drain",
+    "category": "shadow",
+    "used": false,
+    "file": "assets/library/soul-drain.png",
+    "size": [
+      96,
+      48
+    ],
+    "pivot": [
+      0,
+      0
+    ],
+    "frames": 23,
+    "frame_ms": 65,
+    "loop": false
+  },
+  {
+    "number": 75,
+    "key": "void-implosion",
+    "name": "공허 압축",
+    "original": "Void implosion",
+    "category": "shadow",
+    "used": true,
+    "file": "assets/pvfx/void-implosion.png",
+    "size": [
+      96,
+      96
+    ],
+    "pivot": [
+      48,
+      48
+    ],
+    "frames": 21,
+    "frame_ms": 70,
+    "loop": false
+  },
+  {
+    "number": 76,
+    "key": "dash-dust",
+    "name": "돌진 먼지",
+    "original": "Dash dust",
+    "category": "smoke",
+    "used": true,
+    "file": "assets/pvfx/dash-dust.png",
+    "size": [
+      68,
+      32
+    ],
+    "pivot": [
+      24,
+      28
+    ],
+    "frames": 13,
+    "frame_ms": 60,
+    "loop": false
+  },
+  {
+    "number": 77,
+    "key": "dust-puff",
+    "name": "먼지 구름",
+    "original": "Dust puff",
+    "category": "smoke",
+    "used": false,
+    "file": "assets/library/dust-puff.png",
+    "size": [
+      72,
+      40
+    ],
+    "pivot": [
+      36,
+      33
+    ],
+    "frames": 14,
+    "frame_ms": 70,
+    "loop": false
+  },
+  {
+    "number": 78,
+    "key": "smoke-bomb",
+    "name": "연막",
+    "original": "Smoke bomb",
+    "category": "smoke",
+    "used": false,
+    "file": "assets/library/smoke-bomb.png",
+    "size": [
+      64,
+      56
+    ],
+    "pivot": [
+      32,
+      50
+    ],
+    "frames": 21,
+    "frame_ms": 70,
+    "loop": false
+  },
+  {
+    "number": 79,
+    "key": "steam-vent",
+    "name": "증기 분출",
+    "original": "Steam vent",
+    "category": "smoke",
+    "used": false,
+    "file": "assets/library/steam-vent.png",
+    "size": [
+      48,
+      72
+    ],
+    "pivot": [
+      14,
+      68
+    ],
+    "frames": 30,
+    "frame_ms": 80,
+    "loop": true
+  },
+  {
+    "number": 80,
+    "key": "bleeding",
+    "name": "출혈",
+    "original": "Bleeding",
+    "category": "status",
+    "used": false,
+    "file": "assets/library/bleeding.png",
+    "size": [
+      40,
+      56
+    ],
+    "pivot": [
+      20,
+      49
+    ],
+    "frames": 20,
+    "frame_ms": 80,
+    "loop": true
+  },
+  {
+    "number": 81,
+    "key": "burning-aura",
+    "name": "화상 기운",
+    "original": "Burning aura",
+    "category": "status",
+    "used": true,
+    "file": "assets/pvfx/burning-aura.png",
+    "size": [
+      48,
+      64
+    ],
+    "pivot": [
+      24,
+      54
+    ],
+    "frames": 12,
+    "frame_ms": 75,
+    "loop": true
+  },
+  {
+    "number": 82,
+    "key": "charm-hearts",
+    "name": "매혹 하트",
+    "original": "Charm hearts",
+    "category": "status",
+    "used": false,
+    "file": "assets/library/charm-hearts.png",
+    "size": [
+      40,
+      40
+    ],
+    "pivot": [
+      20,
+      23
+    ],
+    "frames": 20,
+    "frame_ms": 80,
+    "loop": true
+  },
+  {
+    "number": 83,
+    "key": "electrified",
+    "name": "감전",
+    "original": "Electrified",
+    "category": "status",
+    "used": true,
+    "file": "assets/pvfx/electrified.png",
+    "size": [
+      48,
+      56
+    ],
+    "pivot": [
+      24,
+      47
+    ],
+    "frames": 14,
+    "frame_ms": 65,
+    "loop": true
+  },
+  {
+    "number": 84,
+    "key": "frozen-chill",
+    "name": "냉기 기운",
+    "original": "Frozen chill",
+    "category": "status",
+    "used": true,
+    "file": "assets/pvfx/frozen-chill.png",
+    "size": [
+      40,
+      48
+    ],
+    "pivot": [
+      20,
+      42
+    ],
+    "frames": 14,
+    "frame_ms": 70,
+    "loop": true
+  },
+  {
+    "number": 85,
+    "key": "poisoned",
+    "name": "중독",
+    "original": "Poisoned",
+    "category": "status",
+    "used": false,
+    "file": "assets/library/poisoned.png",
+    "size": [
+      64,
+      80
+    ],
+    "pivot": [
+      32,
+      72
+    ],
+    "frames": 18,
+    "frame_ms": 80,
+    "loop": true
+  },
+  {
+    "number": 86,
+    "key": "power-up-aura",
+    "name": "강화 기운",
+    "original": "Power-up aura",
+    "category": "status",
+    "used": false,
+    "file": "assets/library/power-up-aura.png",
+    "size": [
+      56,
+      56
+    ],
+    "pivot": [
+      28,
+      50
+    ],
+    "frames": 14,
+    "frame_ms": 70,
+    "loop": true
+  },
+  {
+    "number": 87,
+    "key": "sleep",
+    "name": "수면",
+    "original": "Sleep",
+    "category": "status",
+    "used": false,
+    "file": "assets/library/sleep.png",
+    "size": [
+      40,
+      48
+    ],
+    "pivot": [
+      12,
+      46
+    ],
+    "frames": 30,
+    "frame_ms": 80,
+    "loop": true
+  },
+  {
+    "number": 88,
+    "key": "stun-stars",
+    "name": "기절 별",
+    "original": "Stun stars",
+    "category": "status",
+    "used": false,
+    "file": "assets/library/stun-stars.png",
+    "size": [
+      48,
+      32
+    ],
+    "pivot": [
+      24,
+      16
+    ],
+    "frames": 16,
+    "frame_ms": 75,
+    "loop": true
+  },
+  {
+    "number": 89,
+    "key": "coin-pickup",
+    "name": "동전 획득",
+    "original": "Coin pickup",
+    "category": "ui",
+    "used": false,
+    "file": "assets/library/coin-pickup.png",
+    "size": [
+      32,
+      32
+    ],
+    "pivot": [
+      16,
+      16
+    ],
+    "frames": 10,
+    "frame_ms": 60,
+    "loop": false
+  },
+  {
+    "number": 90,
+    "key": "heart-pickup",
+    "name": "하트 획득",
+    "original": "Heart pickup",
+    "category": "ui",
+    "used": false,
+    "file": "assets/library/heart-pickup.png",
+    "size": [
+      32,
+      40
+    ],
+    "pivot": [
+      16,
+      27
+    ],
+    "frames": 10,
+    "frame_ms": 70,
+    "loop": false
+  },
+  {
+    "number": 91,
+    "key": "level-up",
+    "name": "레벨 상승",
+    "original": "Level up",
+    "category": "ui",
+    "used": true,
+    "file": "assets/pvfx/level-up.png",
+    "size": [
+      64,
+      96
+    ],
+    "pivot": [
+      32,
+      88
+    ],
+    "frames": 20,
+    "frame_ms": 70,
+    "loop": false
+  },
+  {
+    "number": 92,
+    "key": "star-burst-pickup",
+    "name": "별 획득",
+    "original": "Star-burst pickup",
+    "category": "ui",
+    "used": false,
+    "file": "assets/library/star-burst-pickup.png",
+    "size": [
+      40,
+      40
+    ],
+    "pivot": [
+      20,
+      26
+    ],
+    "frames": 13,
+    "frame_ms": 60,
+    "loop": false
+  },
+  {
+    "number": 93,
+    "key": "treasure-glint",
+    "name": "보물 반짝임",
+    "original": "Treasure glint",
+    "category": "ui",
+    "used": false,
+    "file": "assets/library/treasure-glint.png",
+    "size": [
+      48,
+      48
+    ],
+    "pivot": [
+      24,
+      24
+    ],
+    "frames": 16,
+    "frame_ms": 75,
+    "loop": true
+  },
+  {
+    "number": 94,
+    "key": "bubble-burst",
+    "name": "물방울 파열",
+    "original": "Bubble burst",
+    "category": "water",
+    "used": false,
+    "file": "assets/library/bubble-burst.png",
+    "size": [
+      48,
+      48
+    ],
+    "pivot": [
+      24,
+      24
+    ],
+    "frames": 12,
+    "frame_ms": 60,
+    "loop": false
+  },
+  {
+    "number": 95,
+    "key": "tidal-wave",
+    "name": "해일",
+    "original": "Tidal wave",
+    "category": "water",
+    "used": false,
+    "file": "assets/library/tidal-wave.png",
+    "size": [
+      96,
+      56
+    ],
+    "pivot": [
+      48,
+      47
+    ],
+    "frames": 20,
+    "frame_ms": 70,
+    "loop": false
+  },
+  {
+    "number": 96,
+    "key": "water-geyser",
+    "name": "물기둥",
+    "original": "Water geyser",
+    "category": "water",
+    "used": false,
+    "file": "assets/library/water-geyser.png",
+    "size": [
+      48,
+      88
+    ],
+    "pivot": [
+      24,
+      80
+    ],
+    "frames": 21,
+    "frame_ms": 65,
+    "loop": false
+  },
+  {
+    "number": 97,
+    "key": "water-splash",
+    "name": "물 튀김",
+    "original": "Water splash",
+    "category": "water",
+    "used": false,
+    "file": "assets/library/water-splash.png",
+    "size": [
+      112,
+      80
+    ],
+    "pivot": [
+      56,
+      66
+    ],
+    "frames": 22,
+    "frame_ms": 70,
+    "loop": false
+  },
+  {
+    "number": 98,
+    "key": "whirlpool",
+    "name": "물 소용돌이",
+    "original": "Whirlpool",
+    "category": "water",
+    "used": false,
+    "file": "assets/library/whirlpool.png",
+    "size": [
+      72,
+      48
+    ],
+    "pivot": [
+      36,
+      25
+    ],
+    "frames": 20,
+    "frame_ms": 70,
+    "loop": true
+  },
+  {
+    "number": 99,
+    "key": "whirlwind",
+    "name": "회오리바람",
+    "original": "Whirlwind",
+    "category": "wind",
+    "used": true,
+    "file": "assets/pvfx/whirlwind.png",
+    "size": [
+      48,
+      72
+    ],
+    "pivot": [
+      24,
+      68
+    ],
+    "frames": 14,
+    "frame_ms": 65,
+    "loop": true
+  },
+  {
+    "number": 100,
+    "key": "wind-blade",
+    "name": "바람 칼날",
+    "original": "Wind blade",
+    "category": "wind",
+    "used": false,
+    "file": "assets/library/wind-blade.png",
+    "size": [
+      96,
+      44
+    ],
+    "pivot": [
+      0,
+      22
+    ],
+    "frames": 16,
+    "frame_ms": 60,
+    "loop": false
+  },
+  {
+    "number": 101,
+    "key": "wind-gust",
+    "name": "돌풍",
+    "original": "Wind gust",
+    "category": "wind",
+    "used": true,
+    "file": "assets/pvfx/wind-gust.png",
+    "size": [
+      96,
+      48
+    ],
+    "pivot": [
+      48,
+      24
+    ],
+    "frames": 9,
+    "frame_ms": 70,
+    "loop": false
+  }
+]

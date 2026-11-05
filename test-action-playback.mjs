@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import * as T from './dist/three.module.js';
+import {MotionPuppet} from './dist/motion-puppet.mjs';
+import {ActionPlayback} from './dist/action-playback.mjs';
+const p=new MotionPuppet(new T.Scene()),a=new ActionPlayback(p),q=()=>p.bones.RightArm.quaternion.clone();
+a.request(1);const first=q();a.update(1/12);assert.ok(first.angleTo(q())>.01);a.update(1/12);const final=q();a.update(3.99/12);assert.ok(final.angleTo(q())<1e-6);
+a.request(2);assert.equal(a.queued,2);a.update(.01/12+1e-8);assert.equal(a.index,2);assert.ok(a.frame<.001);
+a.update(7/12);assert.equal(a.status,'대기 자세로 복귀');a.request(4);assert.equal(a.index,4);assert.equal(a.frame,0);
+a.update(10/12);assert.equal(a.active,false);assert.ok(q().angleTo(new T.Quaternion())<1e-6);
+console.log('PASS: two distinct preparation frames, instant final pose, four-frame hold, queued transition, recovery interrupt, idle completion');
