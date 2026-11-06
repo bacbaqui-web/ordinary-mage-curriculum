@@ -1,4 +1,4 @@
-import {ensureMagicClips} from './magic-clips.mjs';
+import {ensureMagicClips} from './magic-clips.mjs?v=compound-label';
 import {uniqueMotions,mergeMotions} from './pose-library.mjs';
 import * as T from './three.module.js';
 import {footFaces} from './foot-shape.mjs';
