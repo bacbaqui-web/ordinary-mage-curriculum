@@ -1,5 +1,7 @@
-import {STEAM_RECIPES,isSteam,steamSpec} from './steam-spec.mjs?v=slam15';
+import {RED_LIGHTNING_RECIPES,isRedLightning,redLightningSpec} from './red-lightning-spec.mjs?v=bolt16';
+import {STEAM_RECIPES,isSteam,steamSpec} from './steam-spec.mjs?v=bolt16';
 export const FIRE_RECIPES={
+ ...RED_LIGHTNING_RECIPES,
  ...STEAM_RECIPES,
  q:['불안개','근거리에 붉은 화염과 노란 불티를 뿜습니다. 닿으면 짧은 화상을 입힙니다.'],
  qq:['화염지대','넓게 화염을 뿜고 바닥에 탄 자국과 짙은 연기를 남깁니다.'],
@@ -26,7 +28,7 @@ export const FIRE_RECIPES={
  qh:['불주먹','앞으로 전진하며 불주먹으로 공격하고 적을 크게 밀어냅니다. 벽을 통과하지 않습니다.']
 };
 export function fireSpec(seq,power=1){
- if(seq[0]!=='q')return null;if(isSteam(seq))return steamSpec(seq,power);
+ if(seq[0]!=='q')return null;if(isSteam(seq))return steamSpec(seq,power);if(isRedLightning(seq))return redLightningSpec(seq,power);
  const operations=seq.length===1?'q':seq.slice(1);let op='q';for(const k of operations)if(k!=='q')op=k;
  const upgraded=seq.length===3&&seq.startsWith('qq');
  const scale=upgraded?1.5:1,radius=op==='i'?3:op==='q'?(seq==='qqq'?6.6:seq==='qq'?4.5:2.8):op==='l'?1.5*scale:op==='e'?2*scale:op==='g'?2.8*scale:op==='s'?2.6*scale:2.8*scale;

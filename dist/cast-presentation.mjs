@@ -1,6 +1,6 @@
 import * as T from './three.module.js';
-import {spellReach} from './live-spells.mjs?v=slam15';
-import {RUNES} from './combo-design.mjs?v=slam15';
+import {spellReach} from './live-spells.mjs?v=bolt16';
+import {RUNES} from './combo-design.mjs?v=bolt16';
 export function castWithPresentation({magic,wards,clearPath,collides,wallBlocks},s,caster,dir,aimPoint){
  const hand=caster.g.userData.puppet.lastPositions?.RightHand?.clone().addScaledVector(dir,.25)||new T.Vector3(caster.x,1.3,caster.z).addScaledVector(dir,.5);
  const origin=clearPath(caster,{x:hand.x,z:hand.z})?hand:null;

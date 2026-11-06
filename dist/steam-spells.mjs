@@ -1,5 +1,5 @@
 import * as T from './three.module.js';
-import {steamSpec,steamPlacement} from './steam-spec.mjs?v=slam15';
+import {steamSpec,steamPlacement} from './steam-spec.mjs?v=bolt16';
 import {crossesWard} from './forces.mjs';
 export class SteamSpells{
  constructor(fire){this.f=fire;this.a=fire.a;}
