@@ -1,0 +1,12 @@
+{
+  "name": "ordinary-mage-curriculum",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server/index.mjs",
+    "test:pvp": "node --test test-pvp.mjs"
+  },
+  "engines": { "node": ">=22" },
+  "dependencies": { "ws": "^8.18.0" },
+  "devDependencies": { "playwright": "^1.56.0" }
+}

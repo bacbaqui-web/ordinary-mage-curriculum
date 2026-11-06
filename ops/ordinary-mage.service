@@ -1,0 +1,25 @@
+[Unit]
+Description=Ordinary Mage private-room duel server
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/srv/apps/ordinary-mage/current
+ExecStart=/srv/apps/ordinary-mage/runtime/node-v24.13.0-linux-arm64/bin/node server/index.mjs
+Environment=HOST=127.0.0.1
+Environment=PORT=8787
+Environment=MAX_ROOMS=4
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+MemoryMax=512M
+CPUQuota=50%
+TasksMax=64
+
+[Install]
+WantedBy=multi-user.target
