@@ -1,13 +1,13 @@
 import * as T from './three.module.js';
-import {LiveMagic} from './live-magic.mjs?v=bolt16';
+import {LiveMagic} from './live-magic.mjs?v=bolt17';
 import {QueuedCharge} from './queued-charge.mjs';
 import {Roll} from './combat.mjs';
 import {ForcedMotion} from './motion.mjs';
 import {CastRecoil,chargeSetback} from './combat-response.mjs';
 import {chargeMoveScale} from './magic-motion.mjs';
-import {resolveSpell} from './live-charge-spells.mjs?v=bolt16';
-import {validLoadout} from './live-loadout.mjs?v=bolt16';
-import {fireSpec,hasFireRecipe} from './fire-spec.mjs?v=bolt16';
+import {resolveSpell} from './live-charge-spells.mjs?v=bolt17';
+import {validLoadout} from './live-loadout.mjs?v=bolt17';
+import {fireSpec,hasFireRecipe} from './fire-spec.mjs?v=bolt17';
 import {advanceMovingWard} from './moving-ward.mjs';
 import {crossesWard,distanceToWard} from './forces.mjs';
 import {arenaCollision} from './arena-rules.mjs';

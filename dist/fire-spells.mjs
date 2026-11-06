@@ -1,10 +1,10 @@
-import {RedLightningSpells} from './red-lightning-spells.mjs?v=bolt16';
-import {isRedLightning} from './red-lightning-spec.mjs?v=bolt16';
-import {SteamSpells} from './steam-spells.mjs?v=bolt16';
-import {isSteam} from './steam-spec.mjs?v=bolt16';
+import {RedLightningSpells} from './red-lightning-spells.mjs?v=bolt17';
+import {isRedLightning} from './red-lightning-spec.mjs?v=bolt17';
+import {SteamSpells} from './steam-spells.mjs?v=bolt17';
+import {isSteam} from './steam-spec.mjs?v=bolt17';
 import * as T from './three.module.js';
 import {crossesWard} from './forces.mjs';
-import {fireSpec} from './fire-spec.mjs?v=bolt16';
+import {fireSpec} from './fire-spec.mjs?v=bolt17';
 // Every visible part is 3D geometry. Soft edge shading makes overlapping volumes read as mist.
 export class FireSpells{
  constructor(api){this.a=api;this.effects=[];this.steam=new SteamSpells(this);this.redLightning=new RedLightningSpells(this);}

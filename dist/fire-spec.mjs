@@ -1,5 +1,5 @@
-import {RED_LIGHTNING_RECIPES,isRedLightning,redLightningSpec} from './red-lightning-spec.mjs?v=bolt16';
-import {STEAM_RECIPES,isSteam,steamSpec} from './steam-spec.mjs?v=bolt16';
+import {RED_LIGHTNING_RECIPES,isRedLightning,redLightningSpec} from './red-lightning-spec.mjs?v=bolt17';
+import {STEAM_RECIPES,isSteam,steamSpec} from './steam-spec.mjs?v=bolt17';
 export const FIRE_RECIPES={
  ...RED_LIGHTNING_RECIPES,
  ...STEAM_RECIPES,

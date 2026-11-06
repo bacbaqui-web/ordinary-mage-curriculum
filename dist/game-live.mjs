@@ -1,24 +1,24 @@
-import {Duel,STEP} from './duel.mjs';
+import {Duel,STEP} from './duel.mjs?v=bolt17';
 import {mountPvpUI} from './pvp-ui.mjs';
 import {OBSTACLES} from './arena-rules.mjs';
 let onlineCore=null,pvp=null,onlineResultShown=false,lastOnlineAim=0,onlineRenderAt=0,onlinePrevious=null;
-import {redLightningPlacement} from './red-lightning-spec.mjs?v=bolt16';
-import {steamPlacement} from './steam-spec.mjs?v=bolt16';
-import {BurnVisuals,applyBurnVisual} from './burn-visuals.mjs?v=bolt16';
-import {castWithPresentation,renderCastPresentation} from './cast-presentation.mjs?v=bolt16';
+import {redLightningPlacement} from './red-lightning-spec.mjs?v=bolt17';
+import {steamPlacement} from './steam-spec.mjs?v=bolt17';
+import {BurnVisuals,applyBurnVisual} from './burn-visuals.mjs?v=bolt17';
+import {castWithPresentation,renderCastPresentation} from './cast-presentation.mjs?v=bolt17';
 import {CastRecoil,HitScreen,chargeSetback} from './combat-response.mjs?v=rim9';
 import {VisionShade} from './vision-shade.mjs';
 import {CastingFeedback,ChargeCamera,impactFeedback} from './casting-feedback.mjs?v=charge13';
 import {chargeMoveScale} from './magic-motion.mjs';
 import {canSee} from './vision.mjs';
-import {fireSpec,hasFireRecipe} from './fire-spec.mjs?v=bolt16';
+import {fireSpec,hasFireRecipe} from './fire-spec.mjs?v=bolt17';
 import {BodyFollow} from './body-follow.mjs?v=stride2';
 import {bindMouseControls} from './mouse-controls.mjs';
 import {createWizard,animateWizard,projectWizard} from './wizard.mjs?v=editor-live1';
 import {QueuedCharge} from './queued-charge.mjs?v=interrupt7';
-import {LiveMagic} from './live-magic.mjs?v=bolt16';
-import {spellReach} from './live-spells.mjs?v=bolt16';
-import {describe as describeDesign} from './combo-design.mjs?v=bolt16';
+import {LiveMagic} from './live-magic.mjs?v=bolt17';
+import {spellReach} from './live-spells.mjs?v=bolt17';
+import {describe as describeDesign} from './combo-design.mjs?v=bolt17';
 import {MeshFeedback} from './mesh-feedback.mjs';
 import {groundSpec,groundPoint,inGround,advanceGround} from './ground.mjs?v=zones1';
 import {projectileAsset,groundAsset} from './effect-map.mjs?v=zones1';
@@ -28,14 +28,14 @@ import {FALL_SECONDS,overheadDelivery,segmentCircleHit} from './delivery.mjs?v=z
 import {createProgress,awardKill,requiredXP,learn,mastery,MAX_LEVEL,MAX_RANK} from './progression.mjs?v=zones1';
 import {ForcedMotion} from './motion.mjs?v=zones1';
 import {LowPolyVFX} from './lowpoly-vfx.mjs';
-import {chooseLoadout,choosePlan,chooseLearnedPlan,spendEnemyPoints,OpponentCharge} from './live-opponent.mjs?v=bolt16';
+import {chooseLoadout,choosePlan,chooseLearnedPlan,spendEnemyPoints,OpponentCharge} from './live-opponent.mjs?v=bolt17';
 import {forceSpec,wardSpec,displacement,crossesWard,distanceToWard} from './forces.mjs?v=zones1';
 import {elementalSpec,inElementCone,lightningPoint,lightningHits} from './elements.mjs?v=zones1';
 const describeSpell=seq=>describeDesign(seq).steps.join(' ');
 import * as T from './three.module.js';
-import {Charge,ELEMENTS,NAMES,resolveSpell} from './live-charge-spells.mjs?v=bolt16';
+import {Charge,ELEMENTS,NAMES,resolveSpell} from './live-charge-spells.mjs?v=bolt17';
 import {Roll,ROLL_DURATION,incomingThreat,enemyChargeProgress} from './combat.mjs?v=zones1';
-import {RUNES,KEYS,DEFAULT_LOADOUT,validLoadout,assignRune,mapSequence,spellName,composition} from './live-loadout.mjs?v=bolt16';
+import {RUNES,KEYS,DEFAULT_LOADOUT,validLoadout,assignRune,mapSequence,spellName,composition} from './live-loadout.mjs?v=bolt17';
 let loadout={...DEFAULT_LOADOUT};try{const saved=JSON.parse(localStorage.getItem('mage-loadout-v1'));if(validLoadout(saved))loadout=saved}catch{}
 let progress=createProgress(loadout),monsters=[],spawnTimer=0,monsterId=0;
 let draft={...loadout},activeSlot='q',selectionReturn=false;
@@ -237,7 +237,7 @@ charge.tick(dt);const chargeSpeed=chargeMoveScale(charge.active,charge.parts.len
  if(toastTimer>0){toastTimer-=dt;if(toastTimer<=0)$('toast').classList.remove('show')}
 }
 function label(el,a){const pos=new T.Vector3(a.x,2.65,a.z).project(camera);el.style.display=Math.abs(pos.x)>1||Math.abs(pos.y)>1?'none':'';el.style.left=((pos.x+1)*innerWidth/2)+'px';el.style.top=((-pos.y+1)*innerHeight/2)+'px'}
-function drawFireTell(caster,seq,border){const s=fireSpec(seq),target=caster===player?aim:(enemyTarget||player),dir=caster.dir,points=[];let p={x:caster.x,z:caster.z},r=s.lightning&&s.op==='q'?4.5:s.lightning&&s.op==='g'?3:s.radius;
+function drawFireTell(caster,seq,border){const s=fireSpec(seq),target=caster===player?aim:(enemyTarget||player),dir=caster.dir,points=[];let p={x:caster.x,z:caster.z},r=s.lightning&&s.op==='q'?s.fieldRadius:s.lightning&&s.op==='g'?3:s.radius;
 if(s.steam)p=steamPlacement(s,caster,dir,target);if(s.lightning)p=redLightningPlacement(s,caster,dir,target);
 if(!s.steam&&!s.lightning&&s.op==='i')p={x:caster.x+dir.x*3,z:caster.z+dir.z*3};if(!s.steam&&!s.lightning&&['l','t','g'].includes(s.op)){const d=new T.Vector3(target.x-p.x,0,target.z-p.z);if(d.length()>s.range)d.setLength(s.range);p={x:p.x+d.x,z:p.z+d.z};}
 if(['w','h'].includes(s.op)){const side=new T.Vector3(-dir.z,0,dir.x).multiplyScalar(s.op==='s'?1.4:s.op==='h'?.6*s.scale:s.orbRadius),a=new T.Vector3(p.x,0,p.z),b=a.clone().addScaledVector(dir,s.op==='h'?s.dashDistance:s.range);points.push(a.clone().add(side),b.clone().add(side),b.clone().sub(side),a.clone().sub(side),a.clone().add(side));}
