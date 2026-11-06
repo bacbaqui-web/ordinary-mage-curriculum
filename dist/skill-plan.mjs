@@ -1,5 +1,5 @@
-import {RUNES,valid,describe} from './combo-design.mjs?v=ash12';
-import {mountAtlasPreview} from './atlas-preview.mjs?v=ash12';
+import {RUNES,valid,describe} from './combo-design.mjs?v=ash13';
+import {mountAtlasPreview} from './atlas-preview.mjs?v=ash13';
 const $=id=>document.getElementById(id),ids=Object.keys(RUNES);let seq=valid(location.hash.slice(1))?location.hash.slice(1):'qqw',branch=seq.slice(0,2),dispose=()=>{};
 const recipe=s=>[...s].map(k=>RUNES[k].name).join(' → ');
 const icons=s=>[...s].map(k=>`<span class="rune-icon" style="--rune:${RUNES[k].color}" title="${RUNES[k].name}">${RUNES[k].icon}</span>`).join('<i>＋</i>');

@@ -1,6 +1,6 @@
 import * as T from './three.module.js';
 import {crossesWard} from './forces.mjs';
-import {fireSpec} from './fire-spec.mjs?v=ash12';
+import {fireSpec} from './fire-spec.mjs?v=ash13';
 // Every visible part is 3D geometry. Soft edge shading makes overlapping volumes read as mist.
 export class FireSpells{
  constructor(api){this.a=api;this.effects=[];}
@@ -28,7 +28,7 @@ export class FireSpells{
  if(this.a.hit(v,e.s.damage,e.dir,e.s.op==='h'?e.s.knockback:0,e.owner)){this.a.applyPayload(v,e.s,e.owner);if(once)e.hit.add(v);}}}
  cast(seq,power,owner,dir,target,emission=null){if(this.effects.length>55)return;const s=fireSpec(seq,power),origin=emission?{x:emission.x,z:emission.z}:{x:owner.x,z:owner.z},delta=new T.Vector3(target.x-owner.x,0,target.z-owner.z);if(delta.length()>s.range)delta.setLength(s.range);const point={x:owner.x+delta.x,z:owner.z+delta.z};let e;
  if(s.op==='i'){const p={x:owner.x+dir.x*3,z:owner.z+dir.z*3},mesh=this.cloud(s,s.radius,'circle');this.add('smokescreen',mesh,{...s,damage:s.tickDamage},owner,p,dir,s.life,{radius:s.radius});if(s.upgraded){const light=new T.PointLight(0xff3218,5,8);light.position.y=1;mesh.add(light);}return;}
- if(['q','d','p'].includes(s.op)){const mesh=this.cloud(s,s.radius);mesh.rotation.y=-Math.atan2(dir.z,dir.x);e=this.add('cone',mesh,s,owner,origin,dir,s.life,{radius:s.radius});this.damage(e,origin,s.radius,{cone:true});this.embers(e,s.upgraded?85:55);if(seq==='qq'||seq==='qqq')this.coneResidue(s,owner,origin,dir);return;}
+ if(['q','d','p'].includes(s.op)){const mesh=this.cloud(s,s.radius);mesh.rotation.y=-Math.atan2(dir.z,dir.x);e=this.add('cone',mesh,s,owner,origin,dir,s.life,{radius:s.radius});this.damage(e,origin,s.radius,{cone:true});this.embers(e,s.upgraded?85:55);if(s.op==='d')this.ashFall(s,owner,origin,dir);if(seq==='qq'||seq==='qqq')this.coneResidue(s,owner,origin,dir);return;}
  if(s.op==='l'){const mesh=new T.Group();this.a.scene.add(mesh);e=this.add('lightning',mesh,s,owner,point,dir,.42,{radius:s.radius});const pts=Array.from({length:10},(_,i)=>new T.Vector3(i===9?0:(Math.random()-.5)*.65,6-i*6/9,i===9?0:(Math.random()-.5)*.4));for(let i=0;i<9;i++){this.segment(mesh,pts[i],pts[i+1],.065,0xff241a);this.segment(mesh,pts[i],pts[i+1],.022,0xffb45a);if(i===3||i===5)this.segment(mesh,pts[i],pts[i].clone().add(new T.Vector3(.65,-.65,.2)),.035,0xff492a);}mesh.scale.setScalar(s.scale);this.damage(e,point,s.radius);this.residue(s,owner,point,dir,s.upgraded?2.4:1);return;}
  if(s.op==='w'||s.op==='s'||s.op==='h'){
  let mesh;if(s.op==='s'){const shape=new T.Shape();shape.absarc(0,0,1.5,-1.1,1.1,false);shape.absarc(-.32,0,1.28,1.1,-1.1,true);shape.closePath();mesh=new T.Mesh(new T.ExtrudeGeometry(shape,{depth:.13,bevelEnabled:false,curveSegments:20}),new T.MeshBasicMaterial({color:0xff3725,transparent:true,opacity:.9}));mesh.rotation.x=-Math.PI/2;mesh.rotation.z=-Math.atan2(dir.z,dir.x);this.a.scene.add(mesh);}
@@ -42,9 +42,22 @@ export class FireSpells{
  }
  segment(g,a,b,r,color){const d=b.clone().sub(a),m=new T.Mesh(new T.CylinderGeometry(r,r,d.length(),6),new T.MeshBasicMaterial({color}));m.position.copy(a).add(b).multiplyScalar(.5);m.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),d.normalize());g.add(m);}
  residue(s,owner,p,dir,size=1){const m=new T.Mesh(new T.SphereGeometry(1.1,20,8).scale(1,.012,1),this.fogMaterial(0x211915,.65));this.a.scene.add(m);for(let i=0;i<5;i++){const flame=new T.Mesh(new T.ConeGeometry(.08,.3+Math.random()*.2,5),new T.MeshBasicMaterial({color:i%2?0xffad22:0xff4420,transparent:true,opacity:.8}));const a=i/5*Math.PI*2;flame.position.set(Math.cos(a)*.5,.16,Math.sin(a)*.5);m.add(flame);}m.scale.setScalar(size);this.add('scorch',m,s,owner,p,dir,6,{radius:.8*size});const smoke=this.cloud({...s,op:'i',seq:'residue'},.6*size,'circle');this.add('smoke',smoke,s,owner,p,dir,5,{radius:.5*size});}
+ ashFall(s,owner,p,dir){
+ const count=s.upgraded?180:24,mesh=new T.InstancedMesh(new T.IcosahedronGeometry(1,0),new T.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.85,depthWrite:false}),count),flakes=[];
+ mesh.instanceMatrix.setUsage(T.DynamicDrawUsage);mesh.frustumCulled=false;this.a.scene.add(mesh);
+ for(let i=0;i<count;i++){const angle=Math.atan2(dir.z,dir.x)+(Math.random()-.5)*2.1,d=Math.sqrt(Math.random())*s.radius;
+ flakes.push({x:Math.cos(angle)*d,z:Math.sin(angle)*d,y:.3+Math.random()*(s.upgraded?2.5:1.1),speed:s.upgraded?.35+Math.random()*.2:.55+Math.random()*.3,size:.025+Math.random()*.045,phase:Math.random()*Math.PI*2,landed:false});
+ mesh.setColorAt(i,new T.Color([0xaaa69e,0xccc6ba,0x8c8b86][i%3]));}
+ const e=this.add('ashfall',mesh,s,owner,p,dir,s.upgraded?7.5:3.5,{flakes,pose:new T.Object3D()});this.updateAsh(e,0);
+ }
+ updateAsh(e,dt){for(let i=0;i<e.flakes.length;i++){const f=e.flakes[i];if(!f.landed){f.y=Math.max(.025,f.y-f.speed*dt);f.x+=Math.sin(e.age*1.4+f.phase)*dt*.16;f.z+=Math.cos(e.age+f.phase)*dt*.12;f.landed=f.y<=.025;}
+ const pose=e.pose;pose.position.set(f.x,f.y,f.z);pose.rotation.set(f.landed?0:e.age+f.phase,f.phase, f.landed?0:e.age*.7);pose.scale.set(f.size*(f.landed?2.1:1),f.size*(f.landed?.12:.55),f.size*(f.landed?1.8:1));pose.updateMatrix();e.mesh.setMatrixAt(i,pose.matrix);}
+ e.mesh.instanceMatrix.needsUpdate=true;e.mesh.material.opacity=.85*Math.min(1,e.life/1.5);
+ }
  coneResidue(s,owner,p,dir){const count=s.seq==='qqq'?9:5;for(let i=0;i<count;i++){const a=Math.atan2(dir.z,dir.x)+(i%3-1)*.55,d=s.radius*(.22+.65*(i+.5)/count),point={x:p.x+Math.cos(a)*d,z:p.z+Math.sin(a)*d};this.residue(s,owner,point,dir,s.seq==='qqq'?1.35:1);}}
  update(dt){for(let i=this.effects.length-1;i>=0;i--){const e=this.effects[i];e.life-=dt;e.age+=dt;e.tick-=dt;let done=e.life<=0;
- if(e.type==='shot'||e.type==='punch'){const travel=Math.min(e.speed*dt,e.travel-e.distance),steps=Math.max(1,Math.ceil(travel/.1));for(let j=0;j<steps;j++){const next={x:e.point.x+e.dir.x*travel/steps,z:e.point.z+e.dir.z*travel/steps};const wall=this.a.wards.find(w=>w.hp>0&&w.life>0&&w.owner!==e.owner&&crossesWard(e.point,next,w,e.type==='punch'?.45:.2));if(this.a.collides(next.x,next.z,e.type==='punch'?.45:.2)||wall){if(wall)wall.hp=Math.max(0,wall.hp-e.s.damage);done=true;break;}e.point=next;e.distance+=travel/steps;
+ if(e.type==='ashfall'){this.updateAsh(e,dt);}
+ else if(e.type==='shot'||e.type==='punch'){const travel=Math.min(e.speed*dt,e.travel-e.distance),steps=Math.max(1,Math.ceil(travel/.1));for(let j=0;j<steps;j++){const next={x:e.point.x+e.dir.x*travel/steps,z:e.point.z+e.dir.z*travel/steps};const wall=this.a.wards.find(w=>w.hp>0&&w.life>0&&w.owner!==e.owner&&crossesWard(e.point,next,w,e.type==='punch'?.45:.2));if(this.a.collides(next.x,next.z,e.type==='punch'?.45:.2)||wall){if(wall)wall.hp=Math.max(0,wall.hp-e.s.damage);done=true;break;}e.point=next;e.distance+=travel/steps;
  if(e.type==='punch'){if(this.a.wallBlocks?.(e.owner,next)){done=true;break;}e.owner.x=next.x;e.owner.z=next.z;}
  this.damage(e,e.point,e.radius,{once:true});if(e.hit.size&&e.s.op==='w'){done=true;break;}}
  e.mesh.position.set(e.point.x+(e.type==='punch'?e.dir.x*.7:0),1,e.point.z+(e.type==='punch'?e.dir.z*.7:0));done||=e.distance>=e.travel;this.embers({...e,radius:e.radius},4);}

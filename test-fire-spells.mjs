@@ -35,3 +35,5 @@ victim.x=1.5;cast('qqh');for(let i=0;i<12;i++)f.update(.05);assert.ok(hits.some(
 cast('qqh');blocked=true;for(let i=0;i<12;i++)f.update(.05);assert.ok(owner.x<=1);blocked=false;
 cast('qqi');f.update(.05);assert.ok(hits.length>0);assert.ok(payloads.some(x=>x.p.burn));
 console.log('PASS fire upgrades: radius, damage, smoke size, scorch, melee reach, walls, dash collision and knockback');
+
+cast('qd');const smallAsh=f.effects.find(e=>e.type==='ashfall').flakes.length;cast('qqd');let falling=f.effects.find(e=>e.type==='ashfall');assert.ok(falling.flakes.length>=smallAsh*7);for(let i=0;i<20;i++)f.update(.05);assert.ok(!f.effects.some(e=>e.type==='cone'));assert.ok(falling.flakes.some(x=>!x.landed));const hitCount=hits.length;for(let i=0;i<100;i++)f.update(.05);assert.ok(falling.flakes.some(x=>x.landed));assert.equal(hits.length,hitCount);for(let i=0;i<40;i++)f.update(.05);assert.equal(f.effects.length,0);console.log('PASS dense ash outlasts flame, settles on ground, causes no extra damage and expires');
