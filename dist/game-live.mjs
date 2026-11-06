@@ -1,18 +1,19 @@
-import {BurnVisuals,applyBurnVisual} from './burn-visuals.mjs?v=ash13';
-import {castWithPresentation,renderCastPresentation} from './cast-presentation.mjs?v=ash13';
+import {steamPlacement} from './steam-spec.mjs?v=steam14';
+import {BurnVisuals,applyBurnVisual} from './burn-visuals.mjs?v=steam14';
+import {castWithPresentation,renderCastPresentation} from './cast-presentation.mjs?v=steam14';
 import {CastRecoil,HitScreen,chargeSetback} from './combat-response.mjs?v=rim9';
 import {VisionShade} from './vision-shade.mjs';
 import {CastingFeedback,ChargeCamera,impactFeedback} from './casting-feedback.mjs?v=charge13';
 import {chargeMoveScale} from './magic-motion.mjs';
 import {canSee} from './vision.mjs';
-import {fireSpec,hasFireRecipe} from './fire-spec.mjs?v=ash13';
+import {fireSpec,hasFireRecipe} from './fire-spec.mjs?v=steam14';
 import {BodyFollow} from './body-follow.mjs?v=stride2';
 import {bindMouseControls} from './mouse-controls.mjs';
 import {createWizard,animateWizard,projectWizard} from './wizard.mjs?v=editor-live1';
 import {QueuedCharge} from './queued-charge.mjs?v=interrupt7';
-import {LiveMagic} from './live-magic.mjs?v=ash13';
-import {spellReach} from './live-spells.mjs?v=ash13';
-import {describe as describeDesign} from './combo-design.mjs?v=ash13';
+import {LiveMagic} from './live-magic.mjs?v=steam14';
+import {spellReach} from './live-spells.mjs?v=steam14';
+import {describe as describeDesign} from './combo-design.mjs?v=steam14';
 import {MeshFeedback} from './mesh-feedback.mjs';
 import {groundSpec,groundPoint,inGround,advanceGround} from './ground.mjs?v=zones1';
 import {projectileAsset,groundAsset} from './effect-map.mjs?v=zones1';
@@ -22,14 +23,14 @@ import {FALL_SECONDS,overheadDelivery,segmentCircleHit} from './delivery.mjs?v=z
 import {createProgress,awardKill,requiredXP,learn,mastery,MAX_LEVEL,MAX_RANK} from './progression.mjs?v=zones1';
 import {ForcedMotion} from './motion.mjs?v=zones1';
 import {LowPolyVFX} from './lowpoly-vfx.mjs';
-import {chooseLoadout,choosePlan,chooseLearnedPlan,spendEnemyPoints,OpponentCharge} from './live-opponent.mjs?v=ash13';
+import {chooseLoadout,choosePlan,chooseLearnedPlan,spendEnemyPoints,OpponentCharge} from './live-opponent.mjs?v=steam14';
 import {forceSpec,wardSpec,displacement,crossesWard,distanceToWard} from './forces.mjs?v=zones1';
 import {elementalSpec,inElementCone,lightningPoint,lightningHits} from './elements.mjs?v=zones1';
 const describeSpell=seq=>describeDesign(seq).steps.join(' ');
 import * as T from './three.module.js';
-import {Charge,ELEMENTS,NAMES,resolveSpell} from './live-charge-spells.mjs?v=ash13';
+import {Charge,ELEMENTS,NAMES,resolveSpell} from './live-charge-spells.mjs?v=steam14';
 import {Roll,ROLL_DURATION,incomingThreat,enemyChargeProgress} from './combat.mjs?v=zones1';
-import {RUNES,KEYS,DEFAULT_LOADOUT,validLoadout,assignRune,mapSequence,spellName,composition} from './live-loadout.mjs?v=ash13';
+import {RUNES,KEYS,DEFAULT_LOADOUT,validLoadout,assignRune,mapSequence,spellName,composition} from './live-loadout.mjs?v=steam14';
 let loadout={...DEFAULT_LOADOUT};try{const saved=JSON.parse(localStorage.getItem('mage-loadout-v1'));if(validLoadout(saved))loadout=saved}catch{}
 let progress=createProgress(loadout),monsters=[],spawnTimer=0,monsterId=0;
 let draft={...loadout},activeSlot='q',selectionReturn=false;
@@ -108,7 +109,7 @@ function area(a,x,z,r,damage,color,force=0,dir=null,payload=null){ring(x,z,color
 function field(a,x,z,r,damage,color,life=3,force=0,payload=null){const m=mesh(new T.CircleGeometry(r,48),new T.MeshBasicMaterial({color,transparent:true,opacity:.16,side:T.DoubleSide}),x,.085,z);m.rotation.x=-Math.PI/2;m.castShadow=false;fields.push({m,owner:a,x,z,r,damage,color,life,tick:.1,force,payload});ring(x,z,color,r,.6)}
 const shields=new Map();for(const a of[player,enemy]){const m=new T.Object3D();m.userData.active=false;shields.set(a,m);}
 function applyPayload(a,payload,source=null){if(!payload||finished||a.dead)return;applyBurnVisual(a,payload);if(payload.slow)a.slow=Math.max(a.slow||0,payload.slow);if(payload.burn){if(!(a.burn>0))a.burnTick=.5;a.burn=Math.max(a.burn||0,payload.burn);a.burnOwner=source;a.burnDamage=payload.burnDamage||2;}if(payload.echo&&!a.echo)a.echo={time:.25,damage:payload.echo,owner:source};}
-function updateStatuses(dt){for(const a of[player,enemy,...monsters.filter(m=>!m.dead)]){a.slow=Math.max(0,(a.slow||0)-dt);if(a.burn>0){a.burn-=dt;a.burnTick=(a.burnTick||0)-dt;if(a.burnTick<=0){a.burnTick=.5;hit(a,a.burnDamage||2,new T.Vector3(),0,a.burnOwner);spark(a.x,a.z,0xff9c45,3)}}if(a.echo){a.echo.time-=dt;if(a.echo.time<=0){const {damage,owner}=a.echo;a.echo=null;hit(a,damage,new T.Vector3(),0,owner);ring(a.x,a.z,0xf3d56b,.75,.25)}}}}
+function updateStatuses(dt){for(const a of[player,enemy,...monsters.filter(m=>!m.dead)]){a.frostSlow=Math.max(0,(a.frostSlow||0)-dt);a.slow=Math.max(0,(a.slow||0)-dt);if(a.burn>0){a.burn-=dt;a.burnTick=(a.burnTick||0)-dt;if(a.burnTick<=0){a.burnTick=.5;hit(a,a.burnDamage||2,new T.Vector3(),0,a.burnOwner);spark(a.x,a.z,0xff9c45,3)}}if(a.echo){a.echo.time-=dt;if(a.echo.time<=0){const {damage,owner}=a.echo;a.echo=null;hit(a,damage,new T.Vector3(),0,owner);ring(a.x,a.z,0xf3d56b,.75,.25)}}}}
 function elementalBurst(spec,dir,caster){spellVfx.burst(spec,dir,caster,collides);}
 function boltEffect(x,z,spec){spellVfx.bolt(x,z,spec);}
 function targets(caster){return [caster===player?enemy:player,...monsters.filter(m=>!m.dead)];}
@@ -189,7 +190,7 @@ function cast(result){if(!running||paused||finished)return;const s=resolveSpell(
  history.unshift({name:s.name,seq:s.keys.toUpperCase(),tier:seq.length===1?'1륜':seq.length===2?'2륜':'2륜 복합'});history=history.slice(0,4);$('history').innerHTML=history.map(h=>`<div class="history-item">${h.name}<small>${h.seq.split('').join(' → ')} · ${h.tier}</small></div>`).join('');$('spellName').textContent=s.name;$('queue').textContent=s.keys.toUpperCase().split('').join(' → ')+' / 발사 완료';$('tier').textContent=seq.length===1?'1륜 · 발동':seq.length===2?'2륜 · 발동':'2륜 복합 · 발동';
 }
 function endRound(win){if(!bot){const a=win?enemy:player;a.hp=100;a.shield=0;a.burn=0;a.slow=0;a.echo=null;flash(win?'연습 상대의 체력을 회복했습니다':'연습 모드 · 체력을 회복했습니다');return}finished=true;charge.clear();enemyCharge.clear();moveTarget=null;if(win)wins++;else losses++;$('wins').textContent=wins;$('losses').textContent=losses;$('resultTitle').textContent=win?'승리':'패배';$('resultText').textContent=win?'주문을 조합해 상대 마법사를 제압했습니다.':'몬스터의 공격을 피하며 사냥하세요. 새 대결은 레벨 1부터 시작합니다.';$('result').classList.remove('hidden')}
-function reset(){burnVisuals.clear();for(const a of[player,enemy]){a.ashTime=0;a.greenFireTime=0;}hitScreen.clear();for(const a of[player,enemy])a.recoil?.clear();castingFeedback.clear();chargeCamera.clear();liveMagic.clear();resetHunt();spellVfx.clear();pixelVfx.clear();enemy.strikePoint=null;enemy.strikeLocked=false;enemyCharge.clear();enemyLoadout=chooseLoadout();enemyProgress=createProgress(enemyLoadout);enemyTarget=null;enemy.retaliate=0;fallingStrikes=[];enemy.lastSpell="";enemy.lastSpellTime=0;for(const a of[player,enemy]){a.motion.clear();a.hitFlash=0;a.pendingCastLight=null;a.poison=0;a.wet=0;a.slow=0;a.burn=0;a.echo=null;a.burnTick=0;a.shieldHeat=false;}roll.reset();player.velocity=new T.Vector3();enemy.dodge=0;enemy.dodgeCool=0;enemy.defendCool=0;enemy.attackCount=0;enemy.sidestep=1;for(const s of shots)remove(s.m);for(const f of fields)remove(f.m);for(const f of fx)remove(f.m);for(const w of [...waves,...wards])remove(w.m);waves=[];wards=[];shots=[];fields=[];fx=[];Object.assign(player,{x:-5,z:4,hp:100,mana:100,shield:0,shieldTime:0,cool:0});Object.assign(enemy,{x:16,z:-14,hp:100,mana:100,shield:0,shieldTime:0,cool:2,wind:0});charge.clear();moveTarget=null;finished=false;paused=false;clock=0;history=[];$('history').textContent='QWE로 예약하고 좌클릭으로 시전하세요.';$('result').classList.add('hidden');$('paused').classList.add('hidden');$('pause').textContent='일시정지';$('spellName').textContent='Q · W · E';$('tier').textContent='1륜 · 준비';$('queue').textContent='QWE로 대기줄을 채우세요'}
+function reset(){burnVisuals.clear();for(const a of[player,enemy]){a.ashTime=0;a.greenFireTime=0;}hitScreen.clear();for(const a of[player,enemy])a.recoil?.clear();castingFeedback.clear();chargeCamera.clear();liveMagic.clear();resetHunt();spellVfx.clear();pixelVfx.clear();enemy.strikePoint=null;enemy.strikeLocked=false;enemyCharge.clear();enemyLoadout=chooseLoadout();enemyProgress=createProgress(enemyLoadout);enemyTarget=null;enemy.retaliate=0;fallingStrikes=[];enemy.lastSpell="";enemy.lastSpellTime=0;for(const a of[player,enemy]){a.motion.clear();a.hitFlash=0;a.pendingCastLight=null;a.poison=0;a.wet=0;a.frostSlow=0;a.slow=0;a.burn=0;a.echo=null;a.burnTick=0;a.shieldHeat=false;}roll.reset();player.velocity=new T.Vector3();enemy.dodge=0;enemy.dodgeCool=0;enemy.defendCool=0;enemy.attackCount=0;enemy.sidestep=1;for(const s of shots)remove(s.m);for(const f of fields)remove(f.m);for(const f of fx)remove(f.m);for(const w of [...waves,...wards])remove(w.m);waves=[];wards=[];shots=[];fields=[];fx=[];Object.assign(player,{x:-5,z:4,hp:100,mana:100,shield:0,shieldTime:0,cool:0});Object.assign(enemy,{x:16,z:-14,hp:100,mana:100,shield:0,shieldTime:0,cool:2,wind:0});charge.clear();moveTarget=null;finished=false;paused=false;clock=0;history=[];$('history').textContent='QWE로 예약하고 좌클릭으로 시전하세요.';$('result').classList.add('hidden');$('paused').classList.add('hidden');$('pause').textContent='일시정지';$('spellName').textContent='Q · W · E';$('tier').textContent='1륜 · 준비';$('queue').textContent='QWE로 대기줄을 채우세요'}
 function pause(value=!paused){if(!running||finished)return;paused=value;charge.clear();moveTarget=null;$('paused').classList.toggle('hidden',!paused);$('pause').textContent=paused?'계속하기':'일시정지'}
 function point(e){const rect=canvas.getBoundingClientRect();pointer.set((e.clientX-rect.left)/rect.width*2-1,-(e.clientY-rect.top)/rect.height*2+1);ray.setFromCamera(pointer,camera);const pos=new T.Vector3();if(ray.ray.intersectPlane(ground,pos)){aim.copy(pos);const d=pos.clone().sub(new T.Vector3(player.x,0,player.z));if(d.length()>.1)player.dir.copy(d.normalize());}return pos}
 canvas.addEventListener('pointermove',point);
@@ -212,7 +213,7 @@ function ai(dt){
  const seq=enemyCharge.active?mapSequence(enemyCharge.plan,enemyLoadout):enemyLoadout[KEYS.find(k=>enemyProgress.ranks[k]>0&&enemyLoadout[k]!=='e')];
  const reach=spellReach(seq);
  let v=delta.clone();if(dist<1.3)v.set(0,0,0);if(dist<.8)v.copy(delta).multiplyScalar(-1);
- const speed=((enemy.motion.active||enemy.recoil?.active)?0:enemyCharge.active&&enemyCharge.remaining<=.35?0:4.4*chargeMoveScale(enemyCharge.active,enemyCharge.charge.parts.length))*(enemy.slow>0?.55:1),ox=enemy.x,oz=enemy.z;
+ const speed=((enemy.motion.active||enemy.recoil?.active)?0:enemyCharge.active&&enemyCharge.remaining<=.35?0:4.4*chargeMoveScale(enemyCharge.active,enemyCharge.charge.parts.length))*(enemy.frostSlow>0?.35:enemy.slow>0?.55:1),ox=enemy.x,oz=enemy.z;
  move(enemy,v.x*speed*dt,v.z*speed*dt);
  if(v.lengthSq()>0&&Math.hypot(enemy.x-ox,enemy.z-oz)<dt*.2){const side=new T.Vector3(-delta.z,0,delta.x).multiplyScalar(enemy.sidestep||1);if(collides(enemy.x+side.x*.5,enemy.z+side.z*.5)||wallBlocks(enemy,{x:enemy.x+side.x*.5,z:enemy.z+side.z*.5}))enemy.sidestep=-(enemy.sidestep||1);move(enemy,side.x*speed*dt,side.z*speed*dt);}
  if(enemyCharge.active){const spell=enemyCharge.tick(dt,enemyLoadout);if(spell){if(enemy.mana>=spell.cost){enemy.mana-=spell.cost;spell.mastery=mastery(enemyProgress,spell.parts[0]);spell.power*=spell.mastery;dispatchSpell(spell,enemy,enemy.dir.clone(),new T.Vector3(target.x,0,target.z));enemy.lastSpell=spell.name;enemy.lastSpellTime=.8;}enemy.cool=.65+rand()*.4;}}
@@ -220,7 +221,7 @@ function ai(dt){
 function update(dt){clock+=dt;updateHunt(dt);
  for(const a of[player,enemy,...monsters.filter(m=>!m.dead)]){if(a.motion.active){const step=a.motion.tick(dt),count=Math.max(1,Math.ceil(Math.hypot(step.x,step.z)/.08));for(let i=0;i<count;i++){const dx=step.x/count,dz=step.z/count;if(collides(a.x+dx,a.z+dz)||wallBlocks(a,{x:a.x+dx,z:a.z+dz})){a.motion.clear();break;}a.x+=dx;a.z+=dz;}}}
 charge.tick(dt);const chargeSpeed=chargeMoveScale(charge.active,charge.parts.length);if(chargeSpeed===0||player.recoil?.active||player.motion.active)roll.remaining=0;const rolling=roll.active;const beforeX=player.x,beforeZ=player.z;if(rolling){const step=roll.tick(dt);for(let i=0;i<4;i++)move(player,step.x*chargeSpeed/4,step.z*chargeSpeed/4)}else{roll.tick(dt)}player.cool=Math.max(0,player.cool-dt);player.mana=bot?Math.min(100,player.mana+dt*(charge.active?3:10)):100;
- if(moveTarget&&!rolling&&!player.motion.active&&!player.recoil?.active&&chargeSpeed>0){const d=moveTarget.clone().sub(new T.Vector3(player.x,0,player.z));if(d.length()<.15){moveTarget=null;marker.visible=false}else{d.normalize();const speed=(4.4*chargeSpeed)*(player.slow>0?.55:1);const ox=player.x,oz=player.z;move(player,d.x*dt*speed,d.z*dt*speed);if(Math.abs(ox-player.x)+Math.abs(oz-player.z)<.001){moveTarget=null;marker.visible=false}}}
+ if(moveTarget&&!rolling&&!player.motion.active&&!player.recoil?.active&&chargeSpeed>0){const d=moveTarget.clone().sub(new T.Vector3(player.x,0,player.z));if(d.length()<.15){moveTarget=null;marker.visible=false}else{d.normalize();const speed=(4.4*chargeSpeed)*(player.frostSlow>0?.35:player.slow>0?.55:1);const ox=player.x,oz=player.z;move(player,d.x*dt*speed,d.z*dt*speed);if(Math.abs(ox-player.x)+Math.abs(oz-player.z)<.001){moveTarget=null;marker.visible=false}}}
  player.velocity=new T.Vector3((player.x-beforeX)/dt,0,(player.z-beforeZ)/dt);
  const facing=aim.clone().sub(new T.Vector3(player.x,0,player.z));if(facing.length()>.1)player.dir.copy(facing.normalize());
  liveMagic.update(dt);for(const a of[player,enemy])if(a.recoil?.active){const step=a.recoil.tick(dt),count=Math.max(1,Math.ceil(Math.hypot(step.x,step.z)/.06));for(let j=0;j<count;j++){const next={x:a.x+step.x/count,z:a.z+step.z/count};if(collides(next.x,next.z)||wallBlocks(a,next)){break;}a.x=next.x;a.z=next.z;}}for(const a of[player,enemy,...monsters.filter(m=>!m.dead)]){a.wet=Math.max(0,(a.wet||0)-dt);if(a.poison>0){a.poison-=dt;a.poisonTick-=dt;if(a.poisonTick<=0){a.poisonTick=.5;hit(a,a.poisonDamage||2,new T.Vector3(),0,a.poisonOwner);}}}updateStatuses(dt);if(finished)return;
@@ -232,11 +233,12 @@ charge.tick(dt);const chargeSpeed=chargeMoveScale(charge.active,charge.parts.len
 }
 function label(el,a){const pos=new T.Vector3(a.x,2.65,a.z).project(camera);el.style.display=Math.abs(pos.x)>1||Math.abs(pos.y)>1?'none':'';el.style.left=((pos.x+1)*innerWidth/2)+'px';el.style.top=((-pos.y+1)*innerHeight/2)+'px'}
 function drawFireTell(caster,seq,border){const s=fireSpec(seq),target=caster===player?aim:(enemyTarget||player),dir=caster.dir,points=[];let p={x:caster.x,z:caster.z},r=s.radius;
-if(s.op==='i')p={x:caster.x+dir.x*3,z:caster.z+dir.z*3};if(['l','t','g'].includes(s.op)){const d=new T.Vector3(target.x-p.x,0,target.z-p.z);if(d.length()>s.range)d.setLength(s.range);p={x:p.x+d.x,z:p.z+d.z};}
+if(s.steam)p=steamPlacement(s,caster,dir,target);
+if(!s.steam&&s.op==='i')p={x:caster.x+dir.x*3,z:caster.z+dir.z*3};if(!s.steam&&['l','t','g'].includes(s.op)){const d=new T.Vector3(target.x-p.x,0,target.z-p.z);if(d.length()>s.range)d.setLength(s.range);p={x:p.x+d.x,z:p.z+d.z};}
 if(['w','h'].includes(s.op)){const side=new T.Vector3(-dir.z,0,dir.x).multiplyScalar(s.op==='s'?1.4:s.op==='h'?.6*s.scale:s.orbRadius),a=new T.Vector3(p.x,0,p.z),b=a.clone().addScaledVector(dir,s.op==='h'?s.dashDistance:s.range);points.push(a.clone().add(side),b.clone().add(side),b.clone().sub(side),a.clone().sub(side),a.clone().add(side));}
-else if(['q','d','p','s'].includes(s.op)){points.push(new T.Vector3(p.x,0,p.z));for(let i=0;i<=40;i++){const a=Math.atan2(dir.z,dir.x)-Math.PI/3+i/40*Math.PI*2/3;points.push(new T.Vector3(p.x+Math.cos(a)*r,0,p.z+Math.sin(a)*r));}points.push(new T.Vector3(p.x,0,p.z));}
+else if(s.steam?s.op==='s':['q','d','p','s'].includes(s.op)){points.push(new T.Vector3(p.x,0,p.z));for(let i=0;i<=40;i++){const a=Math.atan2(dir.z,dir.x)-Math.PI/3+i/40*Math.PI*2/3;points.push(new T.Vector3(p.x+Math.cos(a)*r,0,p.z+Math.sin(a)*r));}points.push(new T.Vector3(p.x,0,p.z));}
 else for(let i=0;i<=48;i++){const a=i/48*Math.PI*2;points.push(new T.Vector3(p.x+Math.cos(a)*r,0,p.z+Math.sin(a)*r));}
-border.geometry.dispose();border.geometry=new T.BufferGeometry().setFromPoints(points);border.material.color.set(s.op==='i'?0xaaaaaa:s.op==='p'?0x9cba39:0xff5436);border.visible=true;}
+border.geometry.dispose();border.geometry=new T.BufferGeometry().setFromPoints(points);border.material.color.set(s.steam?0xb8cbd0:s.op==='i'?0xaaaaaa:s.op==='p'?0x9cba39:0xff5436);border.visible=true;}
 function drawTell(caster,seq,fill,border){if(hasFireRecipe(seq)){drawFireTell(caster,seq,border);return;}const spec=describeDesign(seq),reference=caster===player?aim:(enemyTarget||player),range=spellReach(seq);let center={x:caster.x,z:caster.z},radius=1.2+seq.length*.25;
 if(['field','wall','strike','coat'].includes(spec.shape)||spec.motion==='fall'||spec.motion==='pull'){const d=new T.Vector3(reference.x-caster.x,0,reference.z-caster.z);if(d.length()>range)d.setLength(range);center={x:caster.x+d.x,z:caster.z+d.z};}
 if(spec.shape==='spread')radius*=1.6;if(spec.shape==='condensed')radius*=.6;
@@ -286,7 +288,7 @@ function killMonster(m,source){if(m.dead)return;m.dead=true;ring(m.x,m.z,0xe9cb7
  if(source===player||source===enemy){const state=source===player?progress:enemyProgress,levels=awardKill(state,m.xp);if(levels)pixelVfx.play('level-up',source.x,source.z,{width:2});source.mana=Math.min(100,source.mana+10);
  if(levels){source.hp=Math.min(100,source.hp+20);ring(source.x,source.z,0xffdf83,2,.8);if(source===enemy)spendEnemyPoints(enemyProgress,enemyLoadout);else flash('레벨 '+progress.level+' · 스킬 포인트 +'+levels);}else if(source===player)flash('몬스터 처치 · 경험치 +'+m.xp);if(source===player)renderProgress();}}
 function updateHunt(dt){spawnTimer-=dt;if(spawnTimer<=0){spawnTimer=5;if(!monsters.length){for(const p of[{x:-10,z:3},{x:-7,z:10},{x:-15,z:-3},{x:8,z:6},{x:12,z:-15},{x:18,z:-9},{x:20,z:-17}])spawnMonster(p);}spawnMonster();}
- for(const m of monsters){if(m.dead)continue;m.cool=Math.max(0,m.cool-dt);const nearest=bot&&Math.hypot(enemy.x-m.x,enemy.z-m.z)<Math.hypot(player.x-m.x,player.z-m.z)?enemy:player,target=m.aggroTarget&&(m.aggroTarget!==enemy||bot)?m.aggroTarget:nearest,dx=target.x-m.x,dz=target.z-m.z,d=Math.hypot(dx,dz),speed=(m.slow>0?.55:1)*1.45;
+ for(const m of monsters){if(m.dead)continue;m.cool=Math.max(0,m.cool-dt);const nearest=bot&&Math.hypot(enemy.x-m.x,enemy.z-m.z)<Math.hypot(player.x-m.x,player.z-m.z)?enemy:player,target=m.aggroTarget&&(m.aggroTarget!==enemy||bot)?m.aggroTarget:nearest,dx=target.x-m.x,dz=target.z-m.z,d=Math.hypot(dx,dz),speed=(m.frostSlow>0?.35:m.slow>0?.55:1)*1.45;
  if(d<(m.aggro?6.5:3.2)&&visibleTo(m,target)){m.dir.set(dx,0,dz).normalize();if(m.wind>0){m.wind-=dt;if(m.wind<=0){if(d<1.5)hit(target,2+m.type,m.dir,0,m);m.cool=2;}}else if(d<1.2&&m.cool<=0){m.wind=.5;}else if(d>1&&!m.motion.active)move(m,m.dir.x*speed*dt,m.dir.z*speed*dt);}
  else {m.wind=0;m.aggro=false;m.aggroTarget=null;const hx=m.homeX-m.x,hz=m.homeZ-m.z,hd=Math.hypot(hx,hz);if(hd>.5&&!m.motion.active)move(m,hx/hd*dt,hz/hd*dt);}
  m.g.position.set(m.x,0,m.z);m.g.rotation.y=Math.atan2(m.dir.x,m.dir.z);m.body.position.y=.65+Math.sin(clock*5+m.id)*.06;m.body.material.color.copy(m.color);if(m.wind>0)m.body.material.color.set(0xff6655);else if(m.slow>0)m.body.material.color.lerp(new T.Color(0x479eff),.6);if(m.hitFlash>0)m.body.material.color.set(0xffffff);m.bar.scale.x=m.hp/m.maxHp;

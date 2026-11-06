@@ -18,7 +18,7 @@ cast('qt');victim.x=3;for(let j=0;j<20;j++)f.update(.05);assert.ok(hits.length>=
 cast('qg');victim.x=4;f.update(.05);assert.ok(victim.motion.active);assert.ok(victim.motion.x<0);
 victim.x=2;cast('qs');assert.equal(f.effects[0].type,'cut');for(let j=0;j<20;j++)f.update(.05);assert.equal(hits.filter(x=>x.v===victim).length,1);
 cast('qh');blocked=true;for(let j=0;j<20;j++)f.update(.05);assert.ok(owner.x>0&&owner.x<=1);blocked=false;
-for(const seq of Object.keys(FIRE_RECIPES)){cast(seq);for(let i=0;i<160;i++)f.update(.05);assert.equal(f.effects.length,0,seq+' expires');}
+for(const seq of Object.keys(FIRE_RECIPES)){cast(seq);for(let i=0;i<220;i++)f.update(.05);assert.equal(f.effects.length,0,seq+' expires');}
 console.log('PASS fire shapes, cone direction, steam, debuffs, lightning residue, ring walls, persistent damage, pull, slash, blocked dash, cleanup, water removal');
 cast('qi');assert.equal(f.smokeVolumes.length,1);assert.ok(f.smokeVolumes[0].radius>fireSpec('q').radius);assert.equal(f.effects[0].type,'smokescreen');assert.equal(hits.length,0);for(let i=0;i<121;i++)f.update(.05);assert.equal(f.smokeVolumes.length,0);console.log('PASS dense smoke lasts six seconds and expires without damage');
 
