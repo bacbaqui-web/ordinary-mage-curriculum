@@ -1,8 +1,8 @@
-import {SteamSpells} from './steam-spells.mjs?v=steam14';
-import {isSteam} from './steam-spec.mjs?v=steam14';
+import {SteamSpells} from './steam-spells.mjs?v=slam15';
+import {isSteam} from './steam-spec.mjs?v=slam15';
 import * as T from './three.module.js';
 import {crossesWard} from './forces.mjs';
-import {fireSpec} from './fire-spec.mjs?v=steam14';
+import {fireSpec} from './fire-spec.mjs?v=slam15';
 // Every visible part is 3D geometry. Soft edge shading makes overlapping volumes read as mist.
 export class FireSpells{
  constructor(api){this.a=api;this.effects=[];this.steam=new SteamSpells(this);}

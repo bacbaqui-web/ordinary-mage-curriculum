@@ -24,3 +24,5 @@ cast('qis');assert.ok(hits.some(h=>h.d===7));assert.ok(f.smokeVolumes.length>=5)
 cast('qih');advance(.6);assert.ok(hits.some(h=>h.force===3.5));assert.ok(f.smokeVolumes.length>0);
 cast('qih');blocked=true;advance(.6);assert.ok(owner.x<=1);
 console.log('PASS all 11 steam combinations: names, lifetime, sight, damage, frost, poison buildup, dust, low fog, impacts, walls, pull, melee and blocked dash');
+
+cast('qil');advance(.1);assert.equal(hits.length,0);advance(.1);assert.equal(hits.filter(h=>h.d>0).length,1);assert.ok(f.effects.find(e=>e.type==='steamDrop').struck);assert.ok(f.effects.some(e=>e.burst));advance(.5);assert.equal(hits.filter(h=>h.d>0).length,1);console.log('PASS steam slam warns briefly, strikes instantly once, and bursts into smoke');

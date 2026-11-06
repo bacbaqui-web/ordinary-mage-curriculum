@@ -1,4 +1,4 @@
-import {STEAM_RECIPES,isSteam,steamSpec} from './steam-spec.mjs?v=steam14';
+import {STEAM_RECIPES,isSteam,steamSpec} from './steam-spec.mjs?v=slam15';
 export const FIRE_RECIPES={
  ...STEAM_RECIPES,
  q:['불안개','근거리에 붉은 화염과 노란 불티를 뿜습니다. 닿으면 짧은 화상을 입힙니다.'],
