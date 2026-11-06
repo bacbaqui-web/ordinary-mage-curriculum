@@ -19,6 +19,8 @@ ProtectSystem=strict
 ProtectHome=true
 MemoryMax=512M
 CPUQuota=50%
+CPUWeight=5
+Nice=19
 TasksMax=64
 
 [Install]

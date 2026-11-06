@@ -5,6 +5,7 @@
 - 앱: `/srv/apps/ordinary-mage/current` → `releases/` 안의 배포 폴더
 - 실행 파일: `/srv/apps/ordinary-mage/runtime/node-v24.13.0-linux-arm64/bin/node`
 - 서비스: `ordinary-mage.service`
+- CPU가 부족하면 노동요 처리 작업에 양보하도록 `CPUWeight=5`, `Nice=19`를 적용합니다. 대전 서버의 CPU 상한은 0.5코어입니다.
 - 내부 포트: `127.0.0.1:8787`
 - HTTPS 경로: `/mage/`, WebSocket: `/mage/pvp`
 - Nginx: 기존 HTTPS 서버 블록에서 `/etc/nginx/snippets/ordinary-mage.conf`만 추가로 읽습니다.
