@@ -1,0 +1,8 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>효과음 듣기 · 일반마법사 커리큘럼</title>
+<style>body{margin:0;background:#182127;color:#eee9dd;font:16px/1.6 system-ui,sans-serif}main{max-width:1000px;margin:64px auto;padding:0 24px}h1{font-size:32px;margin:12px 0}p{color:#b6c0c4}a{color:#e8c987}#sounds{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin:32px 0}article{background:#253139;border:1px solid #41505a;border-radius:12px;padding:20px}h2{font-size:18px;margin:0 0 14px}audio{width:100%}small{color:#acb7bd}</style></head>
+<body><main><a href="./">← 게임으로 돌아가기</a><h1>효과음 듣기</h1><p>마법 11종과 충전·명중·구르기 소리입니다. 게임에서는 여러 소리가 겹치는 점을 고려해 음량을 낮춰 재생합니다.</p><div id="sounds"></div><p id="status" role="status"></p></main>
+<script type="module">
+try{const response=await fetch('./audio/manifest.json');if(!response.ok)throw Error();const data=await response.json();for(const item of data.sounds){const card=document.createElement('article'),title=document.createElement('h2'),audio=document.createElement('audio'),meta=document.createElement('small');title.textContent=item.label;audio.controls=true;audio.preload='none';audio.src='./audio/'+item.file;audio.addEventListener('play',()=>document.querySelectorAll('audio').forEach(other=>{if(other!==audio)other.pause();}));meta.textContent=item.seconds+'초';card.append(title,audio,meta);document.querySelector('#sounds').append(card);}}
+catch{document.querySelector('#status').textContent='효과음 목록을 불러오지 못했습니다. 페이지를 새로고침해 주세요.';}
+</script></body></html>

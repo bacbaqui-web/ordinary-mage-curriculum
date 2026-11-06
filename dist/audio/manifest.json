@@ -1,0 +1,147 @@
+{
+  "generator": "Audio Studio MCP / Stable Audio 3 medium (MLX)",
+  "selection": "Automatic onset and signal checks; originals retained for listening",
+  "license": "Stability AI Community License",
+  "sounds": [
+    {
+      "id": "fire",
+      "label": "화염",
+      "file": "fire.wav",
+      "seconds": 0.319,
+      "bytes": 42290,
+      "peak": 0.7079,
+      "source": "fire_v1.wav",
+      "prompt": "TrackType: SFX, A single magical fireball, ignites with a sharp fiery whoosh and a brief crackling burst, warm roaring flame, punchy bass, crisp embers, isolated close recording, dry studio, no music, no voices, no background noise."
+    },
+    {
+      "id": "ice",
+      "label": "빙결",
+      "file": "ice.wav",
+      "seconds": 0.339,
+      "bytes": 44928,
+      "peak": 0.7079,
+      "source": "ice_v2.wav",
+      "prompt": "TrackType: SFX, A single ice spell, crystallizes then snaps into sharp frozen shards, glassy ice crystals, brittle crack, cold shimmering tail, isolated close recording, dry studio, no music, no voices, no background noise."
+    },
+    {
+      "id": "lightning",
+      "label": "전격",
+      "file": "lightning.wav",
+      "seconds": 0.419,
+      "bytes": 55490,
+      "peak": 0.7079,
+      "source": "lightning_v2.wav",
+      "prompt": "TrackType: SFX, A single electric lightning spell, discharges with a sharp electric snap and a short thunder crack, crackling high voltage, tight bass, no long rumble, isolated close recording, dry studio, no music, no voices, no background noise."
+    },
+    {
+      "id": "earth",
+      "label": "대지",
+      "file": "earth.wav",
+      "seconds": 0.873,
+      "bytes": 115550,
+      "peak": 0.7079,
+      "source": "earth_v2.wav",
+      "prompt": "TrackType: SFX, A stone magic spell, erupts from the ground with one heavy rocky impact, granite cracking, gravel scattering, deep dry thud, isolated close recording, dry studio, no music, no voices, no background noise."
+    },
+    {
+      "id": "poison",
+      "label": "독",
+      "file": "poison.wav",
+      "seconds": 0.529,
+      "bytes": 70010,
+      "peak": 0.7079,
+      "source": "poison_v2.wav",
+      "prompt": "TrackType: SFX, A toxic magical potion burst, pops with a wet bubbling splash and a brief hiss, viscous liquid, acidic fizz, small bubbles, isolated close recording, dry studio, no music, no voices, no background noise."
+    },
+    {
+      "id": "barrier",
+      "label": "장벽",
+      "file": "barrier.wav",
+      "seconds": 0.838,
+      "bytes": 110930,
+      "peak": 0.7079,
+      "source": "barrier_v1.wav",
+      "prompt": "TrackType: SFX, A magical crystal shield, materializes with a clean resonant pulse and settles quickly, hollow glass resonance, soft metallic shimmer, rounded attack, isolated close recording, dry studio, no music, no voices, no background noise."
+    },
+    {
+      "id": "field",
+      "label": "장판",
+      "file": "field.wav",
+      "seconds": 1.552,
+      "bytes": 205310,
+      "peak": 0.7079,
+      "source": "field_v2.wav",
+      "prompt": "TrackType: SFX, A magical ground circle, opens with a low expanding pulse and airy shimmer, soft resonant energy, textured wind, deep rounded swell, isolated close recording, dry studio, no music, no voices, no background noise."
+    },
+    {
+      "id": "push",
+      "label": "밀기",
+      "file": "push.wav",
+      "seconds": 0.304,
+      "bytes": 40310,
+      "peak": 0.7079,
+      "source": "push_v2.wav",
+      "prompt": "TrackType: SFX, A compressed air magic blast, bursts outward with a fast forceful whoosh, dry rushing air, tight low punch, clean short tail, isolated close recording, dry studio, no music, no voices, no background noise."
+    },
+    {
+      "id": "pull",
+      "label": "당김",
+      "file": "pull.wav",
+      "seconds": 1.332,
+      "bytes": 176270,
+      "peak": 0.7079,
+      "source": "pull_v1.wav",
+      "prompt": "TrackType: SFX, A magical gravity vortex, sucks air inward and ends with a compact low pulse, reverse airy whoosh, deep hollow energy, isolated close recording, dry studio, no music, no voices, no background noise."
+    },
+    {
+      "id": "slash",
+      "label": "베기",
+      "file": "slash.wav",
+      "seconds": 0.14,
+      "bytes": 18530,
+      "peak": 0.7079,
+      "source": "slash_v2.wav",
+      "prompt": "TrackType: SFX, A single magical blade, swings rapidly through the air with one sharp slicing swoosh, thin metallic edge, dry fast wind, isolated close recording, dry studio, no music, no voices, no background noise."
+    },
+    {
+      "id": "strike",
+      "label": "타격",
+      "file": "strike.wav",
+      "seconds": 0.604,
+      "bytes": 79910,
+      "peak": 0.7079,
+      "source": "strike_v2.wav",
+      "prompt": "TrackType: SFX, A magical force punch, hits once with a tight heavy impact, dry low thump, crisp attack, very short decay, isolated close recording, dry studio, no music, no voices, no background noise."
+    },
+    {
+      "id": "hit",
+      "label": "명중",
+      "file": "hit.wav",
+      "seconds": 0.225,
+      "bytes": 29750,
+      "peak": 0.7079,
+      "source": "hit_v2.wav",
+      "prompt": "TrackType: SFX, A fantasy combat impact, lands once with a short punchy hit, dry leather thud and tiny crisp crack, no voice, isolated close recording, dry studio, no music, no voices, no background noise."
+    },
+    {
+      "id": "roll",
+      "label": "구르기",
+      "file": "roll.wav",
+      "seconds": 0.334,
+      "bytes": 44270,
+      "peak": 0.7079,
+      "source": "roll_v1.wav",
+      "prompt": "TrackType: SFX, A clothed wizard dodging, rolls quickly across stone with a brief cloth swish, soft fabric rush, muted stone scuff, no footsteps, isolated close recording, dry studio, no music, no voices, no background noise."
+    },
+    {
+      "id": "charge",
+      "label": "마법 충전",
+      "file": "charge.wav",
+      "seconds": 2.684,
+      "bytes": 355076,
+      "peak": 0.7079,
+      "source": "charge_v2.wav",
+      "prompt": "TrackType: SFX, A sustained magical energy field, hums continuously at a steady level with subtle sparkling movement, smooth warm low hum, delicate airy crystals, no beats or melody, isolated close recording, dry studio, no music, no voices, no background noise."
+    }
+  ]
+}

@@ -7,7 +7,7 @@ import {WebSocketServer,WebSocket} from 'ws';
 import {Duel,STEP,PROTOCOL,validInput} from '../dist/duel.mjs';
 import {validLoadout,DEFAULT_LOADOUT} from '../dist/live-loadout.mjs';
 const root=fileURLToPath(new URL('../dist/',import.meta.url));
-const mime={'.html':'text/html; charset=utf-8','.mjs':'text/javascript; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json','.png':'image/png','.jpg':'image/jpeg','.webp':'image/webp','.svg':'image/svg+xml','.woff2':'font/woff2'};
+const mime={'.wav':'audio/wav','.html':'text/html; charset=utf-8','.mjs':'text/javascript; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json','.png':'image/png','.jpg':'image/jpeg','.webp':'image/webp','.svg':'image/svg+xml','.woff2':'font/woff2'};
 export function createGameServer({maxRooms=16}={}){
  const rooms=new Map();
  const server=http.createServer(async(req,res)=>{try{
