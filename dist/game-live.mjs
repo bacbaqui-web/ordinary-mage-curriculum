@@ -1,3 +1,4 @@
+import {damageSummary} from './damage-display.mjs?v=damage18';
 import {Duel,STEP} from './duel.mjs?v=bolt17';
 import {mountPvpUI} from './pvp-ui.mjs';
 import {OBSTACLES} from './arena-rules.mjs';
@@ -31,7 +32,7 @@ import {LowPolyVFX} from './lowpoly-vfx.mjs';
 import {chooseLoadout,choosePlan,chooseLearnedPlan,spendEnemyPoints,OpponentCharge} from './live-opponent.mjs?v=bolt17';
 import {forceSpec,wardSpec,displacement,crossesWard,distanceToWard} from './forces.mjs?v=zones1';
 import {elementalSpec,inElementCone,lightningPoint,lightningHits} from './elements.mjs?v=zones1';
-const describeSpell=seq=>describeDesign(seq).steps.join(' ');
+const describeSpell=seq=>describeDesign(seq).steps.join(' ')+' '+damageSummary(seq)+' (완충·숙련 1·정지 표적 비교값)';
 import * as T from './three.module.js';
 import {Charge,ELEMENTS,NAMES,resolveSpell} from './live-charge-spells.mjs?v=bolt17';
 import {Roll,ROLL_DURATION,incomingThreat,enemyChargeProgress} from './combat.mjs?v=zones1';
@@ -263,6 +264,7 @@ function ui(){if(onlineCore)syncOnlineActors();updateCamera();updateVisibility()
  for(const k of['q','w','e'])$('key-'+k).classList.toggle('active',charge.queue.includes(k));
  $('orbs').innerHTML=charge.queue.map((k,i)=>{const amount=charge.active?Math.max(0,Math.min(1,charge.elapsed/1.2-i)):0;return `<div class="orb" style="--c:${RUNES[loadout[k]].color};--p:${amount*100}%"><span>${RUNES[loadout[k]].icon}</span></div>`}).join('');
  if(charge.queue.length){$('spellName').textContent=spellName(mapSequence(charge.queue,loadout));$('tier').textContent=charge.active?'좌클릭 충전 중':'마법 대기줄';$('queue').textContent=charge.queue.join(' → ').toUpperCase()+(charge.active?' / 놓으면 시전':' / 좌클릭으로 시전');}else{$('queue').textContent='QWE로 대기줄을 채우세요';}
+ $('damageEstimate').textContent=charge.queue.length?damageSummary(mapSequence(charge.queue,loadout))+' · 완충/숙련 1 비교값':'';
  $('chargeBar').style.width=(charge.active?charge.progress*100:0)+'%';
  const end=new T.Vector3(player.x, .08,player.z).addScaledVector(player.dir,charge.active?7:3);aimLine.geometry.dispose();aimLine.geometry=new T.BufferGeometry().setFromPoints([new T.Vector3(player.x,.08,player.z),end]);aimLine.visible=running&&!finished;
 }
