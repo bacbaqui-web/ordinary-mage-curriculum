@@ -1,163 +1,233 @@
 {
-  "version": "fantasy-v2",
+  "version": "clear-v3",
   "generator": "Audio Studio MCP / Stable Audio 3 medium (MLX)",
-  "style": "묵직한 판타지: 낮은 울림과 선명한 타격감",
-  "selection": "Duration and signal checks; not a subjective listening evaluation",
+  "style": "저음 절제, 마법별 질감, 짧은 잔향",
+  "selection": "Focused prompts and signal checks; subjective listening assessment not performed",
   "license": "Stability AI Community License",
   "sounds": [
     {
       "id": "fire",
       "label": "화염",
       "file": "fire.wav",
-      "seconds": 1.97,
-      "bytes": 260676,
-      "peak": 0.631,
-      "source": "fire-fantasy-v2_v3.wav",
-      "seed": 9202,
-      "prompt": "TrackType: SFX, A powerful fantasy fire spell exploding outward. Deep bass ignition, thick roaring flame rush, gritty crackling embers decaying naturally. A single forceful attack followed by a rich fiery tail. Isolated studio sound effect, no music, no speech."
+      "seconds": 0.532,
+      "bytes": 70430,
+      "peak": 0.5623,
+      "source": "fire-clear-v3_v3.wav",
+      "seed": 24102,
+      "prompt": "TrackType: SFX, A short burst of burning flames, crisp crackling embers and a fast fiery whoosh. Detailed dry fire texture, quick ignition, short natural decay. Isolated close studio recording. No music or voices. No bass boom or thunder.",
+      "processing": {
+        "highpass_hz": 110,
+        "low_shelf_db": -10,
+        "low_shelf_hz": 220
+      }
     },
     {
       "id": "ice",
       "label": "빙결",
       "file": "ice.wav",
-      "seconds": 1.89,
-      "bytes": 250092,
-      "peak": 0.631,
-      "source": "ice-fantasy-v2_v1.wav",
-      "seed": 9229,
-      "prompt": "TrackType: SFX, A heavy fantasy ice spell. A deep frozen pressure burst fractures into large resonating crystal shards, with a cold shimmering glass tail. One solid bass impact followed by delicate scattered ice. Isolated studio sound effect, no music, no speech."
+      "seconds": 1.1,
+      "bytes": 145574,
+      "peak": 0.5623,
+      "source": "ice-clear-v3_v2.wav",
+      "seed": 24138,
+      "prompt": "TrackType: SFX, Ice crystals cracking and shattering into small frozen shards. Clear brittle glass-like snaps with delicate icy tinkling, one short burst. Isolated close studio recording. No music or voices. No bass boom or thunder.",
+      "processing": {
+        "highpass_hz": 180,
+        "low_shelf_db": -8,
+        "low_shelf_hz": 220
+      }
     },
     {
       "id": "lightning",
       "label": "전격",
       "file": "lightning.wav",
-      "seconds": 2.93,
-      "bytes": 387684,
-      "peak": 0.631,
-      "source": "lightning-fantasy-v2_v1.wav",
-      "seed": 9258,
-      "prompt": "TrackType: SFX, A powerful arcane lightning strike. Sharp electrical snap over a deep thunderous bass impact, dense crackling electricity rapidly dispersing into a low rumbling tail. One strike, close and forceful. Isolated studio sound effect, no music, no speech."
+      "seconds": 0.9,
+      "bytes": 119114,
+      "peak": 0.5623,
+      "source": "lightning-clear-v3_v1.wav",
+      "seed": 24174,
+      "prompt": "TrackType: SFX, A short high voltage electrical arc discharge. A sharp dry snap followed by irregular buzzing sparks and quick sizzling decay. Isolated close studio recording. No music or voices. No bass boom or thunder.",
+      "processing": {
+        "highpass_hz": 140,
+        "low_shelf_db": -8,
+        "low_shelf_hz": 220
+      }
     },
     {
       "id": "earth",
       "label": "대지",
       "file": "earth.wav",
-      "seconds": 2.115,
-      "bytes": 279860,
-      "peak": 0.631,
-      "source": "earth-fantasy-v2_v3.wav",
-      "seed": 9289,
-      "prompt": "TrackType: SFX, A massive stone pillar erupting from the ground by magic. Heavy low rock impact, thick granite grinding and cracking, scattered gravel settling. Weighty physical force with a natural short rocky decay. Isolated studio sound effect, no music, no speech."
+      "seconds": 1.2,
+      "bytes": 158804,
+      "peak": 0.5623,
+      "source": "earth-clear-v3_v1.wav",
+      "seed": 24211,
+      "prompt": "TrackType: SFX, Granite cracking and gravel scattering onto a stone floor. One firm rocky impact followed by detailed dry pebble clicks and scraping grit. Isolated close studio recording. No music or voices. No bass boom or thunder.",
+      "processing": {
+        "highpass_hz": 85,
+        "low_shelf_db": -9,
+        "low_shelf_hz": 220
+      }
     },
     {
       "id": "poison",
       "label": "독",
       "file": "poison.wav",
-      "seconds": 1.83,
-      "bytes": 242154,
-      "peak": 0.631,
+      "seconds": 1.1,
+      "bytes": 145574,
+      "peak": 0.5623,
       "source": "poison-fantasy-v2_v2.wav",
       "seed": 9317,
-      "prompt": "TrackType: SFX, A sinister fantasy poison spell bursting. Deep wet resonant pop, thick viscous liquid splash, layered acidic sizzling and bubbles collapsing. One dark magical impact with a textured bubbling tail. Isolated studio sound effect, no music, no speech."
+      "prompt": "TrackType: SFX, A sinister fantasy poison spell bursting. Deep wet resonant pop, thick viscous liquid splash, layered acidic sizzling and bubbles collapsing. One dark magical impact with a textured bubbling tail. Isolated studio sound effect, no music, no speech.",
+      "processing": {
+        "highpass_hz": 120,
+        "low_shelf_db": -3,
+        "low_shelf_hz": 220
+      }
     },
     {
       "id": "barrier",
       "label": "장벽",
       "file": "barrier.wav",
-      "seconds": 2.59,
-      "bytes": 342702,
-      "peak": 0.631,
-      "source": "barrier-fantasy-v2_v2.wav",
-      "seed": 9346,
-      "prompt": "TrackType: SFX, A large magical protective shield materializing. A deep rounded impact blooms into layered hollow crystal resonance and a low arcane energy hum, then fades smoothly. Powerful solid protective magic. Isolated studio sound effect, no music, no speech."
+      "seconds": 1.29,
+      "bytes": 170712,
+      "peak": 0.5623,
+      "source": "barrier-clear-v3_v3.wav",
+      "seed": 24287,
+      "prompt": "TrackType: SFX, A small crystal bowl struck once, clear rounded glass chime with a brief shimmering resonance. Pure delicate protective magic sound. Isolated close studio recording. No music or voices. No bass boom or thunder.",
+      "processing": {
+        "highpass_hz": 200,
+        "low_shelf_db": -8,
+        "low_shelf_hz": 220
+      }
     },
     {
       "id": "field",
       "label": "장판",
       "file": "field.wav",
-      "seconds": 2.745,
-      "bytes": 363210,
-      "peak": 0.631,
-      "source": "field-fantasy-v2_v2.wav",
-      "seed": 9375,
-      "prompt": "TrackType: SFX, A large arcane circle activating on stone ground. Deep resonant pulse expands outward with swirling textured magical air and low shimmering energy. Slow broad decay after one heavy activation. Isolated studio sound effect, no music, no speech."
+      "seconds": 1.16,
+      "bytes": 153512,
+      "peak": 0.5623,
+      "source": "field-clear-v3_v2.wav",
+      "seed": 24323,
+      "prompt": "TrackType: SFX, Fine sand sweeping in a circle with a soft airy shimmering resonance. A gentle textured magical sweep, light sparkling particles, short decay. Isolated close studio recording. No music or voices. No bass boom or thunder.",
+      "processing": {
+        "highpass_hz": 180,
+        "low_shelf_db": -8,
+        "low_shelf_hz": 220
+      }
     },
     {
       "id": "push",
       "label": "밀기",
       "file": "push.wav",
-      "seconds": 1.695,
-      "bytes": 224294,
-      "peak": 0.631,
-      "source": "push-fantasy-v2_v3.wav",
-      "seed": 9405,
-      "prompt": "TrackType: SFX, A forceful magical shockwave pushing air outward. Deep compressed bass punch followed by a broad rushing air whoosh and a short airy decay. One strong gust, heavy and physical. Isolated studio sound effect, no music, no speech."
+      "seconds": 0.522,
+      "bytes": 69108,
+      "peak": 0.5623,
+      "source": "push_v1.wav",
+      "seed": 1819,
+      "prompt": "TrackType: SFX, A compressed air magic blast, bursts outward with a fast forceful whoosh, dry rushing air, tight low punch, clean short tail, isolated close recording, dry studio, no music, no voices, no background noise.",
+      "processing": {
+        "highpass_hz": 100,
+        "low_shelf_db": -5,
+        "low_shelf_hz": 220
+      }
     },
     {
       "id": "pull",
       "label": "당김",
       "file": "pull.wav",
-      "seconds": 2.69,
-      "bytes": 355932,
-      "peak": 0.631,
-      "source": "pull-fantasy-v2_v1.wav",
-      "seed": 9432,
-      "prompt": "TrackType: SFX, A dark gravity spell pulling air inward. Low resonant suction vortex, twisting airy rush gathering into a heavy hollow bass pulse and short fading resonance. One powerful magical pull. Isolated studio sound effect, no music, no speech."
+      "seconds": 1.0,
+      "bytes": 132344,
+      "peak": 0.5623,
+      "source": "pull-clear-v3_v1.wav",
+      "seed": 24396,
+      "prompt": "TrackType: SFX, A short reverse air whoosh drawing inward, with a hollow midrange suction sound and a clean quiet ending. No impact. Isolated close studio recording. No music or voices. No bass boom or thunder.",
+      "processing": {
+        "highpass_hz": 140,
+        "low_shelf_db": -8,
+        "low_shelf_hz": 220
+      }
     },
     {
       "id": "slash",
       "label": "베기",
       "file": "slash.wav",
-      "seconds": 1.26,
-      "bytes": 166742,
-      "peak": 0.631,
-      "source": "slash-fantasy-v2_v3.wav",
-      "seed": 9463,
-      "prompt": "TrackType: SFX, A heavy enchanted blade slicing through air once. A broad fast cutting whoosh with a low body, a clean metallic edge and a brief resonant airy tail. Powerful cinematic sword swing. Isolated studio sound effect, no music, no speech."
+      "seconds": 0.6,
+      "bytes": 79424,
+      "peak": 0.5623,
+      "source": "slash-clear-v3_v3.wav",
+      "seed": 24435,
+      "prompt": "TrackType: SFX, One fast sword swing cutting the air. Crisp narrow swish and a subtle metallic edge, quick attack and short dry decay. Isolated close studio recording. No music or voices. No bass boom or thunder.",
+      "processing": {
+        "highpass_hz": 160,
+        "low_shelf_db": -8,
+        "low_shelf_hz": 220
+      }
     },
     {
       "id": "strike",
       "label": "타격",
       "file": "strike.wav",
-      "seconds": 1.64,
-      "bytes": 217016,
-      "peak": 0.631,
-      "source": "strike-fantasy-v2_v3.wav",
-      "seed": 9492,
-      "prompt": "TrackType: SFX, A heavy magical fist striking solid armor once. Deep punchy bass thump layered with a crisp hard impact, a short gritty crunch and a compact resonant tail. Weighty close combat hit. Isolated studio sound effect, no music, no speech."
+      "seconds": 0.55,
+      "bytes": 72810,
+      "peak": 0.5623,
+      "source": "strike-clear-v3_v1.wav",
+      "seed": 24470,
+      "prompt": "TrackType: SFX, A wooden staff hitting a leather shield once. A firm dry knock with a clear crack and compact woody body, very short decay. Isolated close studio recording. No music or voices. No bass boom or thunder.",
+      "processing": {
+        "highpass_hz": 100,
+        "low_shelf_db": -10,
+        "low_shelf_hz": 220
+      }
     },
     {
       "id": "hit",
       "label": "명중",
       "file": "hit.wav",
-      "seconds": 0.72,
-      "bytes": 95300,
-      "peak": 0.631,
-      "source": "hit-fantasy-v2_v1.wav",
-      "seed": 9519,
-      "prompt": "TrackType: SFX, A single heavy fantasy combat hit on leather armor. Tight low thump, clear dry crack, brief crunchy texture and quick decay. Solid punchy impact, restrained high frequencies. Isolated studio sound effect, no music, no speech."
+      "seconds": 0.232,
+      "bytes": 30740,
+      "peak": 0.5623,
+      "source": "hit_v1.wav",
+      "seed": 1887,
+      "prompt": "TrackType: SFX, A fantasy combat impact, lands once with a short punchy hit, dry leather thud and tiny crisp crack, no voice, isolated close recording, dry studio, no music, no voices, no background noise.",
+      "processing": {
+        "highpass_hz": 120,
+        "low_shelf_db": -7,
+        "low_shelf_hz": 220
+      }
     },
     {
       "id": "roll",
       "label": "구르기",
       "file": "roll.wav",
-      "seconds": 1.38,
-      "bytes": 182618,
-      "peak": 0.631,
-      "source": "roll-fantasy-v2_v2.wav",
-      "seed": 9549,
-      "prompt": "TrackType: SFX, A robed fighter doing one quick dodge roll on stone. Thick fabric swoosh followed by a muted weighty body landing and a short gritty stone scuff. Compact physical movement. Isolated studio sound effect, no music, no speech."
+      "seconds": 0.492,
+      "bytes": 65138,
+      "peak": 0.5623,
+      "source": "roll_v1.wav",
+      "seed": 1904,
+      "prompt": "TrackType: SFX, A clothed wizard dodging, rolls quickly across stone with a brief cloth swish, soft fabric rush, muted stone scuff, no footsteps, isolated close recording, dry studio, no music, no voices, no background noise.",
+      "processing": {
+        "highpass_hz": 100,
+        "low_shelf_db": -5,
+        "low_shelf_hz": 220
+      }
     },
     {
       "id": "charge",
       "label": "마법 충전",
       "file": "charge.wav",
-      "seconds": 4.69,
-      "bytes": 620532,
-      "peak": 0.631,
-      "source": "charge-fantasy-v2_v2.wav",
-      "seed": 9578,
-      "prompt": "TrackType: SFX, Continuous steady deep arcane energy drone. Smooth low resonant hum with subtle dark airy swirling texture and very soft crystalline overtones. Even sustained sound without impacts, rhythmic beats, melody or rising pitch. Isolated studio sound effect, no music, no speech."
+      "seconds": 2.512,
+      "bytes": 332384,
+      "peak": 0.3277,
+      "source": "charge-clear-v3_v3.wav",
+      "seed": 24583,
+      "prompt": "TrackType: SFX, A quiet continuous airy magical shimmer, delicate glass overtones and softly swirling air. Steady gentle texture without rhythm, melody, impacts or swelling bass. Isolated close studio recording. No music or voices. No bass boom or thunder.",
+      "processing": {
+        "highpass_hz": 250,
+        "low_shelf_db": -10,
+        "low_shelf_hz": 220
+      }
     }
   ]
 }

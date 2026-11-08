@@ -1,7 +1,7 @@
-import {mountPlanAudio} from './plan-audio.mjs?v=fantasy2';
+import {mountPlanAudio} from './plan-audio.mjs?v=clear3';
 import {damageSummary,damageDetails} from './damage-display.mjs?v=damage18';
 import {RUNES,valid,describe} from './combo-design.mjs?v=bolt17';
-import {mountAtlasPreview} from './atlas-preview.mjs?v=fantasy2';
+import {mountAtlasPreview} from './atlas-preview.mjs?v=clear3';
 const $=id=>document.getElementById(id),ids=Object.keys(RUNES);let seq=valid(location.hash.slice(1))?location.hash.slice(1):'qqw',branch=seq.slice(0,2),dispose=()=>{},disposeSound=()=>{};
 const recipe=s=>[...s].map(k=>RUNES[k].name).join(' → ');
 const icons=s=>[...s].map(k=>`<span class="rune-icon" style="--rune:${RUNES[k].color}" title="${RUNES[k].name}">${RUNES[k].icon}</span>`).join('<i>＋</i>');
