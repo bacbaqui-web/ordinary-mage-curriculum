@@ -1,8 +1,8 @@
 import {RevisionRequests} from './revision-requests.mjs?v=requests1';
-import {mountPlanAudio} from './plan-audio.mjs?v=clear3';
+import {mountPlanAudio} from './plan-audio.mjs?v=fire4';
 import {damageSummary,damageDetails} from './damage-display.mjs?v=damage18';
 import {RUNES,valid,describe} from './combo-design.mjs?v=bolt17';
-import {mountAtlasPreview} from './atlas-preview.mjs?v=clear3';
+import {mountAtlasPreview} from './atlas-preview.mjs?v=fire4';
 const $=id=>document.getElementById(id),ids=Object.keys(RUNES);let seq=valid(location.hash.slice(1))?location.hash.slice(1):'qqw',branch=seq.slice(0,2),dispose=()=>{},disposeSound=()=>{};
 const requests=new RevisionRequests();let disposeRequest=()=>{};
 const recipe=s=>[...s].map(k=>RUNES[k].name).join(' → ');

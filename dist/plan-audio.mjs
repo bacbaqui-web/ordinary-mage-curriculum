@@ -1,4 +1,4 @@
-import {GameAudio} from './game-audio.mjs?v=clear3';
+import {GameAudio} from './game-audio.mjs?v=fire4';
 
 const audio=new GameAudio();
 // Preview controls are independent from the game's saved mute setting.

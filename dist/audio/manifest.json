@@ -1,5 +1,5 @@
 {
-  "version": "clear-v3",
+  "version": "clear-v3-fire-v4",
   "generator": "Audio Studio MCP / Stable Audio 3 medium (MLX)",
   "style": "저음 절제, 마법별 질감, 짧은 잔향",
   "selection": "Focused prompts and signal checks; subjective listening assessment not performed",
@@ -9,17 +9,18 @@
       "id": "fire",
       "label": "화염",
       "file": "fire.wav",
-      "seconds": 0.532,
-      "bytes": 70430,
+      "seconds": 1.65,
+      "bytes": 218340,
       "peak": 0.5623,
-      "source": "fire-clear-v3_v3.wav",
-      "seed": 24102,
-      "prompt": "TrackType: SFX, A short burst of burning flames, crisp crackling embers and a fast fiery whoosh. Detailed dry fire texture, quick ignition, short natural decay. Isolated close studio recording. No music or voices. No bass boom or thunder.",
+      "source": "fire-combustion-v4_v2.wav",
+      "seed": 35182,
+      "prompt": "TrackType: SFX, A gas burner ignites into one powerful continuous jet of blazing fire. FWOOSH, then a dense steady roaring flame and sizzling combustion fading away. Close dry recording of real fire erupting. Smooth sustained turbulent combustion, not a series of flaps. No cloth, no fabric, no wings, no wind gusts, no footsteps, no music, no voices, no bass explosion.",
       "processing": {
-        "highpass_hz": 110,
-        "low_shelf_db": -10,
-        "low_shelf_hz": 220
-      }
+        "highpass_hz": 100,
+        "low_shelf_db": -4,
+        "low_shelf_hz": 200
+      },
+      "selection": "Lowest amplitude modulation in sustained body; no subjective listening evaluation"
     },
     {
       "id": "ice",

@@ -25,7 +25,7 @@ export class GameAudio {
  async load(){
   await Promise.all(IDS.map(async id=>{
    if(this.buffers.has(id))return;
-   try{const r=await fetch(new URL(`./audio/${id}.wav?v=clear3`,import.meta.url));if(!r.ok)throw Error(`${id}: HTTP ${r.status}`);this.buffers.set(id,await this.context.decodeAudioData(await r.arrayBuffer()));}
+   try{const r=await fetch(new URL(`./audio/${id}.wav?v=fire4`,import.meta.url));if(!r.ok)throw Error(`${id}: HTTP ${r.status}`);this.buffers.set(id,await this.context.decodeAudioData(await r.arrayBuffer()));}
    catch(error){this.failures.push(String(error));}
   }));
   // A later gesture can retry transient load failures without affecting gameplay.
