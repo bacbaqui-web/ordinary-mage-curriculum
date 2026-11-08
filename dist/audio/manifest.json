@@ -1,5 +1,5 @@
 {
-  "version": "clear-v3-fire-v4",
+  "version": "clear-v3-fire-sync5",
   "generator": "Audio Studio MCP / Stable Audio 3 medium (MLX)",
   "style": "저음 절제, 마법별 질감, 짧은 잔향",
   "selection": "Focused prompts and signal checks; subjective listening assessment not performed",
@@ -9,8 +9,8 @@
       "id": "fire",
       "label": "화염",
       "file": "fire.wav",
-      "seconds": 1.65,
-      "bytes": 218340,
+      "seconds": 1.57,
+      "bytes": 207756,
       "peak": 0.5623,
       "source": "fire-combustion-v4_v2.wav",
       "seed": 35182,
@@ -18,7 +18,8 @@
       "processing": {
         "highpass_hz": 100,
         "low_shelf_db": -4,
-        "low_shelf_hz": 200
+        "low_shelf_hz": 200,
+        "additional_attack_trim_ms": 80
       },
       "selection": "Lowest amplitude modulation in sustained body; no subjective listening evaluation"
     },

@@ -11,7 +11,7 @@ export class GameAudio {
    if(!this.context){
     const Audio=globalThis.AudioContext||globalThis.webkitAudioContext;
     if(!Audio){this.available=false;return;}
-    this.context=new Audio();this.master=this.context.createGain();this.master.gain.value=.42;
+    this.context=new Audio({latencyHint:'interactive'});this.master=this.context.createGain();this.master.gain.value=.42;
     this.compressor=this.context.createDynamicsCompressor();this.compressor.threshold.value=-10;this.compressor.ratio.value=3;
     this.analyser=this.context.createAnalyser();this.analyser.fftSize=256;
     this.master.connect(this.compressor);this.compressor.connect(this.analyser);this.analyser.connect(this.context.destination);
@@ -25,7 +25,7 @@ export class GameAudio {
  async load(){
   await Promise.all(IDS.map(async id=>{
    if(this.buffers.has(id))return;
-   try{const r=await fetch(new URL(`./audio/${id}.wav?v=fire4`,import.meta.url));if(!r.ok)throw Error(`${id}: HTTP ${r.status}`);this.buffers.set(id,await this.context.decodeAudioData(await r.arrayBuffer()));}
+   try{const r=await fetch(new URL(`./audio/${id}.wav?v=sync5`,import.meta.url));if(!r.ok)throw Error(`${id}: HTTP ${r.status}`);this.buffers.set(id,await this.context.decodeAudioData(await r.arrayBuffer()));}
    catch(error){this.failures.push(String(error));}
   }));
   // A later gesture can retry transient load failures without affecting gameplay.

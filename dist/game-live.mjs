@@ -1,4 +1,4 @@
-import {GameAudio} from './game-audio.mjs?v=fire4';
+import {GameAudio} from './game-audio.mjs?v=sync5';
 import {damageSummary} from './damage-display.mjs?v=damage18';
 import {Duel,STEP} from './duel.mjs?v=bolt17';
 import {mountPvpUI} from './pvp-ui.mjs';

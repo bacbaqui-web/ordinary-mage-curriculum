@@ -8,14 +8,14 @@ const page=await browser.newPage({viewport:{width:1440,height:1100}}),errors=[];
 await page.addInitScript(()=>{
  localStorage.setItem('mage-sound-enabled','false');window.soundEvents=[];window.castTimes=[];window.activeSounds=new Set();
  const original=AudioContext.prototype.createBufferSource;
- AudioContext.prototype.createBufferSource=function(){const source=original.call(this),start=source.start;source.start=function(...args){window.soundEvents.push({at:performance.now(),loop:source.loop,duration:source.buffer.duration,rate:source.playbackRate.value});window.activeSounds.add(source);source.addEventListener('ended',()=>window.activeSounds.delete(source));return start.apply(source,args);};return source;};
+ AudioContext.prototype.createBufferSource=function(){const source=original.call(this),start=source.start;source.start=function(...args){const samples=source.buffer.getChannelData(0),n=Math.round(source.buffer.sampleRate*.02);let energy=0;for(let i=0;i<n;i++)energy+=samples[i]**2;window.soundEvents.push({onsetRms:Math.sqrt(energy/n),at:performance.now(),loop:source.loop,duration:source.buffer.duration,rate:source.playbackRate.value});window.activeSounds.add(source);source.addEventListener('ended',()=>window.activeSounds.delete(source));return start.apply(source,args);};return source;};
  window.addEventListener('DOMContentLoaded',()=>{let last='';new MutationObserver(()=>{const status=document.querySelector('#atlasPreview [role=status]')?.textContent||'';if(status.startsWith('시전')&&!last.startsWith('시전'))window.castTimes.push(performance.now());last=status;}).observe(document.body,{subtree:true,childList:true,characterData:true});});
 });
 try{
  await page.goto(base+'skill-plan.html#qqw');await page.locator('#atlasPreview [data-action=restart]').click();
  await page.waitForFunction(()=>window.soundEvents.some(e=>e.loop));
  await page.waitForFunction(()=>window.castTimes.length>0&&window.soundEvents.some(e=>!e.loop),{},{timeout:15000});
- const timing=await page.evaluate(()=>({cast:castTimes[0],sounds:soundEvents.filter(e=>!e.loop)}));assert.ok(Math.abs(timing.sounds[0].at-timing.cast)<100,JSON.stringify(timing));assert.ok(timing.sounds.length>=2,'Compound cast must play both layers');await page.waitForFunction(()=>soundEvents.filter(e=>!e.loop).length>=3,{},{timeout:10000});
+ const timing=await page.evaluate(()=>({cast:castTimes[0],sounds:soundEvents.filter(e=>!e.loop)}));assert.ok(Math.abs(timing.sounds[0].at-timing.cast)<100,JSON.stringify(timing));assert.ok(timing.sounds[0].onsetRms>.05,'Fire must be audible within its first 20 ms');assert.ok(timing.sounds.length>=2,'Compound cast must play both layers');await page.waitForFunction(()=>soundEvents.filter(e=>!e.loop).length>=3,{},{timeout:10000});
  await page.locator('#atlasPreview [data-action=restart]').click();await page.waitForFunction(()=>[...window.activeSounds].some(s=>s.loop));
  await page.locator('#atlasPreview [data-action=pause]').click();await page.waitForFunction(()=>window.activeSounds.size===0);
  await page.locator('#bases [data-seq="i"]').click();await page.locator('#atlasPreview [data-action=restart]').click();const before=await page.evaluate(()=>soundEvents.length);await page.waitForFunction(n=>soundEvents.length>n&&soundEvents.slice(n).some(e=>!e.loop),before,{timeout:10000});

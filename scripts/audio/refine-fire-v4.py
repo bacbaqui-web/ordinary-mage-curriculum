@@ -26,9 +26,9 @@ async def main():
   a[:132]*=np.linspace(0,1,132);n=min(int(sr*.25),len(a)//3);a[-n:]*=np.linspace(1,0,n)**1.5
   a*=min(10**(-5/20)/max(abs(a)),10**(-20/20)/np.sqrt(np.mean(a*a)))
   sf.write(path,a,sr,subtype='PCM_24');options.append((score,path,item,len(a)/sr,float(max(abs(a)))))
- score,path,item,duration,peak=min(options,key=lambda x:x[0]);(ROOT/'dist/audio/fire.wav').write_bytes(path.read_bytes())
+ score,path,item,duration,peak=min(options,key=lambda x:x[0]);a,sr=sf.read(path);a=a[int(sr*.08):];a[:88]*=np.linspace(0,1,88);sf.write(ROOT/'dist/audio/fire.wav',a,sr,subtype='PCM_24');duration=len(a)/sr
  mf=ROOT/'dist/audio/manifest.json';m=json.loads(mf.read_text());m['version']='clear-v3-fire-v4'
  for x in m['sounds']:
-  if x['id']=='fire':x.update(seconds=round(duration,3),bytes=path.stat().st_size,peak=round(peak,4),source=Path(item['path']).name,seed=item['seed'],prompt=r['prompt_used'],processing=dict(highpass_hz=100,low_shelf_db=-4,low_shelf_hz=200),selection='Lowest amplitude modulation in sustained body; no subjective listening evaluation')
+  if x['id']=='fire':x.update(seconds=round(duration,3),bytes=(ROOT/'dist/audio/fire.wav').stat().st_size,peak=round(peak,4),source=Path(item['path']).name,seed=item['seed'],prompt=r['prompt_used'],processing=dict(highpass_hz=100,low_shelf_db=-4,low_shelf_hz=200,additional_attack_trim_ms=80),selection='Lowest amplitude modulation in sustained body; no subjective listening evaluation')
  mf.write_text(json.dumps(m,ensure_ascii=False,indent=2));print('READY',path.name,'duration',duration,'peak',peak,'modulation',score,flush=True)
 asyncio.run(main())
