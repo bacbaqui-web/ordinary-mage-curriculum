@@ -1,3 +1,4 @@
+import {createRevisionHandler} from './revision-requests.mjs';
 import http from 'node:http';
 import {readFile,stat} from 'node:fs/promises';
 import {resolve,extname,sep} from 'node:path';
@@ -8,11 +9,12 @@ import {Duel,STEP,PROTOCOL,validInput} from '../dist/duel.mjs';
 import {validLoadout,DEFAULT_LOADOUT} from '../dist/live-loadout.mjs';
 const root=fileURLToPath(new URL('../dist/',import.meta.url));
 const mime={'.wav':'audio/wav','.html':'text/html; charset=utf-8','.mjs':'text/javascript; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json','.png':'image/png','.jpg':'image/jpeg','.webp':'image/webp','.svg':'image/svg+xml','.woff2':'font/woff2'};
-export function createGameServer({maxRooms=16}={}){
- const rooms=new Map();
+export function createGameServer({maxRooms=16,requestsFile=process.env.MAGE_REQUESTS_FILE||resolve(root,'../data/revision-requests.json')}={}){
+ const rooms=new Map(),revisionHandler=createRevisionHandler(requestsFile);
  const server=http.createServer(async(req,res)=>{try{
-  if(req.method!=='GET'&&req.method!=='HEAD'){res.writeHead(405);return res.end();}
   const path=decodeURIComponent(new URL(req.url,'http://localhost').pathname);
+  if(await revisionHandler(req,res,path))return;
+  if(req.method!=='GET'&&req.method!=='HEAD'){res.writeHead(405);return res.end();}
   if(path==='/health'){res.writeHead(200,{'Content-Type':'application/json'});return res.end(JSON.stringify({ok:true,protocol:PROTOCOL,rooms:rooms.size}));}
   let file=resolve(root,'.'+(path==='/'?'/index.html':path));if(!file.startsWith(root.endsWith(sep)?root:root+sep)){res.writeHead(403);return res.end();}
   if(!(await stat(file)).isFile()){res.writeHead(404);return res.end();}

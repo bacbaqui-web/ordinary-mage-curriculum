@@ -11,6 +11,9 @@ ExecStart=/srv/apps/ordinary-mage/runtime/node-v24.13.0-linux-arm64/bin/node ser
 Environment=HOST=127.0.0.1
 Environment=PORT=8787
 Environment=MAX_ROOMS=4
+Environment=MAGE_REQUESTS_FILE=/var/lib/ordinary-mage/revision-requests.json
+StateDirectory=ordinary-mage
+StateDirectoryMode=0700
 Restart=on-failure
 RestartSec=3
 NoNewPrivileges=true
