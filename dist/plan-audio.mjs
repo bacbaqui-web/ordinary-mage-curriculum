@@ -1,26 +1,34 @@
-import {GameAudio} from './game-audio.mjs?v=sound1';
+import {GameAudio} from './game-audio.mjs?v=fantasy2';
 
 const audio=new GameAudio();
-// Listening here is explicit and does not change the game's saved mute setting.
+// Preview controls are independent from the game's saved mute setting.
 audio.enabled=true;
-let request=0;
-function stop(){request++;audio.stopAll();}
-window.addEventListener('pagehide',stop);
-window.addEventListener('blur',stop);
-document.addEventListener('visibilitychange',()=>{if(document.hidden)stop();});
+let enabled=true;
+const unlock=()=>{if(enabled)void audio.unlock();};
+window.addEventListener('pointerdown',unlock,{capture:true});
+window.addEventListener('keydown',unlock,{capture:true});
+window.addEventListener('pagehide',()=>audio.stopAll());
+window.addEventListener('blur',()=>{audio.focused=false;audio.stopAll();});
+window.addEventListener('focus',()=>{audio.focused=true;});
+document.addEventListener('visibilitychange',()=>{if(document.hidden)audio.stopAll();});
 
 export function mountPlanAudio(container,sequence){
- container.innerHTML='<div class="sound-actions"><button type="button" data-listen>마법 소리 듣기</button><button type="button" data-stop>소리 멈추기</button><a href="sound-check.html" target="_blank" rel="noopener">전체 효과음 듣기 ↗</a></div><p data-sound-status role="status">게임에서 사용하는 시전 소리입니다.</p>';
- const listen=container.querySelector('[data-listen]'),status=container.querySelector('[data-sound-status]');
- listen.onclick=async()=>{
-  stop();const token=request;listen.disabled=true;status.textContent='소리를 불러오는 중입니다.';
-  await audio.unlock();
-  listen.disabled=false;
-  if(token!==request)return;
-  if(!audio.available||audio.context?.state!=='running'){status.textContent='소리를 재생할 수 없습니다. 브라우저의 소리 차단 설정을 확인하고 다시 눌러 주세요.';return;}
-  if(audio.buffers.size!==14){status.textContent='효과음 파일을 불러오지 못했습니다. 잠시 후 다시 눌러 주세요.';return;}
-  audio.cast(sequence,{x:0,z:0},{x:0,z:0});status.textContent='선택한 마법의 소리를 재생했습니다.';
+ container.innerHTML='<div class="sound-actions"><button type="button" data-preview-sound></button><a href="sound-check.html" target="_blank" rel="noopener">전체 효과음 듣기 ↗</a></div><p data-sound-status role="status"></p>';
+ const button=container.querySelector('[data-preview-sound]'),status=container.querySelector('[data-sound-status]');
+ let disposed=false;
+ function label(){button.textContent=enabled?'미리보기 소리 끄기':'미리보기 소리 켜기';button.setAttribute('aria-pressed',String(enabled));}
+ function message(){
+  const text=!enabled?'미리보기 소리를 껐습니다.':!audio.available?'이 브라우저에서는 소리를 재생할 수 없습니다.':audio.failures.length&&audio.buffers.size<14?'효과음을 불러오지 못했습니다. 다시 시전을 눌러 재시도해 주세요.':audio.context?.state==='running'&&audio.buffers.size===14?'충전·시전·명중 소리가 미리보기와 함께 재생됩니다.':'마법을 선택하거나 다시 시전을 누르면 소리도 함께 재생됩니다.';
+  if(status.textContent!==text)status.textContent=text;
+ }
+ button.onclick=()=>{enabled=!enabled;audio.enabled=enabled;if(enabled)unlock();else audio.stopAll();label();message();};
+ label();message();
+ return {
+  prepare(){return enabled?audio.unlock():Promise.resolve();},
+  update({active,charging,stage}){if(disposed)return;audio.update({active:active&&enabled,charging,stage});message();},
+  cast(caster){if(!disposed)audio.cast(sequence,caster,caster);},
+  hit(target,caster){if(!disposed)audio.hit(target,caster);},
+  stop(){audio.stopAll();},
+  dispose(){disposed=true;audio.stopAll();}
  };
- container.querySelector('[data-stop]').onclick=()=>{stop();status.textContent='소리를 멈췄습니다.';};
- return stop;
 }

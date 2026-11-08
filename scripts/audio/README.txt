@@ -29,3 +29,12 @@
   https://github.com/Stability-AI/stable-audio-3
   모델 및 생성물 이용 조건: Stability AI Community License.
   도구의 MIT 라이선스와 모델 라이선스는 별개입니다.
+
+2026-11-09 · 묵직한 판타지 효과음 2차
+  generate-v2.py로 새 프롬프트·새 시드·후보 3개씩 생성합니다.
+  outputs/audio-fantasy-v2/game의 완성 파일을 dist/audio에 반영합니다.
+  원본과 후보 기록은 outputs/audio-fantasy-v2에 보관합니다.
+  35Hz 아래와 극고음을 정리하고, 130Hz 저음을 보강했습니다.
+  미리보기는 충전·시전·명중 이벤트를 연결하며, 화면 제출 직후 시전음을 시작합니다.
+  node test-plan-audio-browser.mjs로 동기화와 재생 중단을 검사합니다.
+  TEST_URL=https://radio.magamiscom.ing/mage/ 로 공개 페이지를 검사할 수 있습니다.
