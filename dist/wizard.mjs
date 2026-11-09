@@ -1,3 +1,5 @@
+import {CharacterRig} from './character-rig.mjs?v=ankle-slide-1';
+import {characterProfile} from './character-profiles.mjs?v=heel-free-1';
 import * as T from './three.module.js';
 import {MotionPuppet} from './motion-puppet.mjs?v=actor-motion-1';
 export function createWizard(scene,color,trim){
@@ -23,7 +25,7 @@ export function createWizard(scene,color,trim){
  g.userData={parts,body,arm:joints.rightArm,joints,palette,phase:0,stride:0,castTime:0};const puppet=new MotionPuppet(g);g.userData.puppet=puppet;puppet.visual.traverse(o=>{if(o.material)palette.push({material:o.material,color:o.material.color.clone()});});for(const p of parts)p.flat.visible=false;scene.add(g);return g;
 }
 export function animateWizard(g,dt,{speed=0,charging=false,chargeStage=1,cast=0,rolling=false,rollProgress=0,travelX=0,travelZ=1}={}){
- const u=g.userData,j=u.joints;if(!j)return;
+ const u=g.userData,j=u.joints;u.modelDt=dt;if(!j)return;
  if(charging&&u.puppet.magic.mode!=='hold')u.puppet.magic.press();
  u.puppet.magic.update(dt,chargeStage);
  u.puppet.update(dt,{speed:speed>0?speed/4.4:0,charging,cast});if(speed<.05&&!charging&&!cast){u.puppet.time=0;u.puppet.update(0,{speed:0});}
@@ -47,4 +49,35 @@ export function projectWizard(g,camera){
  const puppet=g.userData.puppet;
  puppet.group.rotation.copy(g.userData.body.rotation);
  puppet.render(camera);
+ const u=g.userData,rig=u.characterRig;
+ if(rig){
+  // Rig coordinates are normalized world coordinates. Temporarily cancel the
+  // actor transform, then restore it after skinning in actor-local space.
+  g.updateWorldMatrix(true,false);
+  const pose=Object.fromEntries(Object.entries(puppet.lastPositions).filter(([n])=>!n.endsWith('Toe')).map(([n,p])=>[n,g.worldToLocal(p.clone()).toArray()]));
+  u.modelRoot.matrix.copy(g.matrixWorld).invert();u.modelRoot.updateMatrixWorld(true);
+  rig.apply(pose,u.modelDt||0);
+  u.modelRoot.matrix.identity();u.modelRoot.updateMatrixWorld(true);
+ }
+}
+
+export function setWizardCharacter(g,id,{load=CharacterRig.load.bind(CharacterRig)}={}){
+ const u=g.userData,profile=characterProfile(id);
+ u.puppet.setMotionCharacter(profile.id);
+ if(u.characterId===profile.id)return u.modelReady;
+ u.characterId=profile.id;const token=u.modelToken=(u.modelToken||0)+1;
+ if(u.characterRig){const old=u.characterRig;u.palette=u.palette.filter(p=>p.rig!==old);old.dispose();u.characterRig=null;}
+ u.modelRoot?.removeFromParent();u.modelRoot=null;u.puppet.visual.visible=true;u.modelError=null;
+ if(!profile.model)return u.modelReady=Promise.resolve(null);
+ u.modelReady=load(profile.model,profile.accessories,profile.garment,profile.ankleLift,profile.ankleBack).then(rig=>{
+  if(u.modelToken!==token){rig.dispose();return null;}
+  const root=new T.Group();root.matrixAutoUpdate=false;root.add(rig.group);g.add(root);
+  u.modelRoot=root;u.characterRig=rig;u.puppet.visual.visible=false;
+  const seen=new Set();rig.group.traverse(o=>{
+   if(!o.isMesh)return;o.castShadow=true;o.receiveShadow=true;
+   for(const material of [o.material].flat())if(material?.color&&!seen.has(material)){seen.add(material);u.palette.push({material,color:material.color.clone(),rig});}
+  });
+  return rig;
+ }).catch(error=>{if(u.modelToken===token){u.modelError=error;console.warn('캐릭터 모델을 불러오지 못했습니다.',error);}return null;});
+ return u.modelReady;
 }
