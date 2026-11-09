@@ -1,7 +1,7 @@
 import {CHARACTERS,characterFor,chooseCharacter,chooseSupport} from './character-loadout.mjs';
 import {GameAudio} from './game-audio.mjs?v=sync5';
 import {damageSummary} from './damage-display.mjs?v=damage18';
-import {Duel,STEP} from './duel.mjs?v=bolt17';
+import {Duel,STEP} from './duel.mjs?v=continue3';
 import {mountPvpUI} from './pvp-ui.mjs?v=mouse2';
 import {OBSTACLES} from './arena-rules.mjs';
 let onlineCore=null,pvp=null,onlineResultShown=false,lastOnlineAim=0,onlineRenderAt=0,onlinePrevious=null;
@@ -16,11 +16,11 @@ import {chargeMoveScale} from './magic-motion.mjs';
 import {canSee} from './vision.mjs';
 import {fireSpec,hasFireRecipe} from './fire-spec.mjs?v=bolt17';
 import {BodyFollow} from './body-follow.mjs?v=stride2';
-import {bindDuelControls,mouseRecipe} from './duel-controls.mjs';
+import {bindDuelControls,mouseRecipe} from './duel-controls.mjs?v=continue3';
 let walkDirection={x:0,z:0};
 const slotLabel=k=>({q:'기본',w:'좌클릭',e:'우클릭'}[k]);
 import {createWizard,animateWizard,projectWizard} from './wizard.mjs?v=editor-live1';
-import {QueuedCharge} from './queued-charge.mjs?v=interrupt7';
+import {QueuedCharge} from './queued-charge.mjs?v=continue3';
 import {LiveMagic} from './live-magic.mjs?v=bolt17';
 import {spellReach} from './live-spells.mjs?v=bolt17';
 import {describe as describeDesign} from './combo-design.mjs?v=bolt17';
@@ -229,7 +229,8 @@ function sendWalk(){if(!onlineCore||!pvp?.playing)return;const a=onlineCore.acto
 const controls=bindDuelControls(canvas,window,{
  enabled:()=>running&&!paused&&!finished&&$('selection').classList.contains('hidden')&&$('intro').classList.contains('hidden'),
  walk:d=>{walkDirection=d;sendWalk();},
- begin:(buttons,e)=>{point(e);const recipe=mouseRecipe(buttons,progress.ranks);
+ begin:(buttons,e,extending)=>{point(e);const recipe=mouseRecipe(buttons,progress.ranks);
+  if(extending){if(onlineCore)pvp.input({action:'extend',keys:recipe});else charge.extend(recipe);return;}
   if(onlineCore){pvp.input({action:'cancel'});for(const key of recipe)pvp.input({action:'queue',key});pvp.input({action:'begin',point:{x:aim.x,z:aim.z}});return;}
   charge.clear();for(const key of recipe)charge.enqueue(key);charge.begin();
  },

@@ -37,3 +37,10 @@ test('real sockets: rooms, ready barrier, authoritative states, full room, remat
  b.ws.close();await a.wait(m=>m.type==='opponentLeft');assert.equal(room.core,null);assert.equal(room.phase,'waiting');assert.equal(room.players[0].ready,false);a.ws.close();await new Promise(r=>setTimeout(r,50));assert.equal(app.rooms.size,0);
  }finally{for(const c of clients)c.ws.terminate();await app.close();}
 });
+test('online extension preserves server charge and rejects invalid rune input',()=>{
+ const d=new Duel(loads),c=d.actors[0].charge;
+ d.input(0,{action:'queue',key:'q'});d.input(0,{action:'queue',key:'w'});d.input(0,{action:'begin',point:{x:0,z:0}});steps(d,48);const elapsed=c.elapsed;
+ assert.equal(validInput({action:'extend',keys:['q','bad']}),false);
+ assert.equal(validInput({action:'extend',keys:'qwe'}),false);
+ d.input(0,{action:'extend',keys:['q','w','e']});assert.equal(c.elapsed,elapsed);assert.deepEqual(c.queue,['q','w','e']);steps(d,60);assert.equal(c.release().parts.length,3);d.dispose();
+});

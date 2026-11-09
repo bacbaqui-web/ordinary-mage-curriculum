@@ -1,6 +1,6 @@
 import * as T from './three.module.js';
 import {LiveMagic} from './live-magic.mjs?v=bolt17';
-import {QueuedCharge} from './queued-charge.mjs';
+import {QueuedCharge} from './queued-charge.mjs?v=continue3';
 import {Roll} from './combat.mjs';
 import {ForcedMotion} from './motion.mjs';
 import {CastRecoil,chargeSetback} from './combat-response.mjs';
@@ -19,7 +19,7 @@ const motionKeys=['elapsed','duration','x','z','distance'];
 const recoilKeys=['elapsed','duration','delay','x','z','distance'];
 const pick=(o,keys)=>Object.fromEntries(keys.map(k=>[k,o[k]||0]));
 const point=p=>p&&Number.isFinite(p.x)&&Number.isFinite(p.z)&&Math.abs(p.x)<=100&&Math.abs(p.z)<=100;
-export function validInput(input){return !!input&&['aim','move','queue','begin','release','roll','cancel','stop'].includes(input.action)&&(!input.point||point(input.point))&&(!['aim','move','begin','release','roll'].includes(input.action)||point(input.point))&&(input.action!=='queue'||['q','w','e'].includes(input.key));}
+export function validInput(input){return !!input&&['aim','move','queue','extend','begin','release','roll','cancel','stop'].includes(input.action)&&(!input.point||point(input.point))&&(!['aim','move','begin','release','roll'].includes(input.action)||point(input.point))&&(input.action!=='extend'||Array.isArray(input.keys)&&input.keys.length<=3&&input.keys.every(k=>['q','w','e'].includes(k)))&&(input.action!=='queue'||['q','w','e'].includes(input.key));}
 
 // Runs at a fixed rate on the server. Browsers replay accepted inputs for effects,
 // then correct to the server snapshot; they never submit positions or damage.
@@ -41,6 +41,7 @@ export class Duel {
   switch(input.action){
    case 'move':a.target={x:input.point.x,z:input.point.z};break;
    case 'queue':c.enqueue(input.key);break;
+   case 'extend':c.extend(input.keys);break;
    case 'begin':c.begin();break;
    case 'cancel':c.clear();break;
    case 'stop':c.clear();a.target=null;break;
