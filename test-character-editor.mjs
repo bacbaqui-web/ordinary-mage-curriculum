@@ -113,3 +113,32 @@ assert.ok(rig.garment.pushed>0,'raised leg pushes coat vertices');
 for(const {mesh,vertices} of rig.garment.parts){const p=mesh.geometry.attributes.position;assert.ok(vertices.some(({index,original})=>new T.Vector3().fromBufferAttribute(p,index).distanceTo(original)>.0001));assert.ok(Array.from(p.array).every(Number.isFinite));}
 rig.apply(rig.restPose);for(const [i,{mesh}] of rig.garment.parts.entries())assert.deepEqual(Array.from(mesh.geometry.attributes.position.array),neutral[i],'coat recovers deterministically');
 console.log('PASS: legacy Neck migration, independent neck edit, rigid ankle skin and reversible coat collision');
+
+// Moving the actual bind pivot preserves rest geometry, then rotates the shoe around the cuff.
+const oldCuffRig=new CharacterRig((await new GLTFLoader().parseAsync(JSON.stringify(json),'')).scene);
+const cuffRig=new CharacterRig((await new GLTFLoader().parseAsync(JSON.stringify(json),'')).scene,{ankleLift:.075});
+let oldMesh,cuffMesh;oldCuffRig.root.traverse(m=>{if(m.isSkinnedMesh)oldMesh=m;});cuffRig.root.traverse(m=>{if(m.isSkinnedMesh)cuffMesh=m;});
+for(let i=0;i<oldMesh.geometry.attributes.position.count;i+=17){
+ const a=oldMesh.localToWorld(oldMesh.getVertexPosition(i,new T.Vector3())),b=cuffMesh.localToWorld(cuffMesh.getVertexPosition(i,new T.Vector3()));
+ assert.ok(a.distanceTo(b)<1e-5,'raising bind pivot keeps rest mesh unchanged');
+}
+assert.ok(cuffRig.restPose.LeftFoot[1]-oldCuffRig.restPose.LeftFoot[1]>.07);
+const weights=cuffMesh.geometry.attributes.skinWeight,indices=cuffMesh.geometry.attributes.skinIndex;
+let shoeIndex=-1;for(let i=0;i<weights.count;i++)if(cuffMesh.skeleton.bones[indices.getX(i)]===cuffRig.bones.LeftFoot&&weights.getX(i)>.999){shoeIndex=i;break;}
+assert.ok(shoeIndex>=0);
+const shoeBefore=cuffMesh.localToWorld(cuffMesh.getVertexPosition(shoeIndex,new T.Vector3())),pivotBefore=new T.Vector3(...cuffRig.restPose.LeftFoot),radius=shoeBefore.distanceTo(pivotBefore);
+const liftedCuff=structuredClone(cuffRig.restPose);for(const n of JOINTS)liftedCuff[n][1]+=.6;
+for(let i=0;i<360;i++)cuffRig.apply(liftedCuff,1/120);
+const pivotAfter=cuffRig.bones.LeftFoot.getWorldPosition(new T.Vector3()),shoeAfter=cuffMesh.localToWorld(cuffMesh.getVertexPosition(shoeIndex,new T.Vector3()));
+assert.ok(Math.abs(shoeAfter.distanceTo(pivotAfter)-radius)<1e-5,'shoe rotates at a fixed radius around new ankle');
+assert.ok(shoeAfter.clone().sub(pivotAfter).distanceTo(shoeBefore.clone().sub(pivotBefore))>.03,'shoe really rotates, not only handle movement');
+assert.ok(pivotAfter.distanceTo(new T.Vector3(...liftedCuff.LeftFoot))<1e-5);
+const {migrateAnklePivot}=await import('./dist/ankle-pivot.mjs');
+const legacyCuff={...structuredClone(original),rigVersion:2};const oldCuff=structuredClone(legacyCuff);
+assert.ok(migrateAnklePivot(legacyCuff,.075));assert.equal(migrateAnklePivot(legacyCuff,.075),false);
+for(const n of JOINTS.filter(n=>!n.endsWith('Foot')))assert.deepEqual(legacyCuff.actions[0].keys[0].pose[n],oldCuff.actions[0].keys[0].pose[n]);
+assert.ok(legacyCuff.actions[0].keys[0].pose.LeftFoot[1]>oldCuff.actions[0].keys[0].pose.LeftFoot[1]);
+console.log('PASS: cuff bind pivot, unchanged rest geometry, actual shoe rotation about new pivot and one-time saved pose migration');
+const cuffClearance=Math.max(cuffRig.restPose.LeftFoot[1],cuffRig.restPose.RightFoot[1]);
+const cuffCrouch=moveJoint(cuffRig.restPose,'Hips',[0,cuffRig.restPose.Hips[1]-.4,0],{footClearance:cuffClearance});
+for(const side of ['Left','Right'])assert.ok(cuffCrouch[side+'Foot'][1]>=cuffClearance-1e-6,'new ankle height governs ground contact');

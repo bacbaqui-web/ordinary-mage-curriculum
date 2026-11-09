@@ -1,3 +1,4 @@
+import {raisedAnkle} from './ankle-pivot.mjs';
 import {GarmentCollision} from './garment-collision.mjs';
 import * as T from './three.module.js';
 import {GLTFLoader} from './vendor/GLTFLoader.js';
@@ -10,8 +11,8 @@ const qworld=o=>o.getWorldQuaternion(new T.Quaternion());
 const normalizeName=n=>n.replace(/^mixamorig[:_]?/i,'').replace(/[^a-z0-9]/gi,'').toLowerCase();
 // All coordinates exposed to the editor are in the normalized model's world space.
 export class CharacterRig{
- static async load(url,accessories=[],garment=null){
-  const loader=new GLTFLoader(),rig=new CharacterRig((await loader.loadAsync(url)).scene);
+ static async load(url,accessories=[],garment=null,ankleLift=0){
+  const loader=new GLTFLoader(),rig=new CharacterRig((await loader.loadAsync(url)).scene,{ankleLift});
   try{if(garment)rig.garment=new GarmentCollision(rig,garment);for(const config of accessories)rig.addAccessory((await loader.loadAsync(config.model)).scene,config);return rig;}
   catch(error){rig.dispose();throw error;}
  }
@@ -32,7 +33,7 @@ export class CharacterRig{
   }
  }
 
- constructor(root){
+ constructor(root,{ankleLift=0}={}){
   this.group=new T.Group();this.group.add(root);this.root=root;this.all=[];const named={};
   root.traverse(o=>{if(o.isBone){this.all.push(o);named[normalizeName(o.name)]=o;}if(o.isMesh)o.frustumCulled=false;});
   this.bones=Object.fromEntries(JOINTS.map(n=>[n,named[n==='Spine'?'spine2':n.toLowerCase()]||named[n.toLowerCase()]]));
@@ -88,6 +89,24 @@ export class CharacterRig{
    }
    weights.needsUpdate=true;indices.needsUpdate=true;
   });
+  this.ankleLift=ankleLift;
+  this.originalAnkles=Object.fromEntries(['LeftFoot','RightFoot'].map(n=>[n,world(this.bones[n]).toArray()]));
+  if(ankleLift)for(const side of ['Left','Right']){
+   const bone=this.bones[side+'Foot'],before=bone.matrixWorld.clone();
+   const children=bone.children.map(child=>[child,child.matrixWorld.clone()]);
+   const next=raisedAnkle(world(bone).toArray(),world(this.bones[side+'Leg']).toArray(),ankleLift);
+   bone.position.copy(bone.parent.worldToLocal(V(next)));bone.updateWorldMatrix(false,true);
+   for(const [child,matrix] of children){
+    const local=bone.matrixWorld.clone().invert().multiply(matrix);local.decompose(child.position,child.quaternion,child.scale);
+   }
+   bone.updateWorldMatrix(false,true);
+   // Preserve B * inverseBind at rest: relocating the pivot must not move the shoe.
+   const correction=bone.matrixWorld.clone().invert().multiply(before),seen=new Set();
+   root.traverse(mesh=>{if(!mesh.isSkinnedMesh||seen.has(mesh.skeleton))return;seen.add(mesh.skeleton);
+    const index=mesh.skeleton.bones.indexOf(bone);if(index>=0)mesh.skeleton.boneInverses[index].premultiply(correction);
+   });
+  }
+  this.group.updateMatrixWorld(true);
   this.restPose=this.positions();
   this.feet={LeftFoot:new PassiveFoot(),RightFoot:new PassiveFoot()};
   this.rest=new Map(this.all.map(b=>[b,{position:b.position.clone(),quaternion:b.quaternion.clone(),world:qworld(b)}]));
@@ -159,5 +178,5 @@ export function fitProjectToRig(project,rest,sourceRest){
   const minFoot=Math.min(next.LeftFoot[1],next.RightFoot[1]);if(minFoot<.10)for(const n of JOINTS)next[n][1]+=.10-minFoot;
   k.pose=next;
  }
- result.rigVersion=2;return result;
+ result.rigVersion=3;return result;
 }

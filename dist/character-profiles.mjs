@@ -2,7 +2,7 @@ export const LEGACY_MOTION_KEY='ordinary-mage-pose-editor-v1';
 export const CHARACTERS=[
  {id:'default',name:'기본 캐릭터',label:'기본 캐릭터 · 기존 동작'},
  {id:'fire',name:'이솔',label:'화염 · 이솔'},
- {id:'ice',name:'서린',label:'빙결 · 서린',model:'assets/characters/ice.glb',garment:{hemDepth:.30,thighRadius:.145,shinRadius:.12},accessories:[{id:'ice-bag',model:'assets/characters/ice-bag.glb',joint:'Hips',width:.60,offset:[-.48,-.10,0],rotation:[0,-Math.PI/2,0],strap:{joint:'LeftArm',color:0x284b83}}]},
+ {id:'ice',name:'서린',label:'빙결 · 서린',model:'assets/characters/ice.glb',ankleLift:.075,garment:{hemDepth:.30,thighRadius:.145,shinRadius:.12},accessories:[{id:'ice-bag',model:'assets/characters/ice-bag.glb',joint:'Hips',width:.60,offset:[-.48,-.10,0],rotation:[0,-Math.PI/2,0],strap:{joint:'LeftArm',color:0x284b83}}]},
  {id:'lightning',name:'번',label:'전격 · 번'},
  {id:'earth',name:'담',label:'대지 · 담'},
  {id:'poison',name:'연두',label:'독 · 연두'},

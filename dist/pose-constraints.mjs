@@ -3,7 +3,7 @@ import {Vector3} from './three.module.js';
 export const BONES=[['Hips','Spine'],['Spine','Neck'],['Neck','Head'],['Spine','LeftArm'],['Spine','RightArm'],['LeftArm','LeftForeArm'],['LeftForeArm','LeftHand'],['RightArm','RightForeArm'],['RightForeArm','RightHand'],['Hips','LeftUpLeg'],['Hips','RightUpLeg'],['LeftUpLeg','LeftLeg'],['LeftLeg','LeftFoot'],['RightUpLeg','RightLeg'],['RightLeg','RightFoot']];
 const v=a=>new Vector3(...a);
 function shiftChildren(p,n,delta){for(const [a,b] of BONES)if(a===n){p[b]=v(p[b]).add(delta).toArray();shiftChildren(p,b,delta);}}
-function solveJoint(base,joint,target,preferredBend=null){
+function solveJoint(base,joint,target,preferredBend=null,footClearance=.10){
  let p=structuredClone(base);const end=v(target),old=v(base[joint]);
  if(joint==='Hips'){
   const d=end.clone().sub(old);p[joint]=end.toArray();shiftChildren(p,joint,d);
@@ -11,9 +11,9 @@ function solveJoint(base,joint,target,preferredBend=null){
   // through leg bending instead of stopping the entire hierarchy.
   for(const side of ['Left','Right']){
    const foot=side+'Foot';
-   if(p[foot][1]<.10){
-    const target=[p[foot][0],.10,p[foot][2]];
-    p=solveJoint(p,foot,target,new Vector3(0,0,1));
+   if(p[foot][1]<footClearance){
+    const target=[p[foot][0],footClearance,p[foot][2]];
+    p=solveJoint(p,foot,target,new Vector3(0,0,1),footClearance);
    }
   }
   return p;
@@ -34,12 +34,12 @@ function solveJoint(base,joint,target,preferredBend=null){
 }
 
 // Stop at the floor along the drag path without stretching any bones.
-export function moveJoint(base,joint,target){
+export function moveJoint(base,joint,target,{footClearance=.10}={}){
  base=withNeck(base);
- const clearance=n=>n==='Head'?.215:n.includes('Foot')?.10:0;
+ const clearance=n=>n==='Head'?.215:n.includes('Foot')?footClearance:0;
  const valid=p=>Object.entries(p).every(([n,a])=>a[1]>=Math.min(clearance(n),base[n][1])-1e-9);
- const result=solveJoint(base,joint,target);if(valid(result))return result;
+ const result=solveJoint(base,joint,target,null,footClearance);if(valid(result))return result;
  let low=0,high=1,best=structuredClone(base);
- for(let i=0;i<36;i++){const t=(low+high)/2,p=solveJoint(base,joint,base[joint].map((a,k)=>a+(target[k]-a)*t));if(valid(p)){best=p;low=t;}else high=t;}
+ for(let i=0;i<36;i++){const t=(low+high)/2,p=solveJoint(base,joint,base[joint].map((a,k)=>a+(target[k]-a)*t),null,footClearance);if(valid(p)){best=p;low=t;}else high=t;}
  return best;
 }
