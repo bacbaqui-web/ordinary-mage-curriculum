@@ -3,7 +3,7 @@ import {GarmentCollision} from './garment-collision.mjs';
 import * as T from './three.module.js';
 import {GLTFLoader} from './vendor/GLTFLoader.js';
 import {JOINTS,withNeck} from './pose-data.mjs?v=neck-ankle-1';
-import {PassiveFoot,ANKLE_CLEARANCE} from './passive-foot.mjs';
+import {ModelFoot} from './model-foot.mjs';
 import {BONES} from './pose-constraints.mjs?v=neck-ankle-1';
 const V=a=>new T.Vector3(...a);
 const world=o=>o.getWorldPosition(new T.Vector3());
@@ -108,7 +108,19 @@ export class CharacterRig{
   }
   this.group.updateMatrixWorld(true);
   this.restPose=this.positions();
-  this.feet={LeftFoot:new PassiveFoot(),RightFoot:new PassiveFoot()};
+  this.feet={};
+  for(const name of ['LeftFoot','RightFoot']){
+   const points=[],ankle=world(this.bones[name]);
+   root.traverse(mesh=>{
+    if(!mesh.isSkinnedMesh)return;
+    const {skinWeight:weights,skinIndex:indices}=mesh.geometry.attributes;
+    for(let i=0;i<weights.count;i++){
+     let weight=0;for(let k=0;k<4;k++)if(mesh.skeleton.bones[indices.getComponent(i,k)]===this.bones[name])weight+=weights.getComponent(i,k);
+     if(weight>.99)points.push(mesh.localToWorld(mesh.getVertexPosition(i,new T.Vector3())).sub(ankle).toArray());
+    }
+   });
+   this.feet[name]=new ModelFoot(points);
+  }
   this.rest=new Map(this.all.map(b=>[b,{position:b.position.clone(),quaternion:b.quaternion.clone(),world:qworld(b)}]));
   this.directions=new Map();
   const links=[['Hips','Spine'],['Spine','Neck'],['Neck','Head'],['LeftArm','LeftForeArm'],['LeftForeArm','LeftHand'],['RightArm','RightForeArm'],['RightForeArm','RightHand'],['LeftUpLeg','LeftLeg'],['LeftLeg','LeftFoot'],['RightUpLeg','RightLeg'],['RightLeg','RightFoot']];
@@ -157,9 +169,8 @@ export class CharacterRig{
    if(name==='Head'||name==='Neck')bone.quaternion.copy(qworld(bone.parent).invert().multiply(r.world)).normalize();
    if(this.feet[name]){
     // Foot rotation is a world-space ankle hinge, not inherited shin rotation.
-    // Match the old contact solver to this model's actual ankle-to-sole height.
-    const ankle=[...pose[name]];ankle[1]+=ANKLE_CLEARANCE-this.restPose[name][1];
-    const angle=dt>0?this.feet[name].update(ankle,dt).angle:0;
+    // Use the actual shoe outline and center below the raised cuff.
+    const angle=dt>0?this.feet[name].update(pose[name],dt).angle:0;
     const desired=new T.Quaternion().setFromAxisAngle(new T.Vector3(1,0,0),-angle).multiply(r.world);
     bone.quaternion.copy(qworld(bone.parent).invert().multiply(desired)).normalize();
    }

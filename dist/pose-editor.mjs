@@ -1,6 +1,6 @@
 import {migrateAnklePivot} from './ankle-pivot.mjs';
-import {CHARACTERS,characterProfile,motionStorageKey,projectForCharacter,assertCharacterImport} from './character-profiles.mjs?v=head-scarf-2';
-import {CharacterRig,fitProjectToRig} from './character-rig.mjs?v=head-scarf-2';
+import {CHARACTERS,characterProfile,motionStorageKey,projectForCharacter,assertCharacterImport} from './character-profiles.mjs?v=shoe-follow-1';
+import {CharacterRig,fitProjectToRig} from './character-rig.mjs?v=shoe-follow-1';
 import {ensureMagicClips} from './magic-clips.mjs?v=compound-label';
 import {uniqueMotions,mergeMotions} from './pose-library.mjs';
 import * as T from './three.module.js';

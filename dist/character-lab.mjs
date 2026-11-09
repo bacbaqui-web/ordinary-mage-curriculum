@@ -1,6 +1,6 @@
-import {characterProfile} from './character-profiles.mjs?v=head-scarf-2';
+import {characterProfile} from './character-profiles.mjs?v=shoe-follow-1';
 import {useMotionCharacter} from './live-motions.mjs?v=cuff-pivot-1';
-import {CharacterRig} from './character-rig.mjs?v=head-scarf-2';
+import {CharacterRig} from './character-rig.mjs?v=shoe-follow-1';
 import * as T from './three.module.js';
 import {ActionPlayback} from './action-playback.mjs';
 import {MotionPuppet,demoMotion,readMotion} from './motion-puppet.mjs?v=cuff-pivot-1';

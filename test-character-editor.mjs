@@ -61,8 +61,9 @@ const bent=structuredClone(rig.restPose);bent.LeftLeg[2]+=.2;rig.apply(bent);
 assert.ok(flat.angleTo(rig.bones.LeftFoot.getWorldQuaternion(new T.Quaternion()).normalize())<1e-6);
 const airborne=structuredClone(rig.restPose);for(const n of JOINTS)airborne[n][1]+=.8;
 for(let i=0;i<360;i++)rig.apply(airborne,1/120);
-assert.ok(Math.abs(rig.feet.LeftFoot.angle+Math.PI/2)<.02,'raised GLB foot hangs down');
-assert.ok(flat.angleTo(rig.bones.LeftFoot.getWorldQuaternion(new T.Quaternion()).normalize())>1.4);
+const [cy,cz]=rig.feet.LeftFoot.center,angle=rig.feet.LeftFoot.angle;
+assert.ok(Math.abs(cz*Math.cos(angle)-cy*Math.sin(angle))<.001,'shoe center hangs directly below its actual pivot');
+assert.ok(Math.abs(angle)<.65,'shoe does not fold by ninety degrees');
 for(let i=0;i<180;i++)rig.apply(rig.restPose,1/120);
 assert.ok(Math.abs(rig.feet.LeftFoot.angle)<.001,'landing returns foot to flat');
 assert.ok(flat.angleTo(rig.bones.LeftFoot.getWorldQuaternion(new T.Quaternion()).normalize())<1e-5);
@@ -131,7 +132,7 @@ const liftedCuff=structuredClone(cuffRig.restPose);for(const n of JOINTS)liftedC
 for(let i=0;i<360;i++)cuffRig.apply(liftedCuff,1/120);
 const pivotAfter=cuffRig.bones.LeftFoot.getWorldPosition(new T.Vector3()),shoeAfter=cuffMesh.localToWorld(cuffMesh.getVertexPosition(shoeIndex,new T.Vector3()));
 assert.ok(Math.abs(shoeAfter.distanceTo(pivotAfter)-radius)<1e-5,'shoe rotates at a fixed radius around new ankle');
-assert.ok(shoeAfter.clone().sub(pivotAfter).distanceTo(shoeBefore.clone().sub(pivotBefore))>.03,'shoe really rotates, not only handle movement');
+assert.ok(shoeAfter.clone().sub(pivotAfter).distanceTo(shoeBefore.clone().sub(pivotBefore))>.0001,'shoe really rotates about its measured center');
 assert.ok(pivotAfter.distanceTo(new T.Vector3(...liftedCuff.LeftFoot))<1e-5);
 const {migrateAnklePivot}=await import('./dist/ankle-pivot.mjs');
 const legacyCuff={...structuredClone(original),rigVersion:2};const oldCuff=structuredClone(legacyCuff);
@@ -142,3 +143,28 @@ console.log('PASS: cuff bind pivot, unchanged rest geometry, actual shoe rotatio
 const cuffClearance=Math.max(cuffRig.restPose.LeftFoot[1],cuffRig.restPose.RightFoot[1]);
 const cuffCrouch=moveJoint(cuffRig.restPose,'Hips',[0,cuffRig.restPose.Hips[1]-.4,0],{footClearance:cuffClearance});
 for(const side of ['Left','Right'])assert.ok(cuffCrouch[side+'Foot'][1]>=cuffClearance-1e-6,'new ankle height governs ground contact');
+
+// Dragging either cuff moves every rigid shoe vertex with it, without shin stretching.
+const shoeSamples={};cuffRig.apply(cuffRig.restPose);
+for(const side of ['Left','Right']){
+ const name=side+'Foot',pivot=new T.Vector3(...cuffRig.restPose[name]);shoeSamples[name]=[];
+ for(let i=0;i<weights.count;i++)if(cuffMesh.skeleton.bones[indices.getX(i)]===cuffRig.bones[name]&&weights.getX(i)>.999){
+  shoeSamples[name].push({i,offset:cuffMesh.localToWorld(cuffMesh.getVertexPosition(i,new T.Vector3())).sub(pivot)});
+ }
+ assert.ok(shoeSamples[name].length>100);
+ for(const z of [-.35,.35]){
+  const pose=moveJoint(cuffRig.restPose,name,[pivot.x,pivot.y+.25,z],{footClearance:cuffClearance});
+  for(let step=0;step<90;step++){
+   cuffRig.apply(pose,1/120);
+   const actualPivot=cuffRig.bones[name].getWorldPosition(new T.Vector3());
+   assert.ok(actualPivot.distanceTo(new T.Vector3(...pose[name]))<1e-6,'drag target and real ankle stay connected');
+   for(const {i,offset} of shoeSamples[name].filter((_,i)=>i%13===0)){
+    const actual=cuffMesh.localToWorld(cuffMesh.getVertexPosition(i,new T.Vector3()));
+    const expected=offset.clone().applyAxisAngle(new T.Vector3(1,0,0),-cuffRig.feet[name].angle).add(actualPivot);
+    assert.ok(actual.distanceTo(expected)<1e-5,'visible shoe follows actual cuff rotation and translation');
+    assert.ok(actual.y>=-1e-6,'shoe stays above floor');
+   }
+  }
+ }
+}
+console.log('PASS: left/right ankle drags, forward/backward targets, visible shoe tracking throughout swing');
