@@ -1,4 +1,4 @@
-import {IceBasic} from './ice-basic.mjs?v=icepose4';
+import {IceBasic} from './ice-basic.mjs?v=iceaim5';
 import {hasFireRecipe} from './fire-spec.mjs?v=bolt17';
 import {FireSpells} from './fire-spells.mjs?v=bolt17';
 import * as T from './three.module.js';
@@ -10,7 +10,7 @@ export class LiveMagic {
  constructor(api){this.a=api;this.ice=new IceBasic(api);this.effects=[];this.fire=new FireSpells(api);}
  clear(){this.ice.clear();this.fire.clear();for(const e of this.effects)this.a.remove(e.mesh);this.effects=[];}
  shape(kind,r=.35,form='orb'){const color=RUNES[kind].color,g=form==='wall'?new T.BoxGeometry(.2,2.4,r*2):form==='field'?new T.CylinderGeometry(r,r,.07,40):form==='blade'?new T.BoxGeometry(.12,.15,r*2):kind==='i'?new T.OctahedronGeometry(r):new T.IcosahedronGeometry(r,kind==='d'?0:1);const mesh=new T.Mesh(g,new T.MeshStandardMaterial({color,emissive:color,emissiveIntensity:.45,flatShading:true,transparent:form==='field',opacity:form==='field'?.25:1}));mesh.castShadow=true;this.a.scene.add(mesh);return mesh;}
- cast(spell,caster,dir,target,emission=null){if(spell.iceHand){this.ice.cast(caster,dir,spell.iceHand);return;}if(hasFireRecipe(spell.sequence)){this.fire.cast(spell.sequence,spell.power,caster,dir,target,emission);return;}const node=compileSpell(spell.sequence,spell.power);if(this.effects.length>90)return;this.execute(node,caster,emission?{x:emission.x,z:emission.z}:{x:caster.x,z:caster.z},dir.clone(),{x:target.x,z:target.z},{range:spellReach(spell.sequence),radius:1.2+spell.sequence.length*.25,mult:1,cone:true});}
+ cast(spell,caster,dir,target,emission=null){if(spell.iceHand){this.ice.cast(caster,dir,spell.iceHand,target);return;}if(hasFireRecipe(spell.sequence)){this.fire.cast(spell.sequence,spell.power,caster,dir,target,emission);return;}const node=compileSpell(spell.sequence,spell.power);if(this.effects.length>90)return;this.execute(node,caster,emission?{x:emission.x,z:emission.z}:{x:caster.x,z:caster.z},dir.clone(),{x:target.x,z:target.z},{range:spellReach(spell.sequence),radius:1.2+spell.sequence.length*.25,mult:1,cone:true});}
  payload(node){let p=spellPayload(node.kind,node.power);for(let n=node;n;n=n.inner){if(n.op==='i'){p.damage*=1.35;}if(n.op==='d')p.damage*=1.2;}return p;}
  apply(node,owner,point,radius,dir=null,cone=false,mult=1){const p=this.payload(node);for(const v of this.a.targets(owner)){const dx=v.x-point.x,dz=v.z-point.z,len=Math.hypot(dx,dz);if(len>radius+.4||!this.a.clearPath(point,v))continue;if(cone&&len>.01&&(dx*dir.x+dz*dir.z)/len<.45)continue;const d=new T.Vector3(dx,0,dz).normalize();if(this.a.hit(v,p.damage*mult*(node.kind==='l'&&v.wet>0?1.35:1),d,p.force,owner)){this.a.applyPayload(v,p,owner);if(p.poison){v.poison=p.poison;v.poisonTick=.5;v.poisonOwner=owner;v.poisonDamage=2*node.power;}if(p.wet)v.wet=p.wet;}}
  }
