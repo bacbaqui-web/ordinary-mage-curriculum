@@ -1,8 +1,8 @@
-import {ICE_BASIC} from './ice-basic.mjs?v=iceaim5';
+import {ICE_BASIC} from './ice-basic.mjs?v=levelrelease6';
 import * as T from './three.module.js';
-import {LiveMagic} from './live-magic.mjs?v=iceaim5';
+import {LiveMagic} from './live-magic.mjs?v=levelrelease6';
 import {QueuedCharge} from './queued-charge.mjs?v=continue3';
-import {SpaceSkill,interceptSpaceShots} from './space-skills.mjs?v=iceaim5';
+import {SpaceSkill,interceptSpaceShots} from './space-skills.mjs?v=levelrelease6';
 import {ForcedMotion} from './motion.mjs';
 import {CastRecoil,chargeSetback} from './combat-response.mjs';
 import {chargeMoveScale} from './magic-motion.mjs';
@@ -44,11 +44,11 @@ export class Duel {
    case 'move':a.target={x:input.point.x,z:input.point.z};break;
    case 'queue':c.enqueue(input.key);break;
    case 'extend':c.extend(input.keys);break;
-   case 'begin':c.begin();break;
+   case 'begin':if(c.begin())a.iceHand=input.hand==='right'?'right':'left';break;
    case 'cancel':c.clear();break;
    case 'stop':c.clear();a.target=null;break;
    case 'roll':if(!(a.iceCastLock>0)&&!a.recoil.active&&!a.motion.active&&a.roll.start(a.dir.x,a.dir.z,a,a.loadout.q,a.aim)){a.motion.clear();a.target=null;}break;
-   case 'release':{if(a.roll.active){a.roll.pendingRelease=true;break;}const result=c.release();if(!result||a.cool>0||a.loadout.q==='i'&&result.parts.length===1)break;const s=resolveSpell(result,a.loadout);if(a.mana<s.cost)break;a.mana-=s.cost;a.cool=s.tap?.16:.38;a.target=null;a.recoil.start(a.dir,s.sequence.length,hasFireRecipe(s.sequence)&&fireSpec(s.sequence).op==='h'?fireSpec(s.sequence).dashDuration:0);
+   case 'release':{if(a.roll.active){a.roll.pendingRelease=true;break;}const result=c.release();if(!result||a.cool>0)break;if(a.loadout.q==='i'&&result.parts.length===1){this.input(id,{action:'ice-basic',hand:a.iceHand||'left',point:{x:a.aim.x,z:a.aim.z}});break;}const s=resolveSpell(result,a.loadout);if(a.mana<s.cost)break;a.mana-=s.cost;a.cool=s.tap?.16:.38;a.target=null;a.recoil.start(a.dir,s.sequence.length,hasFireRecipe(s.sequence)&&fireSpec(s.sequence).op==='h'?fireSpec(s.sequence).dashDuration:0);
     // A stable emission point prevents skeleton animation from changing hit range.
     const emission=V(a.x,a.z).addScaledVector(a.dir,.5);if(!this.clearPath(a,emission))emission.set(a.x,0,a.z);
     this.magic.cast(s,a,a.dir.clone(),a.aim.clone(),emission);this.onCast(s,a);break;}
@@ -65,7 +65,7 @@ export class Duel {
   for(const a of this.actors)if(!a.roll.active&&a.roll.pendingRelease){a.roll.pendingRelease=false;this.input(a.id,{action:'release',point:{x:a.aim.x,z:a.aim.z}});}interceptSpaceShots(this.actors,this.magic,dt,m=>this.remove(m));this.magic.update(dt);for(const a of this.actors)if(a.recoil.active){const r=a.recoil.tick(dt);this.move(a,r.x,r.z);}this.statuses(dt);if(!this.finished)this.updateWards(dt);
   if(this.time>=600&&!this.finished){this.finished=true;this.winner=this.actors[0].hp===this.actors[1].hp?null:this.actors[0].hp>this.actors[1].hp?0:1;}
  }
- snapshot(){return {tick:this.tick,time:this.time,finished:this.finished,winner:this.winner,actors:this.actors.map(a=>({...pick(a,numeric),dir:{x:a.dir.x,z:a.dir.z},aim:{x:a.aim.x,z:a.aim.z},target:a.target,charge:{queue:[...a.charge.queue],parts:[...a.charge.parts],held:[...a.charge.held],active:a.charge.active,elapsed:a.charge.elapsed,progress:a.charge.progress},roll:a.roll.snapshot(),motion:pick(a.motion,motionKeys),recoil:pick(a.recoil,recoilKeys),burnOwner:a.burnOwner?.id,poisonOwner:a.poisonOwner?.id,echo:a.echo?{time:a.echo.time,damage:a.echo.damage,owner:a.echo.owner?.id}:null})),wards:this.wards.map(w=>pick(w,['x','z','hp','life','speed','travelled','effectCooldown'])),effects:[this.magic.effects,this.magic.fire.effects,this.magic.ice.effects].map(list=>list.map(e=>({type:e.type,life:e.life,point:e.point?{...e.point}:null,distance:e.distance,position:e.mesh.position.toArray()})))};}
- correct(s){this.tick=s.tick;this.time=s.time;this.finished=s.finished;this.winner=s.winner;s.actors.forEach((data,i)=>{const a=this.actors[i];Object.assign(a,pick(data,numeric));a.dir.set(data.dir.x,0,data.dir.z);a.aim.set(data.aim.x,0,data.aim.z);a.target=data.target;Object.assign(a.charge,data.charge);Object.assign(a.roll,data.roll);Object.assign(a.motion,data.motion);Object.assign(a.recoil,data.recoil);a.burnOwner=this.actors[data.burnOwner];a.poisonOwner=this.actors[data.poisonOwner];a.echo=data.echo?{...data.echo,owner:this.actors[data.echo.owner]}:null;});if(s.wards.length===this.wards.length)s.wards.forEach((w,i)=>{Object.assign(this.wards[i],w);this.wards[i].m.position.set(w.x,1.2,w.z);});[this.magic.effects,this.magic.fire.effects,this.magic.ice.effects].forEach((list,n)=>{if(list.length!==s.effects[n].length)return;list.forEach((e,i)=>{const data=s.effects[n][i];if(data.type!==e.type)return;e.life=data.life;if(data.point)e.point={...data.point};if(data.distance!==undefined)e.distance=data.distance;e.mesh.position.fromArray(data.position);});});}
+ snapshot(){return {tick:this.tick,time:this.time,finished:this.finished,winner:this.winner,actors:this.actors.map(a=>({...pick(a,numeric),iceHand:a.iceHand,dir:{x:a.dir.x,z:a.dir.z},aim:{x:a.aim.x,z:a.aim.z},target:a.target,charge:{queue:[...a.charge.queue],parts:[...a.charge.parts],held:[...a.charge.held],active:a.charge.active,elapsed:a.charge.elapsed,progress:a.charge.progress},roll:a.roll.snapshot(),motion:pick(a.motion,motionKeys),recoil:pick(a.recoil,recoilKeys),burnOwner:a.burnOwner?.id,poisonOwner:a.poisonOwner?.id,echo:a.echo?{time:a.echo.time,damage:a.echo.damage,owner:a.echo.owner?.id}:null})),wards:this.wards.map(w=>pick(w,['x','z','hp','life','speed','travelled','effectCooldown'])),effects:[this.magic.effects,this.magic.fire.effects,this.magic.ice.effects].map(list=>list.map(e=>({type:e.type,life:e.life,point:e.point?{...e.point}:null,distance:e.distance,position:e.mesh.position.toArray()})))};}
+ correct(s){this.tick=s.tick;this.time=s.time;this.finished=s.finished;this.winner=s.winner;s.actors.forEach((data,i)=>{const a=this.actors[i];Object.assign(a,pick(data,numeric));a.iceHand=data.iceHand;a.dir.set(data.dir.x,0,data.dir.z);a.aim.set(data.aim.x,0,data.aim.z);a.target=data.target;Object.assign(a.charge,data.charge);Object.assign(a.roll,data.roll);Object.assign(a.motion,data.motion);Object.assign(a.recoil,data.recoil);a.burnOwner=this.actors[data.burnOwner];a.poisonOwner=this.actors[data.poisonOwner];a.echo=data.echo?{...data.echo,owner:this.actors[data.echo.owner]}:null;});if(s.wards.length===this.wards.length)s.wards.forEach((w,i)=>{Object.assign(this.wards[i],w);this.wards[i].m.position.set(w.x,1.2,w.z);});[this.magic.effects,this.magic.fire.effects,this.magic.ice.effects].forEach((list,n)=>{if(list.length!==s.effects[n].length)return;list.forEach((e,i)=>{const data=s.effects[n][i];if(data.type!==e.type)return;e.life=data.life;if(data.point)e.point={...data.point};if(data.distance!==undefined)e.distance=data.distance;e.mesh.position.fromArray(data.position);});});}
  dispose(){this.magic.clear();for(const w of this.wards)this.remove(w.m);this.wards.length=0;}
 }
