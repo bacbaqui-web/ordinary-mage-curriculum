@@ -34,3 +34,23 @@ useMotionCharacter('ice');assert.equal(savedMotion('빙결 걷기').name,'빙결
 useMotionCharacter('fire');assert.ok(savedMotion('빙결 걷기')==null);
 useMotionCharacter('default');assert.equal(savedMotion('걷기').name,'걷기');assert.equal(records.get(motionStorageKey('default')),JSON.stringify(original));
 console.log('PASS: preview storage switches between characters without changing legacy data');
+
+// The separate bag must follow the hip without resizing or changing the body rig.
+const bagBytes=await fs.readFile('dist/assets/characters/ice-bag.glb');
+const bagJSONLength=bagBytes.readUInt32LE(12),bagJSON=JSON.parse(bagBytes.subarray(20,20+bagJSONLength));
+const bagBinOffset=28+bagJSONLength,bagBinLength=bagBytes.readUInt32LE(20+bagJSONLength);
+bagJSON.buffers=[{byteLength:bagBinLength,uri:'data:application/octet-stream;base64,'+bagBytes.subarray(bagBinOffset,bagBinOffset+bagBinLength).toString('base64')}];
+delete bagJSON.images;delete bagJSON.textures;bagJSON.materials=[{}];
+const bagScene=(await new GLTFLoader().parseAsync(JSON.stringify(bagJSON),'')).scene;
+rig.apply(rig.restPose);const restBefore=structuredClone(rig.restPose);
+rig.addAccessory(bagScene,CHARACTERS.find(c=>c.id==='ice').accessories[0]);
+const bag=rig.accessories.get('ice-bag'),box=()=>new T.Box3().setFromObject(bag.children[0],true);
+const centerBefore=box().getCenter(new T.Vector3()),sizeBefore=box().getSize(new T.Vector3());
+assert.ok(centerBefore.x<-.3,'bag is on character right');
+assert.ok(Math.abs(sizeBefore.z-.6)<.001,'bag broad face points sideways');
+const lifted=structuredClone(rig.restPose);for(const n of JOINTS)lifted[n][1]+=.3;rig.apply(lifted);
+assert.ok(Math.abs(box().getCenter(new T.Vector3()).y-centerBefore.y-.3)<1e-5);
+assert.ok(box().getSize(new T.Vector3()).distanceTo(sizeBefore)<1e-5);
+assert.deepEqual(rig.restPose,restBefore);
+assert.ok(Array.from(bag.userData.strap.mesh.geometry.attributes.position.array).every(Number.isFinite));
+console.log('PASS: actual bag dimensions, right-side placement, hip follow, strap geometry and unchanged character proportions');

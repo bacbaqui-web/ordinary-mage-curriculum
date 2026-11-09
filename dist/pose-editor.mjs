@@ -1,5 +1,5 @@
-import {CHARACTERS,characterProfile,motionStorageKey,projectForCharacter,assertCharacterImport} from './character-profiles.mjs';
-import {CharacterRig,fitProjectToRig} from './character-rig.mjs';
+import {CHARACTERS,characterProfile,motionStorageKey,projectForCharacter,assertCharacterImport} from './character-profiles.mjs?v=ice-bag-1';
+import {CharacterRig,fitProjectToRig} from './character-rig.mjs?v=ice-bag-1';
 import {ensureMagicClips} from './magic-clips.mjs?v=compound-label';
 import {uniqueMotions,mergeMotions} from './pose-library.mjs';
 import * as T from './three.module.js';
@@ -127,7 +127,7 @@ async function selectCharacter(id){
  try{
   const raw=localStorage.getItem(nextKey);let next=raw?validateProject(JSON.parse(raw)):projectForCharacter(initial(),profile.id);
   assertCharacterImport(next,profile.id);prepare(next);
-  if(profile.model){nextRig=await CharacterRig.load(profile.model);renderer();if(!next.rigVersion)next=fitProjectToRig(next,nextRig.restPose,defaultRest());else if(next.rigVersion===1){for(const a of next.actions)for(const k of a.keys)for(const n of JOINTS)k.pose[n][0]*=-1;next.rigVersion=2;}}
+  if(profile.model){nextRig=await CharacterRig.load(profile.model,profile.accessories);renderer();if(!next.rigVersion)next=fitProjectToRig(next,nextRig.restPose,defaultRest());else if(next.rigVersion===1){for(const a of next.actions)for(const k of a.keys)for(const n of JOINTS)k.pose[n][0]*=-1;next.rigVersion=2;}}
   next.characterId=profile.id;
   // A failed model load or storage write must not replace the current editor session.
   if(!raw||profile.id!=='default')localStorage.setItem(nextKey,JSON.stringify(next));

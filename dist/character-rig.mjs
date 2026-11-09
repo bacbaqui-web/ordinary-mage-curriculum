@@ -8,7 +8,28 @@ const qworld=o=>o.getWorldQuaternion(new T.Quaternion());
 const normalizeName=n=>n.replace(/^mixamorig[:_]?/i,'').replace(/[^a-z0-9]/gi,'').toLowerCase();
 // All coordinates exposed to the editor are in the normalized model's world space.
 export class CharacterRig{
- static async load(url){return new CharacterRig((await new GLTFLoader().loadAsync(url)).scene);}
+ static async load(url,accessories=[]){
+  const loader=new GLTFLoader(),rig=new CharacterRig((await loader.loadAsync(url)).scene);
+  try{for(const config of accessories)rig.addAccessory((await loader.loadAsync(config.model)).scene,config);return rig;}
+  catch(error){rig.dispose();throw error;}
+ }
+ addAccessory(root,{id,joint='Hips',width=.6,offset=[0,0,0],rotation=[0,0,0],strap=null}){
+  // Normalize the separate prop before attaching it; character proportions stay unchanged.
+  const bounds=new T.Box3().setFromObject(root,true),size=bounds.getSize(new T.Vector3()),center=bounds.getCenter(new T.Vector3());
+  const scale=width/Math.max(size.x,.001),pivot=new T.Group(),model=new T.Group();
+  root.position.sub(center);model.add(root);model.scale.setScalar(scale);model.rotation.set(...rotation);
+  model.position.set(...offset);pivot.add(model);pivot.name=id;
+  this.group.updateMatrixWorld(true);pivot.position.copy(world(this.bones[joint]));
+  // Start in normalized world axes, then retain the attachment in the bone's local frame.
+  pivot.updateMatrixWorld(true);
+  this.bones[joint].attach(pivot);this.accessories??=new Map();this.accessories.set(id,pivot);
+  if(strap){
+   const mesh=new T.Mesh(new T.BufferGeometry(),new T.MeshStandardMaterial({color:strap.color,roughness:1}));
+   pivot.add(mesh);pivot.userData.strap={mesh,joint:strap.joint,offset,halfDepth:width*.37,top:offset[1]+size.y*scale*.5};
+   this.updateStraps();
+  }
+ }
+
  constructor(root){
   this.group=new T.Group();this.group.add(root);this.root=root;this.all=[];const named={};
   root.traverse(o=>{if(o.isBone){this.all.push(o);named[normalizeName(o.name)]=o;}if(o.isMesh)o.frustumCulled=false;});
@@ -36,6 +57,26 @@ export class CharacterRig{
   for(const [a,b] of links)this.directions.set(a,{child:b,dir:V(this.restPose[b]).sub(V(this.restPose[a])).normalize()});
   this.ordered=JOINTS.slice().sort((a,b)=>this.depth(this.bones[a])-this.depth(this.bones[b]));
  }
+ updateStraps(){
+  for(const pivot of this.accessories?.values()||[]){
+   const strap=pivot.userData.strap;if(!strap)continue;
+   const shoulder=world(this.bones[strap.joint]),chest=world(this.bones.Spine);
+   const points=[
+    new T.Vector3(strap.offset[0],strap.top,strap.halfDepth),
+    pivot.worldToLocal(new T.Vector3(chest.x,chest.y,chest.z+.23)),
+    pivot.worldToLocal(shoulder.clone().add(new T.Vector3(.035,.07,.16))),
+    pivot.worldToLocal(shoulder.clone().add(new T.Vector3(.035,.09,0))),
+    pivot.worldToLocal(shoulder.clone().add(new T.Vector3(.035,.07,-.16))),
+    pivot.worldToLocal(new T.Vector3(chest.x,chest.y,chest.z-.22)),
+    new T.Vector3(strap.offset[0],strap.top,-strap.halfDepth)
+   ];
+   // Build in normalized units: the attachment has inverse bone scale from attach().
+   const signature=points.flatMap(p=>p.toArray()).map(n=>n.toFixed(5)).join(',');
+   if(signature===strap.signature)continue;strap.signature=signature;
+   const curve=new T.CatmullRomCurve3(points);strap.mesh.geometry.dispose();
+   strap.mesh.geometry=new T.TubeGeometry(curve,32,.018,4,false);
+  }
+ }
  depth(b){let n=0;while(b.parent){n++;b=b.parent;}return n;}
  positions(){this.group.updateMatrixWorld(true);return Object.fromEntries(JOINTS.map(n=>[n,world(this.bones[n]).toArray()]));}
  apply(pose){
@@ -51,7 +92,7 @@ export class CharacterRig{
    bone.parent.updateWorldMatrix(true,false);bone.position.copy(bone.parent.worldToLocal(V(pose[name])));
    bone.updateWorldMatrix(false,true);
   }
-  this.group.updateMatrixWorld(true);
+  this.group.updateMatrixWorld(true);this.updateStraps();
  }
  dispose(){this.group.traverse(o=>{o.geometry?.dispose();for(const m of [o.material].flat().filter(Boolean)){for(const val of Object.values(m))if(val?.isTexture)val.dispose();m.dispose();}});this.group.removeFromParent();}
 }
