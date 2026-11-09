@@ -1,3 +1,4 @@
+import {setCombatCamera} from './combat-hit.mjs?v=bodyhit11';
 import {fireSpec,hasFireRecipe} from './fire-spec.mjs?v=bolt17';
 import {BurnVisuals,applyBurnVisual} from './burn-visuals.mjs?v=bolt17';
 import {crossesWard,distanceToWard} from './forces.mjs';
@@ -9,7 +10,7 @@ import {canSee} from './vision.mjs';
 import * as T from './three.module.js';
 import {createWizard,animateWizard,projectWizard} from './wizard.mjs?v=castaxis8';
 import {LowPolyVFX} from './lowpoly-vfx.mjs';
-import {LiveMagic} from './live-magic.mjs?v=castaxis8';
+import {LiveMagic} from './live-magic.mjs?v=bodyhit11';
 import {RUNES} from './combo-design.mjs?v=bolt17';
 import {advanceMovingWard} from './moving-ward.mjs';
 import {ForcedMotion} from './motion.mjs';
@@ -17,7 +18,7 @@ export function mountAtlasPreview(host,seq,audio={}){
  host.innerHTML='<canvas aria-label="게임과 같은 마법 시전 미리보기"></canvas><div class="preview-controls"><button data-action="pause">일시정지</button><button data-action="restart">다시 시전</button><button data-action="view">시점 바꾸기</button><span role="status"></span></div><small>실제 게임과 같은 주문 처리와 3D 효과를 사용합니다. 연습 상대는 반복 시전마다 회복합니다.</small>';
  const canvas=host.querySelector('canvas'),status=host.querySelector('[role=status]');let renderer;try{renderer=new T.WebGLRenderer({canvas,antialias:true});}catch{status.textContent='3D 화면을 열지 못했습니다. 그래픽 가속을 켜고 새로고침해 주세요.';return()=>{};}
  renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setClearColor(0x203039);renderer.outputColorSpace=T.SRGBColorSpace;renderer.shadowMap.enabled=true;
- const scene=new T.Scene(),camera=new T.PerspectiveCamera(38,1,.1,80),vfx=new LowPolyVFX(scene),burnVisuals=new BurnVisuals(scene),feedback=new CastingFeedback(scene),chargeCamera=new ChargeCamera(),wards=[];scene.add(new T.HemisphereLight(0xd5eaff,0x58644e,2.2));const sun=new T.DirectionalLight(0xffe8c3,3);sun.position.set(-4,10,6);sun.castShadow=true;scene.add(sun);
+ const scene=new T.Scene(),camera=new T.PerspectiveCamera(38,1,.1,80),vfx=new LowPolyVFX(scene),burnVisuals=new BurnVisuals(scene),feedback=new CastingFeedback(scene),chargeCamera=new ChargeCamera(),wards=[];setCombatCamera(camera);scene.add(new T.HemisphereLight(0xd5eaff,0x58644e,2.2));const sun=new T.DirectionalLight(0xffe8c3,3);sun.position.set(-4,10,6);sun.castShadow=true;scene.add(sun);
  const floor=new T.Mesh(new T.PlaneGeometry(28,22),new T.MeshStandardMaterial({color:0x697565,roughness:1}));floor.rotation.x=-Math.PI/2;floor.receiveShadow=true;scene.add(floor);const grid=new T.GridHelper(24,24,0x7b8778,0x65735f);grid.position.y=.01;scene.add(grid);
  const caster={x:-2.4,z:0,recoil:new CastRecoil(),g:createWizard(scene,0x394351,0xe7b367)},target={x:0,z:0,hp:100,shield:0,motion:new ForcedMotion(),g:createWizard(scene,0x71566b,0xc2d6df)};caster.g.rotation.y=Math.PI/2;target.g.rotation.y=-Math.PI/2;
  const remove=mesh=>{scene.remove(mesh);mesh.traverse(o=>{o.geometry?.dispose();o.material?.dispose();});};

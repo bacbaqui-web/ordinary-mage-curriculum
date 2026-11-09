@@ -29,7 +29,7 @@ for(const op of ['d','p','e','t','g','s','h']){const base=fireSpec('q'+op),up=fi
 assert.equal(fireSpec('qqi').radius,fireSpec('qi').radius);assert.ok(fireSpec('qi').radius<4.8);
 cast('qqq');assert.ok(f.effects.filter(e=>e.type==='scorch').length>=9);assert.equal(f.effects[0].radius,6.6);
 cast('qql');assert.equal(f.effects[0].radius,2.25);assert.ok(f.effects[1].mesh.scale.x>2);
-victim.x=3.6;cast('qs');assert.equal(hits.length,0);cast('qqs');assert.ok(hits.some(h=>h.v===victim));
+victim.x=4.3;cast('qs');assert.equal(hits.length,0);cast('qqs');assert.ok(hits.some(h=>h.v===victim));
 cast('qqe');assert.ok(wards.every(w=>Math.abs(Math.hypot(w.x,w.z)-3)<1e-8));
 victim.x=1.5;cast('qqh');for(let i=0;i<12;i++)f.update(.05);assert.ok(hits.some(h=>h.force===7));assert.ok(owner.x>4.9);
 cast('qqh');blocked=true;for(let i=0;i<12;i++)f.update(.05);assert.ok(owner.x<=1);blocked=false;

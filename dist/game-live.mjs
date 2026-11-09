@@ -1,15 +1,15 @@
-import {projectileTouchesBody} from './screen-hit.mjs?v=screenhit10';
-import {HitboxView} from './hitbox-view.mjs?v=screenhit10';
+import {wardTouches,setCombatCamera} from './combat-hit.mjs?v=bodyhit11';
+import {HitboxView} from './hitbox-view.mjs?v=bodyhit11';
 import {LevelUpVfx} from './level-up-vfx.mjs?v=screenhit10';
 import {FrostVisuals} from './frost-visuals.mjs?v=screenhit10';
-import {ICE_BASIC} from './ice-basic.mjs?v=screenhit10';
-import {SpaceSkill,SPACE_SKILLS,interceptSpaceShots} from './space-skills.mjs?v=screenhit10';
+import {ICE_BASIC} from './ice-basic.mjs?v=bodyhit11';
+import {SpaceSkill,SPACE_SKILLS,interceptSpaceShots} from './space-skills.mjs?v=bodyhit11';
 import {SpaceVisuals} from './space-visuals.mjs?v=space1';
 import {CHARACTERS,characterFor,chooseCharacter,chooseSupport} from './character-loadout.mjs';
 import {GameAudio} from './game-audio.mjs?v=sync5';
 import {damageSummary} from './damage-display.mjs?v=damage18';
-import {Duel,STEP} from './duel.mjs?v=screenhit10';
-import {mountPvpUI} from './pvp-ui.mjs?v=screenhit10';
+import {Duel,STEP} from './duel.mjs?v=bodyhit11';
+import {mountPvpUI} from './pvp-ui.mjs?v=bodyhit11';
 import {OBSTACLES} from './arena-rules.mjs';
 let onlineCore=null,pvp=null,onlineResultShown=false,lastOnlineAim=0,onlineRenderAt=0,onlinePrevious=null;
 import {redLightningPlacement} from './red-lightning-spec.mjs?v=bolt17';
@@ -28,7 +28,7 @@ let walkDirection={x:0,z:0},icePressHand='left';
 const slotLabel=k=>({q:'기본',w:'좌클릭',e:'우클릭'}[k]);
 import {createWizard,animateWizard,projectWizard} from './wizard.mjs?v=screenhit10';
 import {QueuedCharge} from './queued-charge.mjs?v=continue3';
-import {LiveMagic} from './live-magic.mjs?v=screenhit10';
+import {LiveMagic} from './live-magic.mjs?v=bodyhit11';
 import {spellReach} from './live-spells.mjs?v=bolt17';
 import {describe as describeDesign} from './combo-design.mjs?v=bolt17';
 import {MeshFeedback} from './mesh-feedback.mjs';
@@ -62,7 +62,7 @@ window.addEventListener('blur',()=>{gameAudio.focused=false;gameAudio.stopAll();
 window.addEventListener('focus',()=>{gameAudio.focused=true;});
 document.addEventListener('visibilitychange',()=>{if(document.hidden)gameAudio.stopAll();});
 const renderer=new T.WebGLRenderer({canvas,antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFSoftShadowMap;renderer.outputColorSpace=T.SRGBColorSpace;renderer.setClearColor(0x2c3940);
-const scene=new T.Scene();scene.fog=new T.Fog(0x586367,55,100);const camera=new T.PerspectiveCamera(38,1,.1,100);camera.position.set(18,23,22);camera.lookAt(0,0,0);
+const scene=new T.Scene();scene.fog=new T.Fog(0x586367,55,100);const camera=new T.PerspectiveCamera(38,1,.1,100);camera.position.set(18,23,22);camera.lookAt(0,0,0);setCombatCamera(camera);
 const castingFeedback=new CastingFeedback(scene),chargeCamera=new ChargeCamera();let chargeView={distance:1,fov:38,x:0,y:0};
 const spellVfx=new LowPolyVFX(scene);const pixelVfx=new MeshFeedback(scene,spellVfx);
 
@@ -196,14 +196,12 @@ function updateForces(dt){
  w.hit.add(victim);const d=new T.Vector3(victim.x-w.x,0,victim.z-w.z).normalize();if(hit(victim,s.damage,d,0,w.owner)){applyPayload(victim,s,w.owner);const amount=displacement(s.force,distance);victim.motion.start(d.x,d.z,amount);}}
  }if(w.radius>=s.range){remove(w.m);waves.splice(i,1);}}
  for(let i=wards.length-1;i>=0;i--){const w=wards[i];advanceMovingWard(w,dt,{actors:[player,enemy,...monsters.filter(m=>!m.dead)],collides,wards});w.m.position.set(w.x,1.2,w.z);w.life-=dt;w.effectCooldown-=dt;
- if(w.hp>0&&w.life>0&&w.effectCooldown<=0){w.effectCooldown=.8;for(const victim of targets(w.owner).filter(v=>distanceToWard(v,w)<1)){const payload=w.spec;
+ if(w.hp>0&&w.life>0&&w.effectCooldown<=0){w.effectCooldown=.8;for(const victim of targets(w.owner).filter(v=>wardTouches(v,w))){const payload=w.spec;
  const side=(victim.x-w.x)*w.nx+(victim.z-w.z)*w.nz>=0?1:-1,away=new T.Vector3(w.nx*side,0,w.nz*side);
  if(payload.burn||payload.slow||payload.shock||payload.push||payload.pull){if(hit(victim,payload.shock,away,0,w.owner)){applyPayload(victim,payload,w.owner);if(payload.push)victim.motion.start(away.x,away.z,payload.push);else if(payload.pull)victim.motion.start(away.x,away.z,-payload.pull);}if(payload.shock)boltEffect(victim.x,victim.z,elementalSpec('l'));else ring(victim.x,victim.z,payload.burn?0xff9c45:payload.slow?0x72dce8:0xb4e676,.7,.3);}}
  }if(w.life<=0||w.hp<=0){spellVfx.shatter(w.x,w.z,w.width);remove(w.m);wards.splice(i,1);}}
 }
-const hitCamera=new T.PerspectiveCamera(38,1,.1,140);
-function screenHit(e,before,next,target){if(!clearPath(e.owner,target)||(e.owner===player&&!visibleTo(player,target)))return false;const fit=Math.max(1,1.1/camera.aspect);hitCamera.aspect=camera.aspect;hitCamera.position.set(player.x+12*fit,17*fit,player.z+15*fit);hitCamera.lookAt(player.x,0,player.z);hitCamera.updateProjectionMatrix();hitCamera.updateMatrixWorld(true);target.g.position.set(target.x,0,target.z);return projectileTouchesBody(e.mesh,before,next,target.body,hitCamera);}
-const liveMagic=new LiveMagic({scene,screenHit,vfx:spellVfx,remove,targets,hit,applyPayload,clearPath,collides,wallBlocks,get wards(){return wards;}});
+const liveMagic=new LiveMagic({scene,vfx:spellVfx,remove,targets,hit,applyPayload,clearPath,collides,wallBlocks,get wards(){return wards;}});
 const burnVisuals=new BurnVisuals(scene);
 function spaceSmoke(){return onlineCore?[...onlineCore.magic.fire.smokeVolumes,...onlineCore.actors.flatMap(a=>a.roll.smoke)]:[...liveMagic.fire.smokeVolumes,...roll.smoke];}
 function visibleTo(a,b){return canSee(a,b,{obstacles,walls:wards,smoke:spaceSmoke()});}
@@ -379,7 +377,7 @@ let prev=performance.now();function frame(now){requestAnimationFrame(frame);if(o
  castingFeedback.charge(a,charging,stage||1,colors,u.puppet.lastPositions,camera);
  renderCastPresentation(a,castingFeedback);
 
- }frostVisuals.update(paused?0:dt,[player,enemy,...monsters]);burnVisuals.update(paused?0:dt,[player,enemy,...monsters]);visionShade.update(paused?0:dt,player,{obstacles,walls:wards,smoke:spaceSmoke()});spaceVisuals.update(onlineCore?onlineCore.actors:[{...player,roll}]);levelUpVfx.update(paused?0:dt,camera);hitboxView.update([player,enemy,...monsters],(onlineCore?onlineCore.magic:liveMagic).ice.effects,camera);renderer.render(scene,camera)}requestAnimationFrame(frame);
+ }frostVisuals.update(paused?0:dt,[player,enemy,...monsters]);burnVisuals.update(paused?0:dt,[player,enemy,...monsters]);visionShade.update(paused?0:dt,player,{obstacles,walls:wards,smoke:spaceSmoke()});spaceVisuals.update(onlineCore?onlineCore.actors:[{...player,roll}]);levelUpVfx.update(paused?0:dt,camera);hitboxView.update([player,enemy,...monsters],[...(onlineCore?onlineCore.magic:liveMagic).ice.effects,...(onlineCore?onlineCore.magic:liveMagic).effects,...(onlineCore?onlineCore.magic:liveMagic).fire.effects],camera);renderer.render(scene,camera)}requestAnimationFrame(frame);
 // Read-only diagnostics for input and rendering verification.
 window.mageDebug=()=>({audio:gameAudio.stats(),camera:{position:camera.position.toArray(),quaternion:camera.quaternion.toArray(),fov:camera.fov,aspect:camera.aspect},online:onlineCore?{tick:onlineCore.tick,index:pvp.index,time:onlineCore.time,finished:onlineCore.finished,winner:onlineCore.winner}:null,loadout:{...loadout},running,paused,bot,finished,charge:{queue:[...charge.queue],active:charge.active,parts:[...charge.parts],held:[...charge.held],progress:charge.progress,elapsed:charge.elapsed},history:[...history],roll:{...roll.snapshot(),active:roll.active,invulnerable:roll.invulnerable},progress:structuredClone(progress),monsters:monsters.filter(m=>!m.dead).map(m=>({id:m.id,x:m.x,z:m.z,hp:m.hp})),player:{x:player.x,z:player.z,hp:player.hp,mana:player.mana},vision:{enemyVisible:enemy.g.visible,smoke:spaceSmoke()},enemy:{progress:structuredClone(enemyProgress),target:enemyTarget?.monster?'monster':enemyTarget?'player':null,x:enemy.x,z:enemy.z,hp:enemy.hp,mana:enemy.mana,loadout:{...enemyLoadout},charge:{parts:[...enemyCharge.charge.parts],progress:enemyCharge.charge.progress,remaining:enemyCharge.remaining},lastSpell:enemy.lastSpell},groundZones:fields.filter(f=>f.ground).map(f=>({x:f.x,z:f.z,radius:f.r,life:f.life})),projectiles:shots.map(s=>({kind:s.spec.kind,radius:s.spec.radius,speed:s.spec.speed,distance:s.distance})),walls:wards.map(w=>({x:w.x,z:w.z,moving:w.speed>0,travelled:w.travelled})),vfx:spellVfx.stats(),pixelVfx:pixelVfx.stats(),objects:scene.children.length});
 

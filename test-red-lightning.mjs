@@ -4,7 +4,7 @@ function cast(seq){f.clear();for(const w of wards)api.remove(w.m);wards.length=0
 function advance(t){for(let i=0;i<Math.ceil(t/.05);i++)f.update(.05);}
 for(const seq of Object.keys(RED_LIGHTNING_RECIPES)){cast(seq);assert.equal(describe(seq).name,RED_LIGHTNING_RECIPES[seq][0]);advance(12);assert.equal(f.effects.length,0,seq);}
 cast('qli');advance(.2);assert.equal(hits.length,0);advance(.2);assert.equal(hits.length,1);assert.equal(hits[0].d,8);assert.equal(v.frostSlow,2.5);advance(.3);assert.equal(hits.length,1);
-cast('qli');v.z=2;advance(.5);assert.equal(hits.length,0);
+cast('qli');v.z=3.5;advance(.5);assert.equal(hits.length,0);
 cast('qlq');advance(.4);assert.equal(hits.length,1);assert.ok(f.effects.some(e=>e.type==='redFireField'));assert.equal(hits[0].d,4);
 cast('qll');const positions=f.effects.map(e=>({...e.point}));v.x=7;advance(.4);assert.deepEqual(f.effects.filter(e=>e.type==='redStrike').map(e=>e.point),positions);advance(1);assert.equal(hits.length,0);
 cast('qlp');advance(.4);assert.equal(v.poison,6);assert.equal(v.burn,6);assert.ok(v.burn>0);

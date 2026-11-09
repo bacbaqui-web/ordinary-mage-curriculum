@@ -1,3 +1,4 @@
+import {areaTouches} from './combat-hit.mjs?v=bodyhit11';
 export const SPACE_SKILLS={
  q:{name:'불길 돌파',duration:.32,distance:2.6,cooldown:4,color:0xff6828,desc:'짧게 돌진하고 출발 지점에 2초간 불길을 남깁니다. 불길은 0.5초마다 피해 2를 줍니다.'},
  i:{name:'빙판 미끄럼',duration:.28,distance:5.5,cooldown:4.5,color:0x8bdcff,desc:'마우스 지점까지 빠르게 미끄러집니다. 최대 5.5m이며 벽을 넘지 못합니다. 얼음길을 밟은 적은 느려집니다.'},
@@ -21,9 +22,9 @@ export class SpaceSkill{
  if(['q','p','t','l','g'].includes(kind))this.zones.push({x:actor.x+(kind==='p'?this.faceX:kind==='g'?this.faceX*3.8:0),z:actor.z+(kind==='p'?this.faceZ:kind==='g'?this.faceZ*3.8:0),radius:kind==='t'?1.7:kind==='p'?1.25:.85,life:kind==='q'?2:kind==='p'?1.8:kind==='t'?3:.5,kind,tick:0});return true;}
  guard(damage,force,dir,source,actor){if(!this.active)return {damage,force};if(this.invulnerable)return {damage:0,force:0,blocked:true};if(this.kind==='d')return {damage:damage*.3,force:0};if(this.kind==='e'&&source&&Math.hypot(source.x-actor.x,source.z-actor.z)<2.1&&(-dir.x*this.faceX-dir.z*this.faceZ)>.4)return {damage:damage*.2,force:0};return {damage,force};}
  tick(dt,actor=null,api=null){const was=this.active,before=this.age,used=Math.min(dt,this.remaining);this.age+=used;this.remaining=Math.max(0,this.remaining-dt);this.cooldown=Math.max(0,this.cooldown-dt);this.speedBoost=false;
- if(actor&&api){for(const zone of this.zones){zone.life-=dt;zone.tick-=dt;if(zone.kind==='t'&&Math.hypot(actor.x-zone.x,actor.z-zone.z)<zone.radius){actor.slow=0;actor.frostSlow=0;this.speedBoost=true;}if(zone.life>0&&zone.tick<=0){zone.tick=.5;for(const target of api.targets(actor)){if(Math.hypot(target.x-zone.x,target.z-zone.z)>zone.radius+.3||!api.clearPath(zone,target))continue;if(zone.kind==='q')api.hit(target,2,{x:0,z:0},0,actor);if(zone.kind==='i')target.slow=Math.max(target.slow||0,.7);}}}this.zones=this.zones.filter(z=>z.life>0);
+ if(actor&&api){for(const zone of this.zones){zone.life-=dt;zone.tick-=dt;if(zone.kind==='t'&&Math.hypot(actor.x-zone.x,actor.z-zone.z)<zone.radius){actor.slow=0;actor.frostSlow=0;this.speedBoost=true;}if(zone.life>0&&zone.tick<=0){zone.tick=.5;for(const target of api.targets(actor)){if(!areaTouches(target,zone,zone.radius,null,false,false,.2)||!api.clearPath(zone,target))continue;if(zone.kind==='q')api.hit(target,2,{x:0,z:0},0,actor);if(zone.kind==='i')target.slow=Math.max(target.slow||0,.7);}}}this.zones=this.zones.filter(z=>z.life>0);
  if(was&&this.kind==='i'){this.trailClock-=dt;if(this.trailClock<=0){this.trailClock=.03;this.zones.push({x:actor.x,z:actor.z,radius:.65,life:2,kind:'i',tick:0});}}
- if(was&&this.kind==='h'&&!this.hitDone){const target=api.targets(actor).find(t=>Math.hypot(t.x-actor.x,t.z-actor.z)<1&&((t.x-actor.x)*this.faceX+(t.z-actor.z)*this.faceZ)>-.2&&api.clearPath(actor,t));if(target){api.hit(target,3,{x:this.faceX,z:this.faceZ},4.8,actor);this.hitDone=true;}}
+ if(was&&this.kind==='h'&&!this.hitDone){const target=api.targets(actor).find(t=>areaTouches(t,actor,1,{x:this.faceX,z:this.faceZ},true)&&api.clearPath(actor,t));if(target){api.hit(target,3,{x:this.faceX,z:this.faceZ},4.8,actor);this.hitDone=true;}}
  }
  const delay=this.spec.delay||0,end=this.kind==='h'?.32:this.spec.duration;
  const fraction=Math.max(0,Math.min(end,this.age)-Math.max(delay,before))/Math.max(.01,end-delay);
