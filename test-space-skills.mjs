@@ -13,7 +13,7 @@ test('every character pauses charge only during the skill, retaining queue and r
  for(const kind of Object.keys(SPACE_SKILLS)){const d=new Duel(loads(kind)),a=d.actors[0],c=a.charge;a.x=-12;a.z=12;for(const key of ['q','w','e'])d.input(0,{action:'queue',key});d.input(0,{action:'begin',point:{x:-8,z:12}});d.step(.8);const before=c.elapsed;d.input(0,{action:'roll',point:{x:-8,z:12}});d.step(.08);assert.equal(c.elapsed,before,kind);assert.deepEqual(c.queue,['q','w','e']);for(let i=0;i<30;i++)d.step(.03);assert.ok(c.elapsed>before,kind);d.dispose();}
 });
 test('release during skill waits and casts exactly once at the end',()=>{
- let casts=0;const d=new Duel(loads('i'),{onCast:()=>casts++});d.input(0,{action:'queue',key:'q'});d.input(0,{action:'begin',point:{x:2,z:0}});d.step(.2);d.input(0,{action:'roll',point:{x:2,z:0}});d.input(0,{action:'release',point:{x:2,z:0}});assert.equal(casts,0);assert.ok(d.actors[0].charge.active);for(let i=0;i<30;i++)d.step();assert.equal(casts,1);d.dispose();
+ let casts=0;const d=new Duel(loads('d'),{onCast:()=>casts++});d.input(0,{action:'queue',key:'q'});d.input(0,{action:'begin',point:{x:2,z:0}});d.step(.2);d.input(0,{action:'roll',point:{x:2,z:0}});d.input(0,{action:'release',point:{x:2,z:0}});assert.equal(casts,0);assert.ok(d.actors[0].charge.active);for(let i=0;i<30;i++)d.step();assert.equal(casts,1);d.dispose();
 });
 test('earth resists damage and knockback; only lightning has invulnerability',()=>{
  const d=new Duel(loads('d')),a=d.actors[0];d.input(0,{action:'roll',point:{x:2,z:0}});d.hit(a,10,new T.Vector3(1,0,0),4,d.actors[1]);assert.equal(a.hp,97);assert.equal(a.motion.active,false);d.dispose();
