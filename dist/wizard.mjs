@@ -1,5 +1,5 @@
 import * as T from './three.module.js';
-import {MotionPuppet} from './motion-puppet.mjs?v=icepose4';
+import {MotionPuppet} from './motion-puppet.mjs?v=icestraight7';
 export function createWizard(scene,color,trim){
  const g=new T.Group(),body=new T.Group();body.position.y=1;g.add(body);
  const palette=[],joints={},parts=[];

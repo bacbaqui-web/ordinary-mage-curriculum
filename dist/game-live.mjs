@@ -1,13 +1,13 @@
-import {LevelUpVfx} from './level-up-vfx.mjs?v=levelrelease6';
-import {FrostVisuals} from './frost-visuals.mjs?v=levelrelease6';
-import {ICE_BASIC} from './ice-basic.mjs?v=levelrelease6';
-import {SpaceSkill,SPACE_SKILLS,interceptSpaceShots} from './space-skills.mjs?v=levelrelease6';
+import {LevelUpVfx} from './level-up-vfx.mjs?v=icestraight7';
+import {FrostVisuals} from './frost-visuals.mjs?v=icestraight7';
+import {ICE_BASIC} from './ice-basic.mjs?v=icestraight7';
+import {SpaceSkill,SPACE_SKILLS,interceptSpaceShots} from './space-skills.mjs?v=icestraight7';
 import {SpaceVisuals} from './space-visuals.mjs?v=space1';
 import {CHARACTERS,characterFor,chooseCharacter,chooseSupport} from './character-loadout.mjs';
 import {GameAudio} from './game-audio.mjs?v=sync5';
 import {damageSummary} from './damage-display.mjs?v=damage18';
-import {Duel,STEP} from './duel.mjs?v=levelrelease6';
-import {mountPvpUI} from './pvp-ui.mjs?v=levelrelease6';
+import {Duel,STEP} from './duel.mjs?v=icestraight7';
+import {mountPvpUI} from './pvp-ui.mjs?v=icestraight7';
 import {OBSTACLES} from './arena-rules.mjs';
 let onlineCore=null,pvp=null,onlineResultShown=false,lastOnlineAim=0,onlineRenderAt=0,onlinePrevious=null;
 import {redLightningPlacement} from './red-lightning-spec.mjs?v=bolt17';
@@ -24,9 +24,9 @@ import {BodyFollow} from './body-follow.mjs?v=stride2';
 import {bindDuelControls,mouseRecipe} from './duel-controls.mjs?v=continue3';
 let walkDirection={x:0,z:0},icePressHand='left';
 const slotLabel=k=>({q:'기본',w:'좌클릭',e:'우클릭'}[k]);
-import {createWizard,animateWizard,projectWizard} from './wizard.mjs?v=levelrelease6';
+import {createWizard,animateWizard,projectWizard} from './wizard.mjs?v=icestraight7';
 import {QueuedCharge} from './queued-charge.mjs?v=continue3';
-import {LiveMagic} from './live-magic.mjs?v=levelrelease6';
+import {LiveMagic} from './live-magic.mjs?v=icestraight7';
 import {spellReach} from './live-spells.mjs?v=bolt17';
 import {describe as describeDesign} from './combo-design.mjs?v=bolt17';
 import {MeshFeedback} from './mesh-feedback.mjs';
@@ -217,7 +217,7 @@ function cast(result,iceHand=null){if(loadout.q==='i'&&result.parts.length===1&&
 function endRound(win){if(!bot){const a=win?enemy:player;a.hp=100;a.shield=0;a.burn=0;a.slow=0;a.echo=null;flash(win?'연습 상대의 체력을 회복했습니다':'연습 모드 · 체력을 회복했습니다');return}finished=true;charge.clear();enemyCharge.clear();moveTarget=null;if(win)wins++;else losses++;$('wins').textContent=wins;$('losses').textContent=losses;$('resultTitle').textContent=win?'승리':'패배';$('resultText').textContent=win?'주문을 조합해 상대 마법사를 제압했습니다.':'몬스터의 공격을 피하며 사냥하세요. 새 대결은 레벨 1부터 시작합니다.';$('result').classList.remove('hidden')}
 function reset(){walkDirection={x:0,z:0};gameAudio.stopAll();levelUpVfx.clear();frostVisuals.clear();burnVisuals.clear();for(const a of[player,enemy]){a.ashTime=0;a.greenFireTime=0;}hitScreen.clear();for(const a of[player,enemy])a.recoil?.clear();castingFeedback.clear();chargeCamera.clear();liveMagic.clear();resetHunt();spellVfx.clear();pixelVfx.clear();enemy.strikePoint=null;enemy.strikeLocked=false;enemyCharge.clear();enemyLoadout=chooseLoadout();enemyProgress=createProgress(enemyLoadout);enemyTarget=null;enemy.retaliate=0;fallingStrikes=[];enemy.lastSpell="";enemy.lastSpellTime=0;for(const a of[player,enemy]){a.motion.clear();a.hitFlash=0;a.pendingCastLight=null;a.poison=0;a.wet=0;a.frostSlow=0;a.slow=0;a.burn=0;a.echo=null;a.burnTick=0;a.shieldHeat=false;}roll.reset();roll.kind=loadout.q;player.roll=roll;player.velocity=new T.Vector3();enemy.dodge=0;enemy.dodgeCool=0;enemy.defendCool=0;enemy.attackCount=0;enemy.sidestep=1;for(const s of shots)remove(s.m);for(const f of fields)remove(f.m);for(const f of fx)remove(f.m);for(const w of [...waves,...wards])remove(w.m);waves=[];wards=[];shots=[];fields=[];fx=[];Object.assign(player,{iceLeftCool:0,iceRightCool:0,iceCastLock:0,x:-5,z:4,hp:100,mana:100,shield:0,shieldTime:0,cool:0});Object.assign(enemy,{x:16,z:-14,hp:100,mana:100,shield:0,shieldTime:0,cool:2,wind:0});charge.clear();moveTarget=null;finished=false;paused=false;clock=0;history=[];$('history').textContent='짧게 클릭하면 기본 마법, 길게 누르면 조합합니다.';$('result').classList.add('hidden');$('paused').classList.add('hidden');$('pause').textContent='일시정지';$('spellName').textContent='좌클릭 · 우클릭';$('tier').textContent='1륜 · 준비';$('queue').textContent='좌·우 클릭으로 마법을 사용하세요'}
 function pause(value=!paused){controls.reset();if(onlineCore){pvp?.input({action:"stop"});return;}if(!running||finished)return;paused=value;charge.clear();moveTarget=null;$('paused').classList.toggle('hidden',!paused);$('pause').textContent=paused?'계속하기':'일시정지'}
-function point(e){const rect=canvas.getBoundingClientRect();pointer.set((e.clientX-rect.left)/rect.width*2-1,-(e.clientY-rect.top)/rect.height*2+1);ray.setFromCamera(pointer,camera);const pos=new T.Vector3();if(ray.ray.intersectPlane(ground,pos)){aim.copy(pos);const d=pos.clone().sub(new T.Vector3(player.x,0,player.z));if(d.length()>.1)player.dir.copy(d.normalize());}return pos}
+function point(e,iceAim=false){const rect=canvas.getBoundingClientRect();pointer.set((e.clientX-rect.left)/rect.width*2-1,-(e.clientY-rect.top)/rect.height*2+1);ray.setFromCamera(pointer,camera);const pos=new T.Vector3();if(ray.ray.intersectPlane(iceAim?new T.Plane(new T.Vector3(0,1,0),-1.42):ground,pos)){pos.y=0;aim.copy(pos);const d=pos.clone().sub(new T.Vector3(player.x,0,player.z));if(d.length()>.1)player.dir.copy(d.normalize());}return pos}
 canvas.addEventListener('pointermove',e=>{point(e);if(onlineCore&&performance.now()-lastOnlineAim>40){lastOnlineAim=performance.now();pvp.input({action:'aim',point:{x:aim.x,z:aim.z}});}});
 window.addEventListener('keydown',e=>{
  if(e.target.closest?.('input,textarea,select,[contenteditable=true]'))return;
@@ -240,7 +240,7 @@ const controls=bindDuelControls(canvas,window,{
   if(onlineCore){pvp.input({action:'cancel'});for(const key of recipe)pvp.input({action:'queue',key});pvp.input({action:'begin',hand:icePressHand,point:{x:aim.x,z:aim.z}});return;}
   charge.clear();for(const key of recipe)charge.enqueue(key);charge.begin();
  },
- release:e=>{point(e);if(onlineCore){pvp.input({action:'release',point:{x:aim.x,z:aim.z}});return;}if(roll.active){roll.pendingRelease=true;return;}const result=charge.release();if(result)cast(result);},
+ release:e=>{point(e,loadout.q==='i'&&icePressHand==='left'&&(charge.queue.length===1||charge.elapsed<2.4));if(onlineCore){pvp.input({action:'release',point:{x:aim.x,z:aim.z}});return;}if(roll.active){roll.pendingRelease=true;return;}const result=charge.release();if(result)cast(result);},
  cancel:()=>{if(onlineCore)pvp.input({action:'cancel'});else charge.clear();}
 });
 window.addEventListener('blur',()=>pause(true));document.addEventListener('visibilitychange',()=>{if(document.hidden)pause(true)});
@@ -362,10 +362,12 @@ let prev=performance.now();function frame(now){requestAnimationFrame(frame);if(o
  const previous=u.animationPosition||{x:a.x,z:a.z},speed=step?Math.hypot(a.x-previous.x,a.z-previous.z)/step:0;
  const activeSpace=a===player?roll:onlineCore?.actors[1-pvp.index].roll;
  animateWizard(a.g,step,{speed:activeSpace?.active?0:speed,charging,chargeStage:stage||1,cast:a.castFlash||0});
- u.puppet.bodyFollow??=new BodyFollow();
- u.puppet.bodyFollow.update(step,{aim:Math.atan2(a.dir.x,a.dir.z)});
  const iceEngine=onlineCore?onlineCore.magic.ice:liveMagic.ice,iceOwner=onlineCore?onlineCore.actors[a===player?pvp.index:1-pvp.index]:a;
  u.puppet.icePose=iceEngine.pose(iceOwner);
+ const iceFacing=u.puppet.icePose.find(p=>p.hand==='left')?.dir,displayDir=iceFacing||a.dir;
+ u.puppet.bodyFollow??=new BodyFollow();
+ if(iceFacing){a.g.rotation.y=Math.atan2(displayDir.x,displayDir.z);u.body.rotation.set(0,0,0);u.puppet.bodyFollow.ready=false;}
+ u.puppet.bodyFollow.update(step,{aim:Math.atan2(displayDir.x,displayDir.z)});
  u.animationPosition={x:a.x,z:a.z};projectWizard(a.g,camera);iceEngine.syncHands(iceOwner,u.puppet);
  const runes=a===player?loadout:enemyLoadout,parts=a===player?charge.parts:enemyCharge.charge.parts,colors=parts.map(k=>RUNES[runes[k]]?.color||'#ffffff');
  castingFeedback.charge(a,charging,stage||1,colors,u.puppet.lastPositions,camera);
