@@ -33,3 +33,13 @@ assert.ok(Math.abs(crouch.Head[1]-base.Head[1]+.5)<1e-8,'upper body follows pelv
 const lifted=moveJoint(base,'Hips',[.3,1.5,.2]);
 for(const n of JOINTS)assert.ok(new Vector3(...lifted[n]).distanceTo(new Vector3(...base[n]).add(new Vector3(.3,.5,.2)))<1e-6);
 console.log('골반 이동: 상체 따라가기, 발 접지, 무릎 굽힘, 몸 전체 들어올리기 확인');
+
+// Slight downward pointer travel must not freeze horizontal ankle movement.
+for(const side of ['Left','Right'])for(const delta of [[0,-.01,.1],[.08,-.3,0],[0,-2,-.1]]){
+ const name=side+'Foot',start=crouch[name],target=start.map((x,i)=>x+delta[i]);
+ const moved=moveJoint(crouch,name,target);
+ assert.ok(Math.abs(moved[name][1]-.1)<1e-6,'ankle stays at floor');
+ assert.ok(Math.abs(moved[name][0]-target[0])<1e-6&&Math.abs(moved[name][2]-target[2])<1e-6,'ankle slides to reachable horizontal target');
+ for(const [a,b] of BONES)assert.ok(Math.abs(dist(moved,a,b)-dist(crouch,a,b))<1e-6);
+}
+console.log('PASS: diagonal downward ankle drags slide along floor without stretching legs');

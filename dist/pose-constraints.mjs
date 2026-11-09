@@ -38,6 +38,8 @@ export function moveJoint(base,joint,target,{footClearance=.10}={}){
  base=withNeck(base);
  const clearance=n=>n==='Head'?.215:n.includes('Foot')?footClearance:0;
  const valid=p=>Object.entries(p).every(([n,a])=>a[1]>=Math.min(clearance(n),base[n][1])-1e-9);
+ // Slide ankle targets along the floor instead of rejecting the entire diagonal drag.
+ if(joint.endsWith('Foot'))target=[target[0],Math.max(target[1],Math.min(footClearance,base[joint][1])),target[2]];
  const result=solveJoint(base,joint,target,null,footClearance);if(valid(result))return result;
  let low=0,high=1,best=structuredClone(base);
  for(let i=0;i<36;i++){const t=(low+high)/2,p=solveJoint(base,joint,base[joint].map((a,k)=>a+(target[k]-a)*t),null,footClearance);if(valid(p)){best=p;low=t;}else high=t;}

@@ -4,7 +4,7 @@ import * as T from './three.module.js';
 import {GLTFLoader} from './vendor/GLTFLoader.js';
 import {JOINTS,withNeck} from './pose-data.mjs?v=neck-ankle-1';
 import {ModelFoot} from './model-foot.mjs?v=heel-free-1';
-import {BONES} from './pose-constraints.mjs?v=neck-ankle-1';
+import {BONES} from './pose-constraints.mjs?v=ankle-slide-1';
 const V=a=>new T.Vector3(...a);
 const world=o=>o.getWorldPosition(new T.Vector3());
 const qworld=o=>o.getWorldQuaternion(new T.Quaternion());

@@ -1,6 +1,6 @@
 import {migrateAnklePivot} from './ankle-pivot.mjs?v=heel-free-1';
 import {CHARACTERS,characterProfile,motionStorageKey,projectForCharacter,assertCharacterImport} from './character-profiles.mjs?v=heel-free-1';
-import {CharacterRig,fitProjectToRig} from './character-rig.mjs?v=heel-free-1';
+import {CharacterRig,fitProjectToRig} from './character-rig.mjs?v=ankle-slide-1';
 import {ensureMagicClips} from './magic-clips.mjs?v=compound-label';
 import {uniqueMotions,mergeMotions} from './pose-library.mjs';
 import * as T from './three.module.js';
@@ -8,7 +8,7 @@ import {footFaces} from './foot-shape.mjs';
 import {PassiveFoot} from './passive-foot.mjs';
 const feet={LeftFoot:new PassiveFoot(),RightFoot:new PassiveFoot()};
 let footShapes={};
-import {moveJoint as movePoseJoint} from './pose-constraints.mjs?v=cuff-pivot-1';
+import {moveJoint as movePoseJoint} from './pose-constraints.mjs?v=ankle-slide-1';
 import {demoMotion} from './motion-puppet.mjs?v=heel-free-1';
 import {JOINTS,LABELS,samplePose,validateProject} from './pose-data.mjs?v=cuff-pivot-1';
 const $=id=>document.getElementById(id);

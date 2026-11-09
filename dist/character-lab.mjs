@@ -1,6 +1,6 @@
 import {characterProfile} from './character-profiles.mjs?v=heel-free-1';
 import {useMotionCharacter} from './live-motions.mjs?v=heel-free-1';
-import {CharacterRig} from './character-rig.mjs?v=heel-free-1';
+import {CharacterRig} from './character-rig.mjs?v=ankle-slide-1';
 import * as T from './three.module.js';
 import {ActionPlayback} from './action-playback.mjs';
 import {MotionPuppet,demoMotion,readMotion} from './motion-puppet.mjs?v=heel-free-1';
