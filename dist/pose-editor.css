@@ -3,3 +3,5 @@
 input[hidden]{display:none!important}header .button{margin:0}
 
 #timeline button{touch-action:none;user-select:none}#timeline .key{cursor:grab}#timeline .drag-source{opacity:.45;cursor:grabbing}#timeline .drop-target{outline:2px solid #a9e3ff;outline-offset:-2px;background:#426578}
+
+#motionControls{border:0;padding:0;margin:0;min-width:0}#modelStatus{color:#a9d5ed;font-size:12px;line-height:1.5}fieldset:disabled{opacity:.55}

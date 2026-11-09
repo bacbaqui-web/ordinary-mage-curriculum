@@ -1,5 +1,7 @@
 import {validateProject,samplePose} from './pose-data.mjs';
-const storage='ordinary-mage-pose-editor-v1';
+import {motionStorageKey} from './character-profiles.mjs';
+let storage=motionStorageKey('default');
+export function useMotionCharacter(id){storage=motionStorageKey(id);refresh();}
 let project=null;
 function refresh(){try{const raw=globalThis.localStorage?.getItem(storage);project=raw?validateProject(JSON.parse(raw)):null;}catch{project=null;}}
 refresh();
