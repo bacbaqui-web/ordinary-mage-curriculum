@@ -1,5 +1,5 @@
 import {magicClipName} from './magic-clips.mjs';
-import {savedMotion,savedPose} from './live-motions.mjs?v=heel-free-1';
+import {savedMotion,savedPose,createMotionReader} from './live-motions.mjs?v=actor-motion-1';
 import * as T from './three.module.js';
 import {MagicMotion} from './magic-motion.mjs';
 import {actionClips} from './action-clips.mjs';
@@ -32,6 +32,7 @@ export class MotionPuppet{
   this.eyes=[-.085,.085].map(x=>{const m=new T.Mesh(new T.CircleGeometry(.025,8),material(0x25313b));m.userData.x=x;this.visual.add(m);return m;});
   this.magic=new MagicMotion();this.setMotion(motion);
  }
+ setMotionCharacter(id){if(this.motionCharacter===id)return;this.motionCharacter=id;this.motionReader=createMotionReader(id);}
  setMotion({root,clips},mapping={}){
   const bones={};root.traverse(o=>{const key=o.name.replace(/^mixamorig[:_]?/i,'').replace(/[^a-z]/gi,'').toLowerCase();for(const n of names)if(key===n.toLowerCase())bones[n]=o;});
   for(const [n,name] of Object.entries(mapping))bones[n]=root.getObjectByName(name);
@@ -43,6 +44,7 @@ export class MotionPuppet{
  select(i){this.selectedClip=i;this.mixer.stopAllAction();this.action=this.mixer.clipAction(this.clips[i]);this.action.play();this.time=0;}
  update(dt,{speed=1,charging=false,cast=0}={}){this.time+=dt*speed;this.mixer.setTime(this.time);this.source.updateMatrixWorld(true);this.charging=charging;this.cast=cast;}
  render(camera){
+  const {savedMotion:readMotion,savedPose:readPose}=this.motionReader||{savedMotion,savedPose};
   this.group.updateWorldMatrix(true,false);camera.updateWorldMatrix(true,false);
   const positions={},hip=this.bones.Hips.getWorldPosition(new T.Vector3());
   for(const n of names)positions[n]=this.bones[n].getWorldPosition(new T.Vector3()).sub(hip).multiplyScalar(this.scale).add(new T.Vector3(0,1,0));
@@ -50,11 +52,11 @@ export class MotionPuppet{
   if(this.magic.mode==='idle'&&(this.charging||this.cast>0)){positions.RightForeArm.copy(positions.RightArm).add(new T.Vector3(0,-.08,.31));positions.RightHand.copy(positions.RightForeArm).add(new T.Vector3(0,this.charging?.2:0,.3));}
   this.magic.apply(positions);
   const specific=this.magic.mode!=='idle'?magicClipName(this.magic.stage,this.magic.mode):null;
-  const split=specific&&savedMotion(specific);
+  const split=specific&&readMotion(specific);
   const motionName=this.magic.mode!=='idle'?(split?specific:'마법 시전'):this.clips[this.selectedClip]?.name;
-  const edited=savedPose(motionName,this.magic.mode!=='idle'?(split?this.magic.phaseElapsed:this.magic.elapsed):(this.editorActionTime??this.time),{loop:this.magic.mode==='idle'&&this.editorActionTime===undefined,hold:!split&&this.magic.mode==='hold'});
+  const edited=readPose(motionName,this.magic.mode!=='idle'?(split?this.magic.phaseElapsed:this.magic.elapsed):(this.editorActionTime??this.time),{loop:this.magic.mode==='idle'&&this.editorActionTime===undefined,hold:!split&&this.magic.mode==='hold'});
   if(edited){for(const [n,a] of Object.entries(edited))positions[n]=new T.Vector3(...a);positions.LeftToe=positions.LeftFoot.clone().add(new T.Vector3(0,0,.22));positions.RightToe=positions.RightFoot.clone().add(new T.Vector3(0,0,.22));}
-  const magicClip=savedMotion(magicClipName(this.magic.stage,'release'))||savedMotion('마법 시전');this.magic.splitRelease=!!savedMotion(magicClipName(this.magic.stage,'release'));this.magic.releaseDuration=magicClip?Math.max(10/12,magicClip.frames/magicClip.fps):10/12;
+  const magicClip=readMotion(magicClipName(this.magic.stage,'release'))||readMotion('마법 시전');this.magic.splitRelease=!!readMotion(magicClipName(this.magic.stage,'release'));this.magic.releaseDuration=magicClip?Math.max(10/12,magicClip.frames/magicClip.fps):10/12;
   this.bodyFollow?.apply(positions,this.group);
   for(const n of Object.keys(positions))this.group.localToWorld(positions[n]);
   // Basic ice casts own the arm pose, after saved clips and body turning.

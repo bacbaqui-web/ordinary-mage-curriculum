@@ -34,3 +34,21 @@ const legacy={actions:[{name:'3륜 충전',keys:[{frame:4,pose:{Head:[1,2,3]}}]}
 const priorKeys=JSON.stringify(legacy.actions.map(a=>a.keys));assert.equal(ensureMagicClips(legacy),true);
 assert.deepEqual(legacy.actions.map(a=>a.name),['2륜 복합 충전','2륜 복합 발사']);
 assert.deepEqual(legacy.actions.map(a=>a.binding),['3륜 충전','3륜 발사']);assert.equal(JSON.stringify(legacy.actions.map(a=>a.keys)),priorKeys);assert.equal(ensureMagicClips(legacy),false);
+
+// Actual game wizard instances use independent character motion stores.
+const {createWizard,projectWizard}=await import('./dist/wizard.mjs');
+const {motionStorageKey}=await import('./dist/character-profiles.mjs');
+const stores=new Map();globalThis.localStorage={getItem:key=>stores.get(key)||null};
+const put=(id,y)=>stores.set(motionStorageKey(id),JSON.stringify({version:1,rigVersion:7,characterId:id,actions:[makeWalk(y)]}));
+put('default',1.4);put('ice',2.1);put('fire',1.7);
+const gameScene=new T.Scene(),iceWizard=createWizard(gameScene,0,0),fireWizard=createWizard(gameScene,0,0);
+iceWizard.userData.puppet.setMotionCharacter('ice');fireWizard.userData.puppet.setMotionCharacter('fire');
+projectWizard(iceWizard,camera);projectWizard(fireWizard,camera);
+assert.equal(iceWizard.userData.puppet.lastPositions.Head.y,2.1);
+assert.equal(fireWizard.userData.puppet.lastPositions.Head.y,1.7);
+put('ice',2.4);projectWizard(iceWizard,camera);projectWizard(fireWizard,camera);
+assert.equal(iceWizard.userData.puppet.lastPositions.Head.y,2.4,'newly saved pose is read without focus or reload');
+assert.equal(fireWizard.userData.puppet.lastPositions.Head.y,1.7,'other actor is unaffected');
+iceWizard.userData.puppet.setMotionCharacter('earth');projectWizard(iceWizard,camera);
+assert.equal(iceWizard.userData.puppet.lastPositions.Head.y,1.4,'characters without saved clips retain default motions');
+console.log('PASS: game wizard uses selected character, live saves apply, actors remain isolated, legacy fallback works');

@@ -10,3 +10,25 @@ globalThis.addEventListener?.('storage',e=>{if(e.key===storage||e.key===null)ref
 globalThis.addEventListener?.('focus',refresh);
 export function savedMotion(name){return project?.actions.reduce((chosen,a)=>{if((a.binding||a.name)!==name)return chosen;return !chosen||(a.updatedAt||0)>=(chosen.updatedAt||0)?a:chosen;},null);}
 export function savedPose(name,time,{loop=false,hold=false}={}){const a=savedMotion(name);if(!a)return null;let frame=time*a.fps;if(hold)frame=Math.min(frame,1);else if(loop)frame%=a.frames;return samplePose(a,Math.min(a.frames-1,frame));}
+
+// Game actors need separate character stores; choosing one must not change another.
+export function createMotionReader(id,{fallback=true}={}){
+ const profile=characterProfile(id),key=motionStorageKey(profile.id),defaultKey=motionStorageKey('default');
+ let lastRaw,lastFallback,current=null,legacy=null;
+ const parse=raw=>{try{return raw?validateProject(JSON.parse(raw)):null;}catch{return null;}};
+ function refreshActor(){
+  try{
+   const raw=globalThis.localStorage?.getItem(key)??null;
+   if(raw!==lastRaw){lastRaw=raw;current=parse(raw);if(current)migrateAnklePivot(current,profile.ankleLift||0,profile.ankleBack||0);}
+   const old=fallback&&key!==defaultKey?(globalThis.localStorage?.getItem(defaultKey)??null):null;
+   if(old!==lastFallback){lastFallback=old;legacy=parse(old);}
+  }catch{current=null;legacy=null;}
+ }
+ const find=(p,name)=>p?.actions.reduce((chosen,a)=>(a.binding||a.name)!==name?chosen:!chosen||(a.updatedAt||0)>=(chosen.updatedAt||0)?a:chosen,null);
+ const motion=name=>{refreshActor();return find(current,name)||find(legacy,name)||null;};
+ return {savedMotion:motion,savedPose(name,time,{loop=false,hold=false}={}){
+  const a=motion(name);if(!a)return null;let frame=time*a.fps;
+  if(hold)frame=Math.min(frame,1);else if(loop)frame%=a.frames;
+  return samplePose(a,Math.min(a.frames-1,frame));
+ }};
+}

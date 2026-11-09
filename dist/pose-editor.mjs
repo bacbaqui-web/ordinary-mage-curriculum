@@ -9,7 +9,7 @@ import {PassiveFoot} from './passive-foot.mjs';
 const feet={LeftFoot:new PassiveFoot(),RightFoot:new PassiveFoot()};
 let footShapes={};
 import {moveJoint as movePoseJoint} from './pose-constraints.mjs?v=ankle-slide-1';
-import {demoMotion} from './motion-puppet.mjs?v=heel-free-1';
+import {demoMotion} from './motion-puppet.mjs?v=actor-motion-1';
 import {JOINTS,LABELS,samplePose,validateProject} from './pose-data.mjs?v=cuff-pivot-1';
 const $=id=>document.getElementById(id);
 const moveJoint=(base,joint,target)=>movePoseJoint(base,joint,target,{footClearance:rig?Math.max(rig.restPose.LeftFoot[1],rig.restPose.RightFoot[1]):.10});

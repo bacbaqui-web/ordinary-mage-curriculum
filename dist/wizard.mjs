@@ -1,5 +1,5 @@
 import * as T from './three.module.js';
-import {MotionPuppet} from './motion-puppet.mjs?v=castaxis8';
+import {MotionPuppet} from './motion-puppet.mjs?v=actor-motion-1';
 export function createWizard(scene,color,trim){
  const g=new T.Group(),body=new T.Group();body.position.y=1;g.add(body);
  const palette=[],joints={},parts=[];
