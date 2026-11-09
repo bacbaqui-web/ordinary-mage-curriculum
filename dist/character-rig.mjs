@@ -153,7 +153,8 @@ export class CharacterRig{
     const target=V(pose[link.child]).sub(V(pose[name]));
     if(target.lengthSq()>1e-10){const q=new T.Quaternion().setFromUnitVectors(link.dir,target.normalize()).multiply(r.world);bone.quaternion.copy(qworld(bone.parent).invert().multiply(q)).normalize();}
    }
-   if(name==='Head')bone.quaternion.copy(qworld(bone.parent).invert().multiply(r.world)).normalize();
+   // The bulky scarf follows Neck translation, with an upright frame like the head.
+   if(name==='Head'||name==='Neck')bone.quaternion.copy(qworld(bone.parent).invert().multiply(r.world)).normalize();
    if(this.feet[name]){
     // Foot rotation is a world-space ankle hinge, not inherited shin rotation.
     // Match the old contact solver to this model's actual ankle-to-sole height.
