@@ -54,3 +54,16 @@ assert.ok(box().getSize(new T.Vector3()).distanceTo(sizeBefore)<1e-5);
 assert.deepEqual(rig.restPose,restBefore);
 assert.ok(Array.from(bag.userData.strap.mesh.geometry.attributes.position.array).every(Number.isFinite));
 console.log('PASS: actual bag dimensions, right-side placement, hip follow, strap geometry and unchanged character proportions');
+
+// The GLB ankle must not remain rigidly attached to a bent shin.
+rig.apply(rig.restPose);const flat=rig.bones.LeftFoot.getWorldQuaternion(new T.Quaternion()).normalize();
+const bent=structuredClone(rig.restPose);bent.LeftLeg[2]+=.2;rig.apply(bent);
+assert.ok(flat.angleTo(rig.bones.LeftFoot.getWorldQuaternion(new T.Quaternion()).normalize())<1e-6);
+const airborne=structuredClone(rig.restPose);for(const n of JOINTS)airborne[n][1]+=.8;
+for(let i=0;i<360;i++)rig.apply(airborne,1/120);
+assert.ok(Math.abs(rig.feet.LeftFoot.angle+Math.PI/2)<.02,'raised GLB foot hangs down');
+assert.ok(flat.angleTo(rig.bones.LeftFoot.getWorldQuaternion(new T.Quaternion()).normalize())>1.4);
+for(let i=0;i<180;i++)rig.apply(rig.restPose,1/120);
+assert.ok(Math.abs(rig.feet.LeftFoot.angle)<.001,'landing returns foot to flat');
+assert.ok(flat.angleTo(rig.bones.LeftFoot.getWorldQuaternion(new T.Quaternion()).normalize())<1e-5);
+console.log('PASS: GLB ankle independence, airborne gravity and flat landing');

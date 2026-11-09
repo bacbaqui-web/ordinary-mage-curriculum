@@ -1,5 +1,5 @@
-import {CHARACTERS,characterProfile,motionStorageKey,projectForCharacter,assertCharacterImport} from './character-profiles.mjs?v=ice-bag-1';
-import {CharacterRig,fitProjectToRig} from './character-rig.mjs?v=ice-bag-1';
+import {CHARACTERS,characterProfile,motionStorageKey,projectForCharacter,assertCharacterImport} from './character-profiles.mjs?v=foot-hinge-1';
+import {CharacterRig,fitProjectToRig} from './character-rig.mjs?v=foot-hinge-1';
 import {ensureMagicClips} from './magic-clips.mjs?v=compound-label';
 import {uniqueMotions,mergeMotions} from './pose-library.mjs';
 import * as T from './three.module.js';
@@ -168,6 +168,6 @@ function draw(v,p){const {canvas,camera}=v,w=Math.round(canvas.clientWidth),h=Ma
  }
  if($('handles').checked)for(const [n,a] of Object.entries(v.points)){ctx.beginPath();ctx.arc(a.x,a.y,n===selected?7:4,0,Math.PI*2);ctx.fillStyle=n===selected?'#fff1bd':'#17282f';ctx.fill();ctx.lineWidth=1.5;ctx.strokeStyle=n===selected?'#e7aa42':'#e7eff0';ctx.stroke();}const a=v.points[selected];ctx.font='12px system-ui';ctx.fillStyle='#fff1bd';ctx.fillText(LABELS[JOINTS.indexOf(selected)],a.x+10,a.y-10);
 }
-let last=performance.now();function tick(now){requestAnimationFrame(tick);const dt=Math.min(.05,(now-last)/1000);last=now;if(playing){frame=(frame+dt*current().fps)%current().frames;$('scrub').value=Math.floor(frame);$('frameLabel').textContent=`${Math.floor(frame)+1} / ${current().frames} 프레임`;}const p=pose();if(rig)rig.apply(p);for(const n of Object.keys(feet))footShapes[n]=feet[n].update(p[n],dt);for(const v of views)draw(v,p);}sync();if($('status').textContent==='준비 중')$('status').textContent='관절을 선택해 편집하세요.';requestAnimationFrame(tick);
+let last=performance.now();function tick(now){requestAnimationFrame(tick);const dt=Math.min(.05,(now-last)/1000);last=now;if(playing){frame=(frame+dt*current().fps)%current().frames;$('scrub').value=Math.floor(frame);$('frameLabel').textContent=`${Math.floor(frame)+1} / ${current().frames} 프레임`;}const p=pose();if(rig)rig.apply(p,dt);for(const n of Object.keys(feet))footShapes[n]=feet[n].update(p[n],dt);for(const v of views)draw(v,p);}sync();if($('status').textContent==='준비 중')$('status').textContent='관절을 선택해 편집하세요.';requestAnimationFrame(tick);
 
 let wanted=new URLSearchParams(location.search).get('character');try{wanted ||= localStorage.getItem('ordinary-mage-editor-character');}catch{}if(wanted&&wanted!=='default')void selectCharacter(wanted);

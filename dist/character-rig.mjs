@@ -1,6 +1,7 @@
 import * as T from './three.module.js';
 import {GLTFLoader} from './vendor/GLTFLoader.js';
 import {JOINTS} from './pose-data.mjs';
+import {PassiveFoot,ANKLE_CLEARANCE} from './passive-foot.mjs';
 import {BONES} from './pose-constraints.mjs';
 const V=a=>new T.Vector3(...a);
 const world=o=>o.getWorldPosition(new T.Vector3());
@@ -51,6 +52,7 @@ export class CharacterRig{
   const floor=new T.Box3().setFromObject(this.group,true);const hip=world(this.bones.Hips);
   this.group.position.set(-hip.x,-floor.min.y,-hip.z);this.group.updateMatrixWorld(true);
   this.restPose=this.positions();
+  this.feet={LeftFoot:new PassiveFoot(),RightFoot:new PassiveFoot()};
   this.rest=new Map(this.all.map(b=>[b,{position:b.position.clone(),quaternion:b.quaternion.clone(),world:qworld(b)}]));
   this.directions=new Map();
   const links=[['Hips','Spine'],['Spine','Head'],['LeftArm','LeftForeArm'],['LeftForeArm','LeftHand'],['RightArm','RightForeArm'],['RightForeArm','RightHand'],['LeftUpLeg','LeftLeg'],['LeftLeg','LeftFoot'],['RightUpLeg','RightLeg'],['RightLeg','RightFoot']];
@@ -79,7 +81,7 @@ export class CharacterRig{
  }
  depth(b){let n=0;while(b.parent){n++;b=b.parent;}return n;}
  positions(){this.group.updateMatrixWorld(true);return Object.fromEntries(JOINTS.map(n=>[n,world(this.bones[n]).toArray()]));}
- apply(pose){
+ apply(pose,dt=0){
   for(const b of this.all){const r=this.rest.get(b);b.position.copy(r.position);b.quaternion.copy(r.quaternion);}
   this.group.updateMatrixWorld(true);
   for(const name of this.ordered){
@@ -87,6 +89,14 @@ export class CharacterRig{
    if(link){
     const target=V(pose[link.child]).sub(V(pose[name]));
     if(target.lengthSq()>1e-10){const q=new T.Quaternion().setFromUnitVectors(link.dir,target.normalize()).multiply(r.world);bone.quaternion.copy(qworld(bone.parent).invert().multiply(q)).normalize();}
+   }
+   if(this.feet[name]){
+    // Foot rotation is a world-space ankle hinge, not inherited shin rotation.
+    // Match the old contact solver to this model's actual ankle-to-sole height.
+    const ankle=[...pose[name]];ankle[1]+=ANKLE_CLEARANCE-this.restPose[name][1];
+    const angle=dt>0?this.feet[name].update(ankle,dt).angle:0;
+    const desired=new T.Quaternion().setFromAxisAngle(new T.Vector3(1,0,0),-angle).multiply(r.world);
+    bone.quaternion.copy(qworld(bone.parent).invert().multiply(desired)).normalize();
    }
    // Editor coordinates keep handles and visible skeleton in the same place.
    bone.parent.updateWorldMatrix(true,false);bone.position.copy(bone.parent.worldToLocal(V(pose[name])));
