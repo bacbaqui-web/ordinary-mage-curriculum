@@ -51,6 +51,22 @@ export class CharacterRig{
   this.group.scale.setScalar(2.15/size.y);this.group.updateMatrixWorld(true);
   const floor=new T.Box3().setFromObject(this.group,true);const hip=world(this.bones.Hips);
   this.group.position.set(-hip.x,-floor.min.y,-hip.z);this.group.updateMatrixWorld(true);
+  // Pick the visible palm center from vertices weighted to the hand/fingers.
+  this.handCenters={};
+  for(const name of ['LeftHand','RightHand']){
+   const hand=this.bones[name],descendants=new Set();hand.traverse(b=>{if(b.isBone)descendants.add(b);});
+   const sum=new T.Vector3();let count=0;
+   root.traverse(mesh=>{
+    if(!mesh.isSkinnedMesh)return;
+    const weights=mesh.geometry.attributes.skinWeight,indices=mesh.geometry.attributes.skinIndex;
+    for(let i=0;i<weights.count;i++){
+     let weight=0;for(let k=0;k<4;k++)if(descendants.has(mesh.skeleton.bones[indices.getComponent(i,k)]))weight+=weights.getComponent(i,k);
+     if(weight<.65)continue;
+     sum.add(mesh.localToWorld(mesh.getVertexPosition(i,new T.Vector3())));count++;
+    }
+   });
+   if(count)this.handCenters[name]=hand.worldToLocal(sum.divideScalar(count));
+  }
   this.restPose=this.positions();
   this.feet={LeftFoot:new PassiveFoot(),RightFoot:new PassiveFoot()};
   this.rest=new Map(this.all.map(b=>[b,{position:b.position.clone(),quaternion:b.quaternion.clone(),world:qworld(b)}]));
@@ -81,6 +97,11 @@ export class CharacterRig{
  }
  depth(b){let n=0;while(b.parent){n++;b=b.parent;}return n;}
  positions(){this.group.updateMatrixWorld(true);return Object.fromEntries(JOINTS.map(n=>[n,world(this.bones[n]).toArray()]));}
+ controlPose(pose){
+  const controls={...pose};
+  for(const [name,center] of Object.entries(this.handCenters))controls[name]=this.bones[name].localToWorld(center.clone()).toArray();
+  return controls;
+ }
  apply(pose,dt=0){
   for(const b of this.all){const r=this.rest.get(b);b.position.copy(r.position);b.quaternion.copy(r.quaternion);}
   this.group.updateMatrixWorld(true);
@@ -90,6 +111,7 @@ export class CharacterRig{
     const target=V(pose[link.child]).sub(V(pose[name]));
     if(target.lengthSq()>1e-10){const q=new T.Quaternion().setFromUnitVectors(link.dir,target.normalize()).multiply(r.world);bone.quaternion.copy(qworld(bone.parent).invert().multiply(q)).normalize();}
    }
+   if(name==='Head')bone.quaternion.copy(qworld(bone.parent).invert().multiply(r.world)).normalize();
    if(this.feet[name]){
     // Foot rotation is a world-space ankle hinge, not inherited shin rotation.
     // Match the old contact solver to this model's actual ankle-to-sole height.

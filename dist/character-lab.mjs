@@ -1,6 +1,6 @@
-import {characterProfile} from './character-profiles.mjs?v=foot-hinge-1';
+import {characterProfile} from './character-profiles.mjs?v=hand-head-1';
 import {useMotionCharacter} from './live-motions.mjs?v=character-editor-1';
-import {CharacterRig} from './character-rig.mjs?v=foot-hinge-1';
+import {CharacterRig} from './character-rig.mjs?v=hand-head-1';
 import * as T from './three.module.js';
 import {ActionPlayback} from './action-playback.mjs';
 import {MotionPuppet,demoMotion,readMotion} from './motion-puppet.mjs?v=character-editor-1';

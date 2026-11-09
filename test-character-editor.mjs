@@ -67,3 +67,23 @@ for(let i=0;i<180;i++)rig.apply(rig.restPose,1/120);
 assert.ok(Math.abs(rig.feet.LeftFoot.angle)<.001,'landing returns foot to flat');
 assert.ok(flat.angleTo(rig.bones.LeftFoot.getWorldQuaternion(new T.Quaternion()).normalize())<1e-5);
 console.log('PASS: GLB ankle independence, airborne gravity and flat landing');
+
+rig.apply(rig.restPose);const headForward=rig.bones.Head.getWorldQuaternion(new T.Quaternion()).normalize();
+const leaned=structuredClone(rig.restPose);leaned.Head[0]+=.2;leaned.Head[2]+=.25;rig.apply(leaned);
+assert.ok(headForward.angleTo(rig.bones.Head.getWorldQuaternion(new T.Quaternion()).normalize())<1e-6);
+for(const name of ['LeftHand','RightHand']){
+ assert.ok(rig.handCenters[name],'actual hand skin has a control center');
+ const controls=rig.controlPose(leaned);
+ const handPoint=rig.bones[name].localToWorld(rig.handCenters[name].clone());
+ const descendants=new Set();rig.bones[name].traverse(b=>descendants.add(b));
+ const visibleCenter=new T.Vector3();let vertices=0;
+ rig.root.traverse(mesh=>{if(!mesh.isSkinnedMesh)return;const weights=mesh.geometry.attributes.skinWeight,indices=mesh.geometry.attributes.skinIndex;
+  for(let i=0;i<weights.count;i++){let w=0;for(let k=0;k<4;k++)if(descendants.has(mesh.skeleton.bones[indices.getComponent(i,k)]))w+=weights.getComponent(i,k);
+   if(w>=.65){visibleCenter.add(mesh.localToWorld(mesh.getVertexPosition(i,new T.Vector3())));vertices++;}
+  }
+ });
+ visibleCenter.divideScalar(vertices);
+ assert.ok(visibleCenter.distanceTo(new T.Vector3(...controls[name]))<.03,'control stays inside deformed hand skin');
+ assert.ok(handPoint.distanceTo(new T.Vector3(...leaned[name]))>.01,'palm control is distinct from wrist');
+}
+console.log('PASS: face stays forward when torso leans, both hand controls follow palm skin');

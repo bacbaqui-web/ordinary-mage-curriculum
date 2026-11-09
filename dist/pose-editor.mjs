@@ -1,5 +1,5 @@
-import {CHARACTERS,characterProfile,motionStorageKey,projectForCharacter,assertCharacterImport} from './character-profiles.mjs?v=foot-hinge-1';
-import {CharacterRig,fitProjectToRig} from './character-rig.mjs?v=foot-hinge-1';
+import {CHARACTERS,characterProfile,motionStorageKey,projectForCharacter,assertCharacterImport} from './character-profiles.mjs?v=hand-head-1';
+import {CharacterRig,fitProjectToRig} from './character-rig.mjs?v=hand-head-1';
 import {ensureMagicClips} from './magic-clips.mjs?v=compound-label';
 import {uniqueMotions,mergeMotions} from './pose-library.mjs';
 import * as T from './three.module.js';
@@ -155,7 +155,7 @@ const views=[['앞',[0,0,6]],['옆',[6,0,0]],['위',[0,6,0]],['쿼터뷰',[5,4,6
  canvas.onpointermove=e=>{if(!drag)return;const dx=(e.clientX-drag.x)/v.scale,dy=-(e.clientY-drag.y)/v.scale,p=new T.Vector3(...drag.start).addScaledVector(right,dx).addScaledVector(up,dy);drag.k.pose=moveJoint(drag.base,selected,p.toArray());sync();};
  canvas.onpointerup=()=>{if(drag){drag=null;save();}};canvas.onpointercancel=()=>{drag=null;save();};return v;
 });
-function draw(v,p){const {canvas,camera}=v,w=Math.round(canvas.clientWidth),h=Math.round(canvas.clientHeight);if(!w||!h)return;if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}const ctx=canvas.getContext('2d'),scale=h/3.1*Number($('zoom').value)/100;v.scale=scale;const point=a=>{const local=new T.Vector3(...a).applyMatrix4(camera.matrixWorldInverse);return {x:w/2+local.x*scale,y:h/2-local.y*scale,z:local.z};};v.points=Object.fromEntries(JOINTS.map(n=>[n,point(p[n])]));ctx.fillStyle='#2b3c44';ctx.fillRect(0,0,w,h);ctx.strokeStyle='#354a52';ctx.lineWidth=1;const spacing=scale*.25;for(let x=w/2%spacing;x<w;x+=spacing){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke();}for(let y=h/2%spacing;y<h;y+=spacing){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();}
+function draw(v,p){const {canvas,camera}=v,w=Math.round(canvas.clientWidth),h=Math.round(canvas.clientHeight);if(!w||!h)return;if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}const ctx=canvas.getContext('2d'),scale=h/3.1*Number($('zoom').value)/100;v.scale=scale;const point=a=>{const local=new T.Vector3(...a).applyMatrix4(camera.matrixWorldInverse);return {x:w/2+local.x*scale,y:h/2-local.y*scale,z:local.z};};const controlPose=rig?rig.controlPose(p):p;v.points=Object.fromEntries(JOINTS.map(n=>[n,point(controlPose[n])]));ctx.fillStyle='#2b3c44';ctx.fillRect(0,0,w,h);ctx.strokeStyle='#354a52';ctx.lineWidth=1;const spacing=scale*.25;for(let x=w/2%spacing;x<w;x+=spacing){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke();}for(let y=h/2%spacing;y<h;y+=spacing){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();}
  // Shared world-space floor: Y=0 in every camera.
  const floor=[[-4,0,-4],[4,0,-4],[4,0,4],[-4,0,4]].map(point);
  ctx.beginPath();floor.forEach((a,i)=>i?ctx.lineTo(a.x,a.y):ctx.moveTo(a.x,a.y));ctx.closePath();ctx.fillStyle='#344b49';ctx.fill();
