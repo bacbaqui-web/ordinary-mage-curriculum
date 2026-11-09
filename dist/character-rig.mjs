@@ -1,17 +1,18 @@
+import {GarmentCollision} from './garment-collision.mjs';
 import * as T from './three.module.js';
 import {GLTFLoader} from './vendor/GLTFLoader.js';
-import {JOINTS} from './pose-data.mjs';
+import {JOINTS,withNeck} from './pose-data.mjs?v=neck-ankle-1';
 import {PassiveFoot,ANKLE_CLEARANCE} from './passive-foot.mjs';
-import {BONES} from './pose-constraints.mjs';
+import {BONES} from './pose-constraints.mjs?v=neck-ankle-1';
 const V=a=>new T.Vector3(...a);
 const world=o=>o.getWorldPosition(new T.Vector3());
 const qworld=o=>o.getWorldQuaternion(new T.Quaternion());
 const normalizeName=n=>n.replace(/^mixamorig[:_]?/i,'').replace(/[^a-z0-9]/gi,'').toLowerCase();
 // All coordinates exposed to the editor are in the normalized model's world space.
 export class CharacterRig{
- static async load(url,accessories=[]){
+ static async load(url,accessories=[],garment=null){
   const loader=new GLTFLoader(),rig=new CharacterRig((await loader.loadAsync(url)).scene);
-  try{for(const config of accessories)rig.addAccessory((await loader.loadAsync(config.model)).scene,config);return rig;}
+  try{if(garment)rig.garment=new GarmentCollision(rig,garment);for(const config of accessories)rig.addAccessory((await loader.loadAsync(config.model)).scene,config);return rig;}
   catch(error){rig.dispose();throw error;}
  }
  addAccessory(root,{id,joint='Hips',width=.6,offset=[0,0,0],rotation=[0,0,0],strap=null}){
@@ -67,11 +68,31 @@ export class CharacterRig{
    });
    if(count)this.handCenters[name]=hand.worldToLocal(sum.divideScalar(count));
   }
+  // Generated boot weights blend into the shin. Make each shoe pivot as a single
+  // piece at its ankle, with a short blend at the cuff to keep the leg seam smooth.
+  root.traverse(mesh=>{
+   if(!mesh.isSkinnedMesh)return;
+   const weights=mesh.geometry.attributes.skinWeight,indices=mesh.geometry.attributes.skinIndex;
+   for(let i=0;i<weights.count;i++){
+    const point=mesh.localToWorld(mesh.getVertexPosition(i,new T.Vector3()));
+    const name=point.x>=0?'LeftFoot':'RightFoot',ankle=world(this.bones[name]);
+    const blend=T.MathUtils.clamp((ankle.y+.07-point.y)/.05,0,1);if(blend===0)continue;
+    const footIndex=mesh.skeleton.bones.indexOf(this.bones[name]);
+    // Only touch vertices already weighted to this leg, never props or other limbs.
+    let legWeight=0;for(let k=0;k<4;k++){const b=mesh.skeleton.bones[indices.getComponent(i,k)];if(b===this.bones[name]||b===this.bones[name.replace('Foot','Leg')]||b?.parent===this.bones[name])legWeight+=weights.getComponent(i,k);}
+    if(legWeight<.9)continue;
+    const combined=new Map([[footIndex,blend]]);
+    for(let k=0;k<4;k++){const index=indices.getComponent(i,k);combined.set(index,(combined.get(index)||0)+weights.getComponent(i,k)*(1-blend));}
+    const slots=[...combined].sort((a,b)=>b[1]-a[1]).slice(0,4),sum=slots.reduce((n,a)=>n+a[1],0);
+    for(let k=0;k<4;k++){indices.setComponent(i,k,slots[k]?.[0]||0);weights.setComponent(i,k,(slots[k]?.[1]||0)/sum);}
+   }
+   weights.needsUpdate=true;indices.needsUpdate=true;
+  });
   this.restPose=this.positions();
   this.feet={LeftFoot:new PassiveFoot(),RightFoot:new PassiveFoot()};
   this.rest=new Map(this.all.map(b=>[b,{position:b.position.clone(),quaternion:b.quaternion.clone(),world:qworld(b)}]));
   this.directions=new Map();
-  const links=[['Hips','Spine'],['Spine','Head'],['LeftArm','LeftForeArm'],['LeftForeArm','LeftHand'],['RightArm','RightForeArm'],['RightForeArm','RightHand'],['LeftUpLeg','LeftLeg'],['LeftLeg','LeftFoot'],['RightUpLeg','RightLeg'],['RightLeg','RightFoot']];
+  const links=[['Hips','Spine'],['Spine','Neck'],['Neck','Head'],['LeftArm','LeftForeArm'],['LeftForeArm','LeftHand'],['RightArm','RightForeArm'],['RightForeArm','RightHand'],['LeftUpLeg','LeftLeg'],['LeftLeg','LeftFoot'],['RightUpLeg','RightLeg'],['RightLeg','RightFoot']];
   for(const [a,b] of links)this.directions.set(a,{child:b,dir:V(this.restPose[b]).sub(V(this.restPose[a])).normalize()});
   this.ordered=JOINTS.slice().sort((a,b)=>this.depth(this.bones[a])-this.depth(this.bones[b]));
  }
@@ -98,11 +119,13 @@ export class CharacterRig{
  depth(b){let n=0;while(b.parent){n++;b=b.parent;}return n;}
  positions(){this.group.updateMatrixWorld(true);return Object.fromEntries(JOINTS.map(n=>[n,world(this.bones[n]).toArray()]));}
  controlPose(pose){
-  const controls={...pose};
+  const controls={...withNeck(pose)};
+  for(const name of ['LeftFoot','RightFoot'])controls[name]=world(this.bones[name]).toArray();
   for(const [name,center] of Object.entries(this.handCenters))controls[name]=this.bones[name].localToWorld(center.clone()).toArray();
   return controls;
  }
  apply(pose,dt=0){
+  pose=withNeck(pose);
   for(const b of this.all){const r=this.rest.get(b);b.position.copy(r.position);b.quaternion.copy(r.quaternion);}
   this.group.updateMatrixWorld(true);
   for(const name of this.ordered){
@@ -124,14 +147,14 @@ export class CharacterRig{
    bone.parent.updateWorldMatrix(true,false);bone.position.copy(bone.parent.worldToLocal(V(pose[name])));
    bone.updateWorldMatrix(false,true);
   }
-  this.group.updateMatrixWorld(true);this.updateStraps();
+  this.group.updateMatrixWorld(true);this.garment?.apply();this.updateStraps();
  }
  dispose(){this.group.traverse(o=>{o.geometry?.dispose();for(const m of [o.material].flat().filter(Boolean)){for(const val of Object.values(m))if(val?.isTexture)val.dispose();m.dispose();}});this.group.removeFromParent();}
 }
 // Seed a character with the common motions, preserving each edge's own length.
 export function fitProjectToRig(project,rest,sourceRest){
  const result=structuredClone(project),hipDelta=V(rest.Hips).sub(V(sourceRest.Hips));
- for(const a of result.actions)for(const k of a.keys){const old=structuredClone(k.pose);if((rest.LeftArm[0]-rest.RightArm[0])*(sourceRest.LeftArm[0]-sourceRest.RightArm[0])<0)for(const n of JOINTS)old[n][0]*=-1;const next={Hips:V(old.Hips).add(hipDelta).toArray()};
+ for(const a of result.actions)for(const k of a.keys){const old=structuredClone(withNeck(k.pose));if((rest.LeftArm[0]-rest.RightArm[0])*(sourceRest.LeftArm[0]-sourceRest.RightArm[0])<0)for(const n of JOINTS)old[n][0]*=-1;const next={Hips:V(old.Hips).add(hipDelta).toArray()};
   for(const [parent,child] of BONES){const len=V(rest[child]).distanceTo(V(rest[parent]));let dir=V(old[child]).sub(V(old[parent]));if(dir.lengthSq()<1e-10)dir=V(rest[child]).sub(V(rest[parent]));next[child]=V(next[parent]).add(dir.normalize().multiplyScalar(len)).toArray();}
   const minFoot=Math.min(next.LeftFoot[1],next.RightFoot[1]);if(minFoot<.10)for(const n of JOINTS)next[n][1]+=.10-minFoot;
   k.pose=next;

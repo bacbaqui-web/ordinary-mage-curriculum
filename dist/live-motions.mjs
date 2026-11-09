@@ -1,4 +1,4 @@
-import {validateProject,samplePose} from './pose-data.mjs';
+import {validateProject,samplePose} from './pose-data.mjs?v=neck-ankle-1';
 import {motionStorageKey} from './character-profiles.mjs';
 let storage=motionStorageKey('default');
 export function useMotionCharacter(id){storage=motionStorageKey(id);refresh();}

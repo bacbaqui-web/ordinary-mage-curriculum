@@ -87,3 +87,29 @@ for(const name of ['LeftHand','RightHand']){
  assert.ok(handPoint.distanceTo(new T.Vector3(...leaned[name]))>.01,'palm control is distinct from wrist');
 }
 console.log('PASS: face stays forward when torso leans, both hand controls follow palm skin');
+
+// Old files gain only Neck; every previously authored coordinate survives.
+const legacy=structuredClone(original);for(const a of legacy.actions)for(const k of a.keys)delete k.pose.Neck;
+const legacyBefore=structuredClone(legacy);validateProject(legacy);
+assert.ok(legacy.actions[0].keys[0].pose.Neck);
+for(const n of JOINTS.filter(n=>n!=='Neck'))assert.deepEqual(legacy.actions[0].keys[0].pose[n],legacyBefore.actions[0].keys[0].pose[n]);
+rig.apply(rig.restPose);
+const neckMoved=moveJoint(rig.restPose,'Neck',[.15,rig.restPose.Neck[1],.15]);
+assert.notDeepEqual(neckMoved.Head,rig.restPose.Head);assert.deepEqual(neckMoved.Spine,rig.restPose.Spine);
+rig.apply(neckMoved);assert.ok(new T.Vector3(...rig.positions().Neck).distanceTo(new T.Vector3(...neckMoved.Neck))<1e-6);
+// Shoe vertices below the cuff are attached to a single ankle, not stretched by the shin.
+let shoeVertices=0;rig.apply(rig.restPose);
+rig.root.traverse(mesh=>{if(!mesh.isSkinnedMesh)return;const pos=mesh.geometry.attributes.position,w=mesh.geometry.attributes.skinWeight,ix=mesh.geometry.attributes.skinIndex;
+ for(let i=0;i<pos.count;i++){const p=mesh.localToWorld(mesh.getVertexPosition(i,new T.Vector3()));if(p.y>.12)continue;
+  let ankleWeight=0;for(let k=0;k<4;k++)if(/Foot$/.test(mesh.skeleton.bones[ix.getComponent(i,k)].name))ankleWeight+=w.getComponent(i,k);
+  assert.ok(ankleWeight>.999);shoeVertices++;
+ }
+});assert.ok(shoeVertices>100);
+const {GarmentCollision}=await import('./dist/garment-collision.mjs');
+rig.garment=new GarmentCollision(rig,CHARACTERS.find(c=>c.id==='ice').garment);assert.ok(rig.garment.parts.length);
+rig.apply(rig.restPose);const neutral=rig.garment.parts.map(({mesh})=>Array.from(mesh.geometry.attributes.position.array));
+const highKnee=moveJoint(rig.restPose,'LeftLeg',[.11,.86,.35]);rig.apply(highKnee);
+assert.ok(rig.garment.pushed>0,'raised leg pushes coat vertices');
+for(const {mesh,vertices} of rig.garment.parts){const p=mesh.geometry.attributes.position;assert.ok(vertices.some(({index,original})=>new T.Vector3().fromBufferAttribute(p,index).distanceTo(original)>.0001));assert.ok(Array.from(p.array).every(Number.isFinite));}
+rig.apply(rig.restPose);for(const [i,{mesh}] of rig.garment.parts.entries())assert.deepEqual(Array.from(mesh.geometry.attributes.position.array),neutral[i],'coat recovers deterministically');
+console.log('PASS: legacy Neck migration, independent neck edit, rigid ankle skin and reversible coat collision');

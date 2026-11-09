@@ -1,5 +1,5 @@
 import {magicClipName} from './magic-clips.mjs';
-import {savedMotion,savedPose} from './live-motions.mjs?v=character-editor-1';
+import {savedMotion,savedPose} from './live-motions.mjs?v=neck-ankle-1';
 import * as T from './three.module.js';
 import {MagicMotion} from './magic-motion.mjs';
 import {actionClips} from './action-clips.mjs';
@@ -12,7 +12,7 @@ function capsule(){const s=new T.Shape();s.moveTo(-.5,-.5);s.lineTo(-.5,.5);s.ab
 export function demoMotion(){
  const root=new T.Group(),bones={};
  const add=(n,parent,x,y,z)=>{const b=new T.Bone();b.name=n;b.position.set(x,y,z);(bones[parent]||root).add(b);bones[n]=b;};
- add('Hips',null,0,1,0);add('Spine','Hips',0,.45,0);add('Head','Spine',0,.4,0);
+ add('Hips',null,0,1,0);add('Spine','Hips',0,.45,0);add('Neck','Spine',0,.228,0);add('Head','Neck',0,.172,0);
  for(const [side,x] of [['Left',-.36],['Right',.36]]){add(side+'Arm','Spine',x*2/3,0,0);add(side+'ForeArm',side+'Arm',0,-.32,0);add(side+'Hand',side+'ForeArm',0,-.32,0);add(side+'UpLeg','Hips',x*.45,-.08,0);add(side+'Leg',side+'UpLeg',0,-.4,0);add(side+'Foot',side+'Leg',0,-.4,.06);}
  const tracks=[],times=Array.from({length:33},(_,i)=>i/32);
  for(const [name,sign,amount,bend] of [['LeftUpLeg',1,.65,false],['RightUpLeg',-1,.65,false],['LeftArm',-1,.5,false],['RightArm',1,.5,false],['LeftLeg',-1,.8,true],['RightLeg',1,.8,true]]){const values=[];for(const t of times){let a=Math.sin(t*Math.PI*2)*sign*amount;if(bend)a=Math.max(0,a);values.push(...new T.Quaternion().setFromAxisAngle(new T.Vector3(1,0,0),a).toArray());}tracks.push(new T.QuaternionKeyframeTrack(name+'.quaternion',times,values));}

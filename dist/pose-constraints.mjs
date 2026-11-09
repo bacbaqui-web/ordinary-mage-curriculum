@@ -1,5 +1,6 @@
+import {withNeck} from './pose-data.mjs?v=neck-ankle-1';
 import {Vector3} from './three.module.js';
-export const BONES=[['Hips','Spine'],['Spine','Head'],['Spine','LeftArm'],['Spine','RightArm'],['LeftArm','LeftForeArm'],['LeftForeArm','LeftHand'],['RightArm','RightForeArm'],['RightForeArm','RightHand'],['Hips','LeftUpLeg'],['Hips','RightUpLeg'],['LeftUpLeg','LeftLeg'],['LeftLeg','LeftFoot'],['RightUpLeg','RightLeg'],['RightLeg','RightFoot']];
+export const BONES=[['Hips','Spine'],['Spine','Neck'],['Neck','Head'],['Spine','LeftArm'],['Spine','RightArm'],['LeftArm','LeftForeArm'],['LeftForeArm','LeftHand'],['RightArm','RightForeArm'],['RightForeArm','RightHand'],['Hips','LeftUpLeg'],['Hips','RightUpLeg'],['LeftUpLeg','LeftLeg'],['LeftLeg','LeftFoot'],['RightUpLeg','RightLeg'],['RightLeg','RightFoot']];
 const v=a=>new Vector3(...a);
 function shiftChildren(p,n,delta){for(const [a,b] of BONES)if(a===n){p[b]=v(p[b]).add(delta).toArray();shiftChildren(p,b,delta);}}
 function solveJoint(base,joint,target,preferredBend=null){
@@ -34,6 +35,7 @@ function solveJoint(base,joint,target,preferredBend=null){
 
 // Stop at the floor along the drag path without stretching any bones.
 export function moveJoint(base,joint,target){
+ base=withNeck(base);
  const clearance=n=>n==='Head'?.215:n.includes('Foot')?.10:0;
  const valid=p=>Object.entries(p).every(([n,a])=>a[1]>=Math.min(clearance(n),base[n][1])-1e-9);
  const result=solveJoint(base,joint,target);if(valid(result))return result;

@@ -1,5 +1,5 @@
-import {CHARACTERS,characterProfile,motionStorageKey,projectForCharacter,assertCharacterImport} from './character-profiles.mjs?v=hand-head-1';
-import {CharacterRig,fitProjectToRig} from './character-rig.mjs?v=hand-head-1';
+import {CHARACTERS,characterProfile,motionStorageKey,projectForCharacter,assertCharacterImport} from './character-profiles.mjs?v=neck-ankle-1';
+import {CharacterRig,fitProjectToRig} from './character-rig.mjs?v=neck-ankle-1';
 import {ensureMagicClips} from './magic-clips.mjs?v=compound-label';
 import {uniqueMotions,mergeMotions} from './pose-library.mjs';
 import * as T from './three.module.js';
@@ -7,9 +7,9 @@ import {footFaces} from './foot-shape.mjs';
 import {PassiveFoot} from './passive-foot.mjs';
 const feet={LeftFoot:new PassiveFoot(),RightFoot:new PassiveFoot()};
 let footShapes={};
-import {moveJoint} from './pose-constraints.mjs';
-import {demoMotion} from './motion-puppet.mjs';
-import {JOINTS,LABELS,samplePose,validateProject} from './pose-data.mjs';
+import {moveJoint} from './pose-constraints.mjs?v=neck-ankle-1';
+import {demoMotion} from './motion-puppet.mjs?v=neck-ankle-1';
+import {JOINTS,LABELS,samplePose,validateProject} from './pose-data.mjs?v=neck-ankle-1';
 const $=id=>document.getElementById(id);
 let characterId='default',storage=motionStorageKey(characterId),rig=null,loading=false,unsaved=false;
 const modelScene=new T.Scene();modelScene.add(new T.HemisphereLight(0xffffff,0x84919d,2.4));
@@ -127,7 +127,7 @@ async function selectCharacter(id){
  try{
   const raw=localStorage.getItem(nextKey);let next=raw?validateProject(JSON.parse(raw)):projectForCharacter(initial(),profile.id);
   assertCharacterImport(next,profile.id);prepare(next);
-  if(profile.model){nextRig=await CharacterRig.load(profile.model,profile.accessories);renderer();if(!next.rigVersion)next=fitProjectToRig(next,nextRig.restPose,defaultRest());else if(next.rigVersion===1){for(const a of next.actions)for(const k of a.keys)for(const n of JOINTS)k.pose[n][0]*=-1;next.rigVersion=2;}}
+  if(profile.model){nextRig=await CharacterRig.load(profile.model,profile.accessories,profile.garment);renderer();if(!next.rigVersion)next=fitProjectToRig(next,nextRig.restPose,defaultRest());else if(next.rigVersion===1){for(const a of next.actions)for(const k of a.keys)for(const n of JOINTS)k.pose[n][0]*=-1;next.rigVersion=2;}}
   next.characterId=profile.id;
   // A failed model load or storage write must not replace the current editor session.
   if(!raw||profile.id!=='default')localStorage.setItem(nextKey,JSON.stringify(next));
@@ -146,7 +146,7 @@ async function selectCharacter(id){
 $('character').replaceChildren(...CHARACTERS.map(c=>new Option(c.label,c.id)));
 $('character').onchange=()=>void selectCharacter($('character').value);
 $('modelStatus').textContent='기존 동작과 기본 관절 모형입니다.';
-const segments=[['Hips','Spine',.36,'#55b9cd'],['Spine','Head',.28,'#55b9cd'],['Spine','LeftArm',.18,'#55b9cd'],['Spine','RightArm',.18,'#55b9cd'],['LeftArm','LeftForeArm',.19,'#f18d65'],['LeftForeArm','LeftHand',.17,'#f18d65'],['RightArm','RightForeArm',.19,'#bb8bdd'],['RightForeArm','RightHand',.17,'#bb8bdd'],['Hips','LeftUpLeg',.23,'#55b9cd'],['Hips','RightUpLeg',.23,'#55b9cd'],['LeftUpLeg','LeftLeg',.22,'#86ba6d'],['LeftLeg','LeftFoot',.20,'#86ba6d'],['RightUpLeg','RightLeg',.22,'#688ee1'],['RightLeg','RightFoot',.20,'#688ee1']];
+const segments=[['Hips','Spine',.36,'#55b9cd'],['Spine','Neck',.28,'#55b9cd'],['Neck','Head',.16,'#55b9cd'],['Spine','LeftArm',.18,'#55b9cd'],['Spine','RightArm',.18,'#55b9cd'],['LeftArm','LeftForeArm',.19,'#f18d65'],['LeftForeArm','LeftHand',.17,'#f18d65'],['RightArm','RightForeArm',.19,'#bb8bdd'],['RightForeArm','RightHand',.17,'#bb8bdd'],['Hips','LeftUpLeg',.23,'#55b9cd'],['Hips','RightUpLeg',.23,'#55b9cd'],['LeftUpLeg','LeftLeg',.22,'#86ba6d'],['LeftLeg','LeftFoot',.20,'#86ba6d'],['RightUpLeg','RightLeg',.22,'#688ee1'],['RightLeg','RightFoot',.20,'#688ee1']];
 const views=[['앞',[0,0,6]],['옆',[6,0,0]],['위',[0,6,0]],['쿼터뷰',[5,4,6]]].map(([name,dir])=>{
  const box=document.createElement('div');box.className='view';const title=document.createElement('h2');title.textContent=name;const canvas=document.createElement('canvas');canvas.setAttribute('aria-label',name+' 관절 편집');canvas.tabIndex=0;box.append(title,canvas);$('views').append(box);
  const camera=new T.OrthographicCamera(-2,2,2,-2,.1,100);camera.position.set(dir[0],dir[1]+1,dir[2]);if(name==='위')camera.up.set(0,0,-1);camera.lookAt(0,1,0);camera.updateMatrixWorld();const right=new T.Vector3(1,0,0).applyQuaternion(camera.quaternion),up=new T.Vector3(0,1,0).applyQuaternion(camera.quaternion);const v={canvas,camera,right,up,points:{},scale:1};
