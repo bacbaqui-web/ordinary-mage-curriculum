@@ -23,6 +23,20 @@ for(const angle of [0,.7,Math.PI,-2]){
 }
 pose.Head[1]+=.1;stores.set(motionStorageKey('ice'),JSON.stringify(project));projectWizard(actor,camera);
 assert.ok(Math.abs(rig.bones.Head.getWorldPosition(new T.Vector3()).y-pose.Head[1])<1e-6);
+// Dynamic strap ends stay attached to the swinging bag and its shoulder route.
+const bag=rig.accessories.get('ice-bag'),strap=bag.userData.strap;
+let maxSwing=0;
+for(let i=0;i<120;i++){
+ actor.position.z+=4.4/120;animateWizard(actor,1/120,{speed:4.4});projectWizard(actor,camera);
+ maxSwing=Math.max(maxSwing,Math.abs(bag.userData.bagMotion.carrier.rotation.x));
+ const positions=strap.mesh.geometry.attributes.position;
+ for(const [start,sign] of [[0,1],[positions.count-5,-1]]){
+  const center=new T.Vector3();for(let j=0;j<4;j++)center.add(new T.Vector3().fromBufferAttribute(positions,start+j));center.multiplyScalar(.25);strap.mesh.localToWorld(center);
+  const anchor=strap.carrier.localToWorld(new T.Vector3(0,strap.top,sign*strap.halfDepth));
+  assert.ok(center.distanceTo(anchor)<1e-5,'strap stays attached to both bag corners while moving');
+ }
+}
+assert.ok(maxSwing>.03,'actual game movement drives bag rotation');
 await setWizardCharacter(actor,'fire',{load});assert.equal(actor.userData.characterRig,null);assert.equal(actor.userData.puppet.visual.visible,true);assert.ok(actor.userData.palette.every(p=>!p.rig));
 let resolve;const pending=setWizardCharacter(actor,'ice',{load:()=>new Promise(r=>resolve=r)});await setWizardCharacter(actor,'fire',{load});let disposed=false;resolve({dispose(){disposed=true;}});await pending;assert.ok(disposed);assert.equal(actor.userData.characterRig,null);
 console.log('PASS: actual ice model/bag, saved pose and live update, transformed world joints, one load per selection, switch cleanup and stale-load protection');

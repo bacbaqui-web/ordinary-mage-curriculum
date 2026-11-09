@@ -1,3 +1,4 @@
+import {BagSwing} from './bag-swing.mjs';
 import {raisedAnkle} from './ankle-pivot.mjs?v=heel-free-1';
 import {GarmentCollision} from './garment-collision.mjs';
 import * as T from './three.module.js';
@@ -21,14 +22,15 @@ export class CharacterRig{
   const bounds=new T.Box3().setFromObject(root,true),size=bounds.getSize(new T.Vector3()),center=bounds.getCenter(new T.Vector3());
   const scale=width/Math.max(size.x,.001),pivot=new T.Group(),model=new T.Group();
   root.position.sub(center);model.add(root);model.scale.setScalar(scale);model.rotation.set(...rotation);
-  model.position.set(...offset);pivot.add(model);pivot.name=id;
+  const carrier=new T.Group();carrier.position.set(...offset);carrier.add(model);pivot.add(carrier);pivot.name=id;
+  pivot.userData.bagMotion={carrier,offset:[...offset],swing:new BagSwing()};
   this.group.updateMatrixWorld(true);pivot.position.copy(world(this.bones[joint]));
   // Start in normalized world axes, then retain the attachment in the bone's local frame.
   pivot.updateMatrixWorld(true);
   this.bones[joint].attach(pivot);this.accessories??=new Map();this.accessories.set(id,pivot);
   if(strap){
    const mesh=new T.Mesh(new T.BufferGeometry(),new T.MeshStandardMaterial({color:strap.color,roughness:1}));
-   pivot.add(mesh);pivot.userData.strap={mesh,joint:strap.joint,offset,halfDepth:width*.37,top:offset[1]+size.y*scale*.5};
+   pivot.add(mesh);pivot.userData.strap={mesh,joint:strap.joint,offset,carrier,halfDepth:width*.37,top:size.y*scale*.5};
    this.updateStraps();
   }
  }
@@ -133,13 +135,13 @@ export class CharacterRig{
    const strap=pivot.userData.strap;if(!strap)continue;
    const shoulder=world(this.bones[strap.joint]),chest=world(this.bones.Spine);
    const points=[
-    new T.Vector3(strap.offset[0],strap.top,strap.halfDepth),
+    pivot.worldToLocal(strap.carrier.localToWorld(new T.Vector3(0,strap.top,strap.halfDepth))),
     pivot.worldToLocal(new T.Vector3(chest.x,chest.y,chest.z+.23)),
     pivot.worldToLocal(shoulder.clone().add(new T.Vector3(.035,.07,.16))),
     pivot.worldToLocal(shoulder.clone().add(new T.Vector3(.035,.09,0))),
     pivot.worldToLocal(shoulder.clone().add(new T.Vector3(.035,.07,-.16))),
     pivot.worldToLocal(new T.Vector3(chest.x,chest.y,chest.z-.22)),
-    new T.Vector3(strap.offset[0],strap.top,-strap.halfDepth)
+    pivot.worldToLocal(strap.carrier.localToWorld(new T.Vector3(0,strap.top,-strap.halfDepth)))
    ];
    // Build in normalized units: the attachment has inverse bone scale from attach().
    const signature=points.flatMap(p=>p.toArray()).map(n=>n.toFixed(5)).join(',');
@@ -156,7 +158,7 @@ export class CharacterRig{
   for(const [name,center] of Object.entries(this.handCenters))controls[name]=this.bones[name].localToWorld(center.clone()).toArray();
   return controls;
  }
- apply(pose,dt=0){
+ apply(pose,dt=0,movement=null){
   pose=withNeck(pose);
   for(const b of this.all){const r=this.rest.get(b);b.position.copy(r.position);b.quaternion.copy(r.quaternion);}
   this.group.updateMatrixWorld(true);
@@ -179,7 +181,15 @@ export class CharacterRig{
    bone.parent.updateWorldMatrix(true,false);bone.position.copy(bone.parent.worldToLocal(V(pose[name])));
    bone.updateWorldMatrix(false,true);
   }
-  this.group.updateMatrixWorld(true);this.garment?.apply();this.updateStraps();
+  this.group.updateMatrixWorld(true);this.garment?.apply();
+  for(const pivot of this.accessories?.values()||[]){
+   const motion=pivot.userData.bagMotion;if(!motion)continue;
+   if(dt<=0&&!movement)motion.swing.reset();
+   const state=motion.swing.update(movement?.position||pose.Hips,movement?.heading||0,dt);
+   motion.carrier.rotation.set(state.angle[0],0,state.angle[1]);
+   motion.carrier.position.set(...motion.offset);motion.carrier.position.y+=state.bounce;
+  }
+  this.group.updateMatrixWorld(true);this.updateStraps();
  }
  dispose(){this.group.traverse(o=>{o.geometry?.dispose();for(const m of [o.material].flat().filter(Boolean)){for(const val of Object.values(m))if(val?.isTexture)val.dispose();m.dispose();}});this.group.removeFromParent();}
 }
