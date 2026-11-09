@@ -1,6 +1,6 @@
 import {validateProject,samplePose} from './pose-data.mjs?v=neck-ankle-1';
-import {motionStorageKey,characterProfile} from './character-profiles.mjs?v=cuff-pivot-1';
-import {migrateAnklePivot} from './ankle-pivot.mjs';
+import {motionStorageKey,characterProfile} from './character-profiles.mjs?v=lower-cuff-1';
+import {migrateAnklePivot} from './ankle-pivot.mjs?v=lower-cuff-1';
 let storage=motionStorageKey('default'),ankleLift=0;
 export function useMotionCharacter(id){storage=motionStorageKey(id);ankleLift=characterProfile(id).ankleLift||0;refresh();}
 let project=null;

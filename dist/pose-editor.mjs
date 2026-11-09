@@ -1,6 +1,6 @@
-import {migrateAnklePivot} from './ankle-pivot.mjs';
-import {CHARACTERS,characterProfile,motionStorageKey,projectForCharacter,assertCharacterImport} from './character-profiles.mjs?v=shoe-follow-1';
-import {CharacterRig,fitProjectToRig} from './character-rig.mjs?v=shoe-follow-1';
+import {migrateAnklePivot} from './ankle-pivot.mjs?v=lower-cuff-1';
+import {CHARACTERS,characterProfile,motionStorageKey,projectForCharacter,assertCharacterImport} from './character-profiles.mjs?v=lower-cuff-1';
+import {CharacterRig,fitProjectToRig} from './character-rig.mjs?v=lower-cuff-1';
 import {ensureMagicClips} from './magic-clips.mjs?v=compound-label';
 import {uniqueMotions,mergeMotions} from './pose-library.mjs';
 import * as T from './three.module.js';
@@ -9,7 +9,7 @@ import {PassiveFoot} from './passive-foot.mjs';
 const feet={LeftFoot:new PassiveFoot(),RightFoot:new PassiveFoot()};
 let footShapes={};
 import {moveJoint as movePoseJoint} from './pose-constraints.mjs?v=cuff-pivot-1';
-import {demoMotion} from './motion-puppet.mjs?v=cuff-pivot-1';
+import {demoMotion} from './motion-puppet.mjs?v=lower-cuff-1';
 import {JOINTS,LABELS,samplePose,validateProject} from './pose-data.mjs?v=cuff-pivot-1';
 const $=id=>document.getElementById(id);
 const moveJoint=(base,joint,target)=>movePoseJoint(base,joint,target,{footClearance:rig?Math.max(rig.restPose.LeftFoot[1],rig.restPose.RightFoot[1]):.10});
@@ -117,7 +117,7 @@ document.addEventListener('keydown',e=>{
  else if(command==='z'||command==='y'){e.preventDefault();$(command==='y'||e.shiftKey?'redo':'undo').click();}
 });
 $('export').onclick=()=>{const url=URL.createObjectURL(new Blob([JSON.stringify(projectForCharacter(project,characterId),null,2)],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download=`ordinary-mage-${characterId}-motions.json`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
-$('import').onchange=async()=>{try{const file=$('import').files[0];if(!file)return;if(file.size>10*1024*1024)throw Error('10MB 이하의 동작 파일을 선택하세요.');const targetId=characterId;const incoming=validateProject(JSON.parse(await file.text()));if(targetId!==characterId)throw Error('캐릭터가 바뀌었습니다. 파일을 다시 선택하세요.');assertCharacterImport(incoming,characterId);compactShoulders(incoming);ensureMagicClips(incoming);if(rig&&!incoming.rigVersion){const fitted=fitProjectToRig(incoming,rig.restPose,defaultRest());incoming.actions=fitted.actions;incoming.rigVersion=3;}if(rig)migrateAnklePivot(incoming,rig.ankleLift);incoming.actions=uniqueMotions(incoming.actions);for(const a of incoming.actions)a.updatedAt=Date.now();const merged=mergeMotions(project.actions,incoming.actions);if(merged.length>100)throw Error('동작은 최대 100개까지 보관할 수 있습니다.');checkpoint();project.actions=merged;index=Math.max(0,project.actions.indexOf(incoming.actions[0]));frame=0;stop();save();sync();}catch(e){$('status').textContent='불러오지 못했습니다. '+e.message;}};
+$('import').onchange=async()=>{try{const file=$('import').files[0];if(!file)return;if(file.size>10*1024*1024)throw Error('10MB 이하의 동작 파일을 선택하세요.');const targetId=characterId;const incoming=validateProject(JSON.parse(await file.text()));if(targetId!==characterId)throw Error('캐릭터가 바뀌었습니다. 파일을 다시 선택하세요.');assertCharacterImport(incoming,characterId);compactShoulders(incoming);ensureMagicClips(incoming);if(rig&&!incoming.rigVersion){const fitted=fitProjectToRig(incoming,rig.restPose,defaultRest());incoming.actions=fitted.actions;incoming.rigVersion=4;}if(rig)migrateAnklePivot(incoming,rig.ankleLift);incoming.actions=uniqueMotions(incoming.actions);for(const a of incoming.actions)a.updatedAt=Date.now();const merged=mergeMotions(project.actions,incoming.actions);if(merged.length>100)throw Error('동작은 최대 100개까지 보관할 수 있습니다.');checkpoint();project.actions=merged;index=Math.max(0,project.actions.indexOf(incoming.actions[0]));frame=0;stop();save();sync();}catch(e){$('status').textContent='불러오지 못했습니다. '+e.message;}};
 function defaultRest(){const {root}=demoMotion();root.updateMatrixWorld(true);return Object.fromEntries(JOINTS.map(n=>[n,root.getObjectByName(n).getWorldPosition(new T.Vector3()).toArray()]));}
 function setBusy(value){loading=value;$('motionControls').disabled=value;for(const id of ['export','import','saveMotion','play','previous','next','frames','fps','scrub','character'])$(id).disabled=value;}
 async function selectCharacter(id){
@@ -129,7 +129,7 @@ async function selectCharacter(id){
  try{
   const raw=localStorage.getItem(nextKey);let next=raw?validateProject(JSON.parse(raw)):projectForCharacter(initial(),profile.id);
   assertCharacterImport(next,profile.id);prepare(next);
-  if(profile.model){nextRig=await CharacterRig.load(profile.model,profile.accessories,profile.garment,profile.ankleLift);renderer();if(!next.rigVersion)next=fitProjectToRig(next,nextRig.restPose,defaultRest());else if(migrateAnklePivot(next,nextRig.ankleLift)&&raw){localStorage.setItem(nextKey+':before-ankle-pivot-3',raw);}}
+  if(profile.model){nextRig=await CharacterRig.load(profile.model,profile.accessories,profile.garment,profile.ankleLift);renderer();if(!next.rigVersion)next=fitProjectToRig(next,nextRig.restPose,defaultRest());else if(migrateAnklePivot(next,nextRig.ankleLift)&&raw){localStorage.setItem(nextKey+':before-ankle-pivot-4',raw);}}
   next.characterId=profile.id;
   // A failed model load or storage write must not replace the current editor session.
   if(!raw||profile.id!=='default')localStorage.setItem(nextKey,JSON.stringify(next));
