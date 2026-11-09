@@ -24,3 +24,17 @@
 @media(max-width:720px){.pvp-row{gap:8px}.pvp-row button{padding:9px}.online-status{top:130px}.mode-tabs{margin-top:4px}}
 #selection{overflow-y:auto;align-items:flex-start;padding:24px 16px}#selection .select-card{margin:auto;flex-shrink:0;max-height:calc(100dvh - 48px);overflow-y:auto}#selection .mode-tabs{position:sticky;top:0;background:#19232b;z-index:2;padding:4px 0}
 #selection .mode-tabs{top:-28px;margin-left:-28px;margin-right:-28px;padding:12px 28px}@media(max-width:650px){#selection .mode-tabs{top:-20px;margin-left:-20px;margin-right:-20px;padding:12px 20px}}@media(max-height:730px) and (min-width:651px){#selection .mode-tabs{top:-18px;margin-left:-18px;margin-right:-18px;padding:12px 18px}}
+
+/* Character identity and the two support runes. */
+#selection .select-card{width:min(1000px,100%)}
+.selection-step{font-size:14px;margin:18px 0 10px}.selection-step small{font-size:11px;color:#a7b9c5;font-weight:400;margin-left:8px}
+.character-picker{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:7px}
+.character-card{padding:0;overflow:hidden;background:#17232c;border:2px solid transparent;text-align:left;transition:border-color .15s,transform .15s}
+.character-card img{display:block;width:100%;height:112px;object-fit:cover;object-position:25% 15%;background:#f8f8f6}
+.character-card>span{display:block;padding:7px 5px}.character-card b{display:block;font-size:13px}.character-card small{font-size:10px;color:var(--rune)}
+.character-card[aria-pressed=true]{border-color:var(--rune);background:#34434c;box-shadow:0 0 14px color-mix(in srgb,var(--rune) 25%,transparent)}
+.character-card:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.character-detail{display:flex;gap:16px;align-items:center;padding:12px 0;border-bottom:1px solid #ffffff1a;font-size:12px}.character-detail span{color:#aebec7}
+#selection .rune-picker{grid-template-columns:repeat(6,minmax(0,1fr));gap:7px}#selection .rune-btn{min-height:85px;padding:10px}#selection .rune-btn small{font-size:10px}#selection .rune-symbol{font-size:22px}#selection .rune-btn strong{font-size:12px}#selection .assigned{font-size:9px;right:5px;top:5px}
+#selection [data-fixed=true]{cursor:default;opacity:.65}.slot-picker{margin-bottom:10px}.slot-btn[data-fixed=true]{border-color:var(--rune)}
+@media(max-width:800px){.character-picker{grid-template-columns:repeat(5,minmax(0,1fr))}.character-card img{height:100px}#selection .rune-picker{grid-template-columns:repeat(3,minmax(0,1fr))}.character-detail{align-items:flex-start;flex-direction:column;gap:5px}}
