@@ -38,3 +38,4 @@
 #selection .rune-picker{grid-template-columns:repeat(6,minmax(0,1fr));gap:7px}#selection .rune-btn{min-height:85px;padding:10px}#selection .rune-btn small{font-size:10px}#selection .rune-symbol{font-size:22px}#selection .rune-btn strong{font-size:12px}#selection .assigned{font-size:9px;right:5px;top:5px}
 #selection [data-fixed=true]{cursor:default;opacity:.65}.slot-picker{margin-bottom:10px}.slot-btn[data-fixed=true]{border-color:var(--rune)}
 @media(max-width:800px){.character-picker{grid-template-columns:repeat(5,minmax(0,1fr))}.character-card img{height:100px}#selection .rune-picker{grid-template-columns:repeat(3,minmax(0,1fr))}.character-detail{align-items:flex-start;flex-direction:column;gap:5px}}
+.guide-controls{display:none}.slot-btn kbd{font-size:12px}.key kbd{font-size:11px}
