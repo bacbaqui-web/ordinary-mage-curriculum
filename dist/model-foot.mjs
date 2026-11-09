@@ -1,6 +1,5 @@
 // A shoe hangs from its measured cuff pivot, not from a horizontal proxy segment.
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
-export const MODEL_FOOT_LIMIT=70*Math.PI/180;
 export class ModelFoot {
  constructor(points){
   if(!points.length)throw Error('발 모양을 찾지 못했습니다.');
@@ -26,10 +25,9 @@ export class ModelFoot {
    const c=Math.cos(this.angle),s=Math.sin(this.angle),[y,z]=this.center;
    const torque=((-9.81-acceleration[0])*(z*c-y*s)+acceleration[1]*(y*c+z*s))/this.inertia;
    this.velocity+=(torque-7*this.velocity)*h;
-   const before=this.angle,next=clamp(before+this.velocity*h,-MODEL_FOOT_LIMIT,MODEL_FOOT_LIMIT);
+   const before=this.angle,next=before+this.velocity*h;
    if(valid(next))this.angle=next;
    else {let lo=0,hi=1;for(let j=0;j<24;j++){const t=(lo+hi)/2;if(valid(before+(next-before)*t))lo=t;else hi=t;}this.angle=before+(next-before)*lo;this.velocity=0;}
-   if(Math.abs(this.angle)>=MODEL_FOOT_LIMIT)this.velocity=0;
   }
   return {angle:this.angle};
  }

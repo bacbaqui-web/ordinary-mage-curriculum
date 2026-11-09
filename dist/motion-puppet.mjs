@@ -1,5 +1,5 @@
 import {magicClipName} from './magic-clips.mjs';
-import {savedMotion,savedPose} from './live-motions.mjs?v=heel-pivot-1';
+import {savedMotion,savedPose} from './live-motions.mjs?v=heel-free-1';
 import * as T from './three.module.js';
 import {MagicMotion} from './magic-motion.mjs';
 import {actionClips} from './action-clips.mjs';

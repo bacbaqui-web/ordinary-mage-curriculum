@@ -1,9 +1,9 @@
-import {raisedAnkle} from './ankle-pivot.mjs?v=heel-pivot-1';
+import {raisedAnkle} from './ankle-pivot.mjs?v=heel-free-1';
 import {GarmentCollision} from './garment-collision.mjs';
 import * as T from './three.module.js';
 import {GLTFLoader} from './vendor/GLTFLoader.js';
 import {JOINTS,withNeck} from './pose-data.mjs?v=neck-ankle-1';
-import {ModelFoot} from './model-foot.mjs?v=heel-pivot-1';
+import {ModelFoot} from './model-foot.mjs?v=heel-free-1';
 import {BONES} from './pose-constraints.mjs?v=neck-ankle-1';
 const V=a=>new T.Vector3(...a);
 const world=o=>o.getWorldPosition(new T.Vector3());
@@ -191,5 +191,5 @@ export function fitProjectToRig(project,rest,sourceRest){
   const minFoot=Math.min(next.LeftFoot[1],next.RightFoot[1]);if(minFoot<.10)for(const n of JOINTS)next[n][1]+=.10-minFoot;
   k.pose=next;
  }
- result.rigVersion=6;return result;
+ result.rigVersion=7;return result;
 }

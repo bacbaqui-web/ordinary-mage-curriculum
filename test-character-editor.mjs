@@ -171,21 +171,19 @@ console.log('PASS: left/right ankle drags, forward/backward targets, visible sho
 
 // Existing cuff poses move down once; all other authored joints remain untouched.
 const v3={...structuredClone(original),rigVersion:3},beforeV3=structuredClone(v3);
-assert.ok(migrateAnklePivot(v3,.05));assert.equal(v3.rigVersion,6);
+assert.ok(migrateAnklePivot(v3,.05));assert.equal(v3.rigVersion,7);
 for(let a=0;a<v3.actions.length;a++)for(let k=0;k<v3.actions[a].keys.length;k++){
  const p=v3.actions[a].keys[k].pose,b=beforeV3.actions[a].keys[k].pose;
  for(const n of JOINTS.filter(n=>!n.endsWith('Foot')))assert.deepEqual(p[n],b[n]);
  for(const side of ['Left','Right'])assert.ok(Math.abs(new T.Vector3(...p[side+'Foot']).distanceTo(new T.Vector3(...b[side+'Foot']))-.025)<1e-8);
 }
 const migratedV3=structuredClone(v3);assert.equal(migrateAnklePivot(v3,.05),false);assert.deepEqual(v3,migratedV3);
-const {MODEL_FOOT_LIMIT}=await import('./dist/model-foot.mjs');
-assert.ok(Math.abs(MODEL_FOOT_LIMIT-70*Math.PI/180)<1e-9);
 const shoe=cuffRig.feet.LeftFoot;shoe.reset();shoe.angle=1;shoe.update([0,1,0],1/240);
 assert.ok(shoe.angle>.9,'shoe can bend beyond the old 37-degree limit');
 console.log('PASS: lower cuff migration preserves other joints, runs once, and allows increased shoe bending');
 
 const v4={...structuredClone(original),rigVersion:4},beforeV4=structuredClone(v4);
-assert.ok(migrateAnklePivot(v4,-.03));assert.equal(v4.rigVersion,6);
+assert.ok(migrateAnklePivot(v4,-.03));assert.equal(v4.rigVersion,7);
 for(let a=0;a<v4.actions.length;a++)for(let k=0;k<v4.actions[a].keys.length;k++){
  const p=v4.actions[a].keys[k].pose,b=beforeV4.actions[a].keys[k].pose;
  for(const n of JOINTS.filter(n=>!n.endsWith('Foot')))assert.deepEqual(p[n],b[n]);
@@ -195,10 +193,10 @@ const migratedV4=structuredClone(v4);assert.equal(migrateAnklePivot(v4,-.03),fal
 console.log('PASS: version 4 ankles lower by .08 exactly once without changing other joints');
 
 // Heel offset changes the actual pivot while preserving the rest mesh.
-const heelRig=new CharacterRig((await new GLTFLoader().parseAsync(JSON.stringify(json),'')).scene,{ankleLift:-.03,ankleBack:.04});
+const heelRig=new CharacterRig((await new GLTFLoader().parseAsync(JSON.stringify(json),'')).scene,{ankleLift:-.03,ankleBack:.07});
 let heelMesh;heelRig.root.traverse(m=>{if(m.isSkinnedMesh)heelMesh=m;});cuffRig.apply(cuffRig.restPose);
 for(const side of ['Left','Right']){
- const name=side+'Foot';assert.ok(Math.abs(heelRig.restPose[name][2]-cuffRig.restPose[name][2]+.04)<1e-8);
+ const name=side+'Foot';assert.ok(Math.abs(heelRig.restPose[name][2]-cuffRig.restPose[name][2]+.07)<1e-8);
  assert.ok(Math.abs(heelRig.restPose[name][1]-cuffRig.restPose[name][1])<1e-8);
 }
 for(let i=0;i<weights.count;i+=17)assert.ok(heelMesh.localToWorld(heelMesh.getVertexPosition(i,new T.Vector3())).distanceTo(cuffMesh.localToWorld(cuffMesh.getVertexPosition(i,new T.Vector3())))<1e-5);
@@ -210,3 +208,22 @@ for(let a=0;a<v5.actions.length;a++)for(let k=0;k<v5.actions[a].keys.length;k++)
 }
 assert.equal(migrateAnklePivot(v5,-.03,.04),false);
 console.log('PASS: heel pivot moves back .04, retains height/rest mesh, migrates saved ankles once');
+
+const v6={...structuredClone(original),rigVersion:6},beforeV6=structuredClone(v6);
+assert.ok(migrateAnklePivot(v6,-.03,.07));assert.equal(v6.rigVersion,7);
+for(let a=0;a<v6.actions.length;a++)for(let k=0;k<v6.actions[a].keys.length;k++){
+ const p=v6.actions[a].keys[k].pose,b=beforeV6.actions[a].keys[k].pose;
+ for(const n of JOINTS){const expected=[...b[n]];if(n.endsWith('Foot'))expected[2]-=.07-.04;assert.deepEqual(p[n],expected);}
+}
+assert.equal(migrateAnklePivot(v6,-.03,.07),false);
+for(const sign of [-1,1]){
+ const foot=heelRig.feet.LeftFoot;foot.reset();foot.angle=sign*3.2;foot.velocity=sign*10;
+ foot.update([0,2,0],1/240);
+ assert.ok(sign*foot.angle>3.2,'airborne shoe continues rotating beyond 180 degrees in either direction');
+ for(let i=0;i<180;i++){
+  const height=heelRig.restPose.LeftFoot[1]+(1-i/179)*.5;
+  foot.update([0,height,0],1/120);
+  assert.ok(height+foot.bottom(foot.angle)>-1e-6,'floor contact remains active without angle limits');
+ }
+}
+console.log('PASS: extra heel offset migrates once; unrestricted rotation in both directions retains floor contact');
