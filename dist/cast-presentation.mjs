@@ -2,7 +2,7 @@ import * as T from './three.module.js';
 import {spellReach} from './live-spells.mjs?v=bolt17';
 import {RUNES} from './combo-design.mjs?v=bolt17';
 export function castWithPresentation({magic,wards,clearPath,collides,wallBlocks},s,caster,dir,aimPoint){
- const hand=caster.g.userData.puppet.lastPositions?.RightHand?.clone().addScaledVector(dir,.25)||new T.Vector3(caster.x,1.3,caster.z).addScaledVector(dir,.5);
+ const hand=new T.Vector3(caster.x,1,caster.z).addScaledVector(dir,.5);
  const origin=clearPath(caster,{x:hand.x,z:hand.z})?hand:null;
  const before=new Set([...magic.effects,...magic.fire.effects,...wards]);caster.castContacts=[];
  magic.cast(s,caster,dir,aimPoint,origin);
@@ -18,4 +18,4 @@ export function castWithPresentation({magic,wards,clearPath,collides,wallBlocks}
  const beamTarget=moving?()=>({point:moving.mesh.position,active:!!moving.mesh.parent&&moving.life>0}):()=>({point:end,active:false});
  caster.castFlash=.3;caster.pendingCastLight={colors:[...s.sequence].map(k=>RUNES[k].color),tier:s.sequence.length,dir:dir.clone(),origin:hand,beamTarget};
 }
-export function renderCastPresentation(actor,feedback){if(!actor.pendingCastLight)return;const event=actor.pendingCastLight,u=actor.g.userData,hand=()=>u.puppet.lastPositions.RightHand.clone().addScaledVector(event.dir,.25);feedback.fire(hand,event.dir,event.colors,event.tier);feedback.beam(hand,event.beamTarget,event.colors,()=>actor.g.visible,event.tier);actor.pendingCastLight=null;}
+export function renderCastPresentation(actor,feedback){if(!actor.pendingCastLight)return;const event=actor.pendingCastLight,u=actor.g.userData,hand=()=>new T.Vector3(actor.x,1,actor.z).addScaledVector(event.dir,.5);feedback.fire(hand,event.dir,event.colors,event.tier);feedback.beam(hand,event.beamTarget,event.colors,()=>actor.g.visible,event.tier);actor.pendingCastLight=null;}
