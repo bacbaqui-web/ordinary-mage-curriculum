@@ -171,7 +171,7 @@ console.log('PASS: left/right ankle drags, forward/backward targets, visible sho
 
 // Existing cuff poses move down once; all other authored joints remain untouched.
 const v3={...structuredClone(original),rigVersion:3},beforeV3=structuredClone(v3);
-assert.ok(migrateAnklePivot(v3,.05));assert.equal(v3.rigVersion,5);
+assert.ok(migrateAnklePivot(v3,.05));assert.equal(v3.rigVersion,6);
 for(let a=0;a<v3.actions.length;a++)for(let k=0;k<v3.actions[a].keys.length;k++){
  const p=v3.actions[a].keys[k].pose,b=beforeV3.actions[a].keys[k].pose;
  for(const n of JOINTS.filter(n=>!n.endsWith('Foot')))assert.deepEqual(p[n],b[n]);
@@ -185,7 +185,7 @@ assert.ok(shoe.angle>.9,'shoe can bend beyond the old 37-degree limit');
 console.log('PASS: lower cuff migration preserves other joints, runs once, and allows increased shoe bending');
 
 const v4={...structuredClone(original),rigVersion:4},beforeV4=structuredClone(v4);
-assert.ok(migrateAnklePivot(v4,-.03));assert.equal(v4.rigVersion,5);
+assert.ok(migrateAnklePivot(v4,-.03));assert.equal(v4.rigVersion,6);
 for(let a=0;a<v4.actions.length;a++)for(let k=0;k<v4.actions[a].keys.length;k++){
  const p=v4.actions[a].keys[k].pose,b=beforeV4.actions[a].keys[k].pose;
  for(const n of JOINTS.filter(n=>!n.endsWith('Foot')))assert.deepEqual(p[n],b[n]);
@@ -193,3 +193,20 @@ for(let a=0;a<v4.actions.length;a++)for(let k=0;k<v4.actions[a].keys.length;k++)
 }
 const migratedV4=structuredClone(v4);assert.equal(migrateAnklePivot(v4,-.03),false);assert.deepEqual(v4,migratedV4);
 console.log('PASS: version 4 ankles lower by .08 exactly once without changing other joints');
+
+// Heel offset changes the actual pivot while preserving the rest mesh.
+const heelRig=new CharacterRig((await new GLTFLoader().parseAsync(JSON.stringify(json),'')).scene,{ankleLift:-.03,ankleBack:.04});
+let heelMesh;heelRig.root.traverse(m=>{if(m.isSkinnedMesh)heelMesh=m;});cuffRig.apply(cuffRig.restPose);
+for(const side of ['Left','Right']){
+ const name=side+'Foot';assert.ok(Math.abs(heelRig.restPose[name][2]-cuffRig.restPose[name][2]+.04)<1e-8);
+ assert.ok(Math.abs(heelRig.restPose[name][1]-cuffRig.restPose[name][1])<1e-8);
+}
+for(let i=0;i<weights.count;i+=17)assert.ok(heelMesh.localToWorld(heelMesh.getVertexPosition(i,new T.Vector3())).distanceTo(cuffMesh.localToWorld(cuffMesh.getVertexPosition(i,new T.Vector3())))<1e-5);
+const v5={...structuredClone(original),rigVersion:5},beforeV5=structuredClone(v5);
+assert.ok(migrateAnklePivot(v5,-.03,.04));
+for(let a=0;a<v5.actions.length;a++)for(let k=0;k<v5.actions[a].keys.length;k++){
+ const p=v5.actions[a].keys[k].pose,b=beforeV5.actions[a].keys[k].pose;
+ for(const n of JOINTS){const expected=[...b[n]];if(n.endsWith('Foot'))expected[2]-=.04;assert.deepEqual(p[n],expected);}
+}
+assert.equal(migrateAnklePivot(v5,-.03,.04),false);
+console.log('PASS: heel pivot moves back .04, retains height/rest mesh, migrates saved ankles once');

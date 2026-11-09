@@ -1,10 +1,10 @@
 import {validateProject,samplePose} from './pose-data.mjs?v=neck-ankle-1';
-import {motionStorageKey,characterProfile} from './character-profiles.mjs?v=lower-cuff-2';
-import {migrateAnklePivot} from './ankle-pivot.mjs?v=lower-cuff-2';
-let storage=motionStorageKey('default'),ankleLift=0;
-export function useMotionCharacter(id){storage=motionStorageKey(id);ankleLift=characterProfile(id).ankleLift||0;refresh();}
+import {motionStorageKey,characterProfile} from './character-profiles.mjs?v=heel-pivot-1';
+import {migrateAnklePivot} from './ankle-pivot.mjs?v=heel-pivot-1';
+let storage=motionStorageKey('default'),ankleLift=0,ankleBack=0;
+export function useMotionCharacter(id){storage=motionStorageKey(id);ankleLift=characterProfile(id).ankleLift||0;ankleBack=characterProfile(id).ankleBack||0;refresh();}
 let project=null;
-function refresh(){try{const raw=globalThis.localStorage?.getItem(storage);project=raw?validateProject(JSON.parse(raw)):null;if(project)migrateAnklePivot(project,ankleLift);}catch{project=null;}}
+function refresh(){try{const raw=globalThis.localStorage?.getItem(storage);project=raw?validateProject(JSON.parse(raw)):null;if(project)migrateAnklePivot(project,ankleLift,ankleBack);}catch{project=null;}}
 refresh();
 globalThis.addEventListener?.('storage',e=>{if(e.key===storage||e.key===null)refresh();});
 globalThis.addEventListener?.('focus',refresh);
