@@ -39,3 +39,4 @@
 #selection [data-fixed=true]{cursor:default;opacity:.65}.slot-picker{margin-bottom:10px}.slot-btn[data-fixed=true]{border-color:var(--rune)}
 @media(max-width:800px){.character-picker{grid-template-columns:repeat(5,minmax(0,1fr))}.character-card img{height:100px}#selection .rune-picker{grid-template-columns:repeat(3,minmax(0,1fr))}.character-detail{align-items:flex-start;flex-direction:column;gap:5px}}
 .guide-controls{display:none}.slot-btn kbd{font-size:12px}.key kbd{font-size:11px}
+.character-detail{flex-wrap:wrap}.character-detail .space-description{flex-basis:100%;font-size:11px;line-height:1.6;color:#c7d8dd}.space-description b{color:#edd0a5;margin-right:7px}
