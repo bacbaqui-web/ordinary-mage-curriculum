@@ -1,15 +1,16 @@
+import {ensureBasicAttacks,actionGroups} from './motion-catalog.mjs';
 import {migrateAnklePivot} from './ankle-pivot.mjs?v=heel-free-1';
 import {CHARACTERS,characterProfile,motionStorageKey,projectForCharacter,assertCharacterImport} from './character-profiles.mjs?v=heel-free-1';
 import {CharacterRig,fitProjectToRig} from './character-rig.mjs?v=bag-swing-1';
 import {ensureMagicClips} from './magic-clips.mjs?v=compound-label';
-import {uniqueMotions,mergeMotions} from './pose-library.mjs';
+import {uniqueMotions,mergeMotions} from './pose-library.mjs?v=action-list-1';
 import * as T from './three.module.js';
 import {footFaces} from './foot-shape.mjs';
 import {PassiveFoot} from './passive-foot.mjs';
 const feet={LeftFoot:new PassiveFoot(),RightFoot:new PassiveFoot()};
 let footShapes={};
 import {moveJoint as movePoseJoint} from './pose-constraints.mjs?v=ankle-slide-1';
-import {demoMotion} from './motion-puppet.mjs?v=actor-motion-1';
+import {demoMotion} from './motion-puppet.mjs?v=action-list-1';
 import {JOINTS,LABELS,samplePose,validateProject} from './pose-data.mjs?v=cuff-pivot-1';
 const $=id=>document.getElementById(id);
 const editableJoints=JOINTS.filter(n=>n!=='Neck');
@@ -33,7 +34,7 @@ function compactShoulders(p){
 function prepare(p){
  compactShoulders(p);
  for(const a of p.actions)if(!a.binding&&['기본 걷기','베기','주먹 타격','방어','마법 시전'].includes(a.name))a.binding=a.name;
- p.actions=uniqueMotions(p.actions);ensureMagicClips(p);return p;
+ p.actions=uniqueMotions(p.actions);ensureMagicClips(p);ensureBasicAttacks(p);return p;
 }
 prepare(project);
 const current=()=>project.actions[index],pose=()=>samplePose(current(),frame);
@@ -76,7 +77,7 @@ function bindKeyDrag(button,source){
 document.addEventListener('keydown',e=>{if(!keyDrag)return;if(e.key==='Escape'){e.preventDefault();finishKeyDrag(false);}else if(e.ctrlKey||e.metaKey||e.key==='Delete'||e.key==='Backspace'){e.preventDefault();e.stopImmediatePropagation();}},true);
 window.addEventListener('blur',()=>finishKeyDrag(false));
 function sync(){
- $('action').replaceChildren(...project.actions.map((a,i)=>new Option(a.name,i)));$('action').value=index;$('name').value=current().name;$('frames').value=current().frames;$('fps').value=current().fps;$('joint').value=selected;
+ $('action').replaceChildren(...actionGroups(project.actions).map(group=>{const el=document.createElement('optgroup');el.label=group.label;el.append(...group.entries.map(({action,index})=>new Option(action.name,index)));return el;}));$('action').value=index;$('name').value=current().name;$('frames').value=current().frames;$('fps').value=current().fps;$('joint').value=selected;
  $('scrub').max=current().frames-1;$('scrub').value=frame;$('frameLabel').textContent=`${Math.floor(frame)+1} / ${current().frames} 프레임`;
  const p=pose()[selected];['x','y','z'].forEach((n,i)=>$(n).value=p[i].toFixed(3));const k=current().keys.find(k=>k.frame===frame);$('ease').value=k?.ease||'smooth';$('delete').disabled=!k||current().keys.length===1;
  $('undo').disabled=!history.length;$('redo').disabled=!future.length;$('play').textContent=playing?'일시정지':'재생';
@@ -118,7 +119,7 @@ document.addEventListener('keydown',e=>{
  else if(command==='z'||command==='y'){e.preventDefault();$(command==='y'||e.shiftKey?'redo':'undo').click();}
 });
 $('export').onclick=()=>{const url=URL.createObjectURL(new Blob([JSON.stringify(projectForCharacter(project,characterId),null,2)],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download=`ordinary-mage-${characterId}-motions.json`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
-$('import').onchange=async()=>{try{const file=$('import').files[0];if(!file)return;if(file.size>10*1024*1024)throw Error('10MB 이하의 동작 파일을 선택하세요.');const targetId=characterId;const incoming=validateProject(JSON.parse(await file.text()));if(targetId!==characterId)throw Error('캐릭터가 바뀌었습니다. 파일을 다시 선택하세요.');assertCharacterImport(incoming,characterId);compactShoulders(incoming);ensureMagicClips(incoming);if(rig&&!incoming.rigVersion){const fitted=fitProjectToRig(incoming,rig.restPose,defaultRest());incoming.actions=fitted.actions;incoming.rigVersion=7;}if(rig)migrateAnklePivot(incoming,rig.ankleLift,rig.ankleBack);incoming.actions=uniqueMotions(incoming.actions);for(const a of incoming.actions)a.updatedAt=Date.now();const merged=mergeMotions(project.actions,incoming.actions);if(merged.length>100)throw Error('동작은 최대 100개까지 보관할 수 있습니다.');checkpoint();project.actions=merged;index=Math.max(0,project.actions.indexOf(incoming.actions[0]));frame=0;stop();save();sync();}catch(e){$('status').textContent='불러오지 못했습니다. '+e.message;}};
+$('import').onchange=async()=>{try{const file=$('import').files[0];if(!file)return;if(file.size>10*1024*1024)throw Error('10MB 이하의 동작 파일을 선택하세요.');const targetId=characterId;const incoming=validateProject(JSON.parse(await file.text()));if(targetId!==characterId)throw Error('캐릭터가 바뀌었습니다. 파일을 다시 선택하세요.');assertCharacterImport(incoming,characterId);compactShoulders(incoming);ensureMagicClips(incoming);ensureBasicAttacks(incoming);if(rig&&!incoming.rigVersion){const fitted=fitProjectToRig(incoming,rig.restPose,defaultRest());incoming.actions=fitted.actions;incoming.rigVersion=7;}if(rig)migrateAnklePivot(incoming,rig.ankleLift,rig.ankleBack);incoming.actions=uniqueMotions(incoming.actions);for(const a of incoming.actions)a.updatedAt=Date.now();const merged=mergeMotions(project.actions,incoming.actions);if(merged.length>100)throw Error('동작은 최대 100개까지 보관할 수 있습니다.');checkpoint();project.actions=merged;index=Math.max(0,project.actions.indexOf(incoming.actions[0]));frame=0;stop();save();sync();}catch(e){$('status').textContent='불러오지 못했습니다. '+e.message;}};
 function defaultRest(){const {root}=demoMotion();root.updateMatrixWorld(true);return Object.fromEntries(JOINTS.map(n=>[n,root.getObjectByName(n).getWorldPosition(new T.Vector3()).toArray()]));}
 function setBusy(value){loading=value;$('motionControls').disabled=value;for(const id of ['export','import','saveMotion','play','previous','next','frames','fps','scrub','character'])$(id).disabled=value;}
 async function selectCharacter(id){

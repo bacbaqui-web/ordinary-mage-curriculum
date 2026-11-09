@@ -1,7 +1,7 @@
 import {CharacterRig} from './character-rig.mjs?v=bag-swing-1';
 import {characterProfile} from './character-profiles.mjs?v=heel-free-1';
 import * as T from './three.module.js';
-import {MotionPuppet} from './motion-puppet.mjs?v=actor-motion-1';
+import {MotionPuppet} from './motion-puppet.mjs?v=action-list-1';
 export function createWizard(scene,color,trim){
  const g=new T.Group(),body=new T.Group();body.position.y=1;g.add(body);
  const palette=[],joints={},parts=[];

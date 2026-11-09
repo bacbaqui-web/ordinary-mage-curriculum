@@ -52,3 +52,14 @@ assert.equal(fireWizard.userData.puppet.lastPositions.Head.y,1.7,'other actor is
 iceWizard.userData.puppet.setMotionCharacter('earth');projectWizard(iceWizard,camera);
 assert.equal(iceWizard.userData.puppet.lastPositions.Head.y,1.4,'characters without saved clips retain default motions');
 console.log('PASS: game wizard uses selected character, live saves apply, actors remain isolated, legacy fallback works');
+
+const left={...makeWalk(2.2,100),name:'좌클릭 기본 공격'},right={...makeWalk(2.6,100),name:'우클릭 기본 공격'};
+stores.set(motionStorageKey('ice'),JSON.stringify({version:1,rigVersion:7,actions:[makeWalk(1.5),left,right]}));
+iceWizard.userData.puppet.setMotionCharacter('ice');
+for(const [hand,height] of [['left',2.2],['right',2.6]]){
+ const p=iceWizard.userData.puppet;p.playBasicAttack(hand);p.icePose=[{hand,dir:new T.Vector3(0,0,1),weight:1}];projectWizard(iceWizard,camera);
+ assert.equal(p.lastPositions.Head.y,height,'left/right authored basic attack is selected');
+ assert.deepEqual(p.lastPositions.LeftHand.toArray(),left.keys[0].pose.LeftHand,'procedural arm pose must not overwrite saved basic attack');
+ p.update(2);projectWizard(iceWizard,camera);assert.equal(p.basicAttack,null,'attack ends instead of looping');
+}
+console.log('PASS: left/right basic attack clips play separately, survive procedural arm override, and end');

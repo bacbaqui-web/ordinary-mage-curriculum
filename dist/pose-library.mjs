@@ -1,5 +1,6 @@
+import {BASIC_ATTACKS} from './motion-catalog.mjs';
 import {MAGIC_CLIPS} from './magic-clips.mjs';
-const builtins=new Set(['기본 걷기','베기','주먹 타격','방어','마법 시전',...MAGIC_CLIPS]);
+const builtins=new Set(['기본 걷기','베기','주먹 타격','방어','마법 시전',...MAGIC_CLIPS,...BASIC_ATTACKS]);
 export const motionKey=a=>a.binding||(builtins.has(a.name)?a.name:null);
 export function uniqueMotions(actions){
  const result=[],slots=new Map();
