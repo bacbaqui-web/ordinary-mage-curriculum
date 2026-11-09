@@ -1,4 +1,4 @@
-import {IceBasic} from './ice-basic.mjs?v=icecool2';
+import {IceBasic} from './ice-basic.mjs?v=icecast3';
 import {hasFireRecipe} from './fire-spec.mjs?v=bolt17';
 import {FireSpells} from './fire-spells.mjs?v=bolt17';
 import * as T from './three.module.js';
