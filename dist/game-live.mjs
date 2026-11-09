@@ -1,23 +1,24 @@
-import {HitboxView} from './hitbox-view.mjs?v=hitbox9';
-import {LevelUpVfx} from './level-up-vfx.mjs?v=hitbox9';
-import {FrostVisuals} from './frost-visuals.mjs?v=hitbox9';
-import {ICE_BASIC} from './ice-basic.mjs?v=hitbox9';
-import {SpaceSkill,SPACE_SKILLS,interceptSpaceShots} from './space-skills.mjs?v=hitbox9';
+import {projectileTouchesBody} from './screen-hit.mjs?v=screenhit10';
+import {HitboxView} from './hitbox-view.mjs?v=screenhit10';
+import {LevelUpVfx} from './level-up-vfx.mjs?v=screenhit10';
+import {FrostVisuals} from './frost-visuals.mjs?v=screenhit10';
+import {ICE_BASIC} from './ice-basic.mjs?v=screenhit10';
+import {SpaceSkill,SPACE_SKILLS,interceptSpaceShots} from './space-skills.mjs?v=screenhit10';
 import {SpaceVisuals} from './space-visuals.mjs?v=space1';
 import {CHARACTERS,characterFor,chooseCharacter,chooseSupport} from './character-loadout.mjs';
 import {GameAudio} from './game-audio.mjs?v=sync5';
 import {damageSummary} from './damage-display.mjs?v=damage18';
-import {Duel,STEP} from './duel.mjs?v=hitbox9';
-import {mountPvpUI} from './pvp-ui.mjs?v=hitbox9';
+import {Duel,STEP} from './duel.mjs?v=screenhit10';
+import {mountPvpUI} from './pvp-ui.mjs?v=screenhit10';
 import {OBSTACLES} from './arena-rules.mjs';
 let onlineCore=null,pvp=null,onlineResultShown=false,lastOnlineAim=0,onlineRenderAt=0,onlinePrevious=null;
 import {redLightningPlacement} from './red-lightning-spec.mjs?v=bolt17';
 import {steamPlacement} from './steam-spec.mjs?v=bolt17';
 import {BurnVisuals,applyBurnVisual} from './burn-visuals.mjs?v=bolt17';
-import {castWithPresentation,renderCastPresentation} from './cast-presentation.mjs?v=hitbox9';
+import {castWithPresentation,renderCastPresentation} from './cast-presentation.mjs?v=screenhit10';
 import {CastRecoil,HitScreen,chargeSetback} from './combat-response.mjs?v=rim9';
 import {VisionShade} from './vision-shade.mjs';
-import {CastingFeedback,ChargeCamera,impactFeedback} from './casting-feedback.mjs?v=hitbox9';
+import {CastingFeedback,ChargeCamera,impactFeedback} from './casting-feedback.mjs?v=screenhit10';
 import {chargeMoveScale} from './magic-motion.mjs';
 import {canSee} from './vision.mjs';
 import {fireSpec,hasFireRecipe} from './fire-spec.mjs?v=bolt17';
@@ -25,9 +26,9 @@ import {BodyFollow} from './body-follow.mjs?v=stride2';
 import {bindDuelControls,mouseRecipe} from './duel-controls.mjs?v=continue3';
 let walkDirection={x:0,z:0},icePressHand='left';
 const slotLabel=k=>({q:'기본',w:'좌클릭',e:'우클릭'}[k]);
-import {createWizard,animateWizard,projectWizard} from './wizard.mjs?v=hitbox9';
+import {createWizard,animateWizard,projectWizard} from './wizard.mjs?v=screenhit10';
 import {QueuedCharge} from './queued-charge.mjs?v=continue3';
-import {LiveMagic} from './live-magic.mjs?v=hitbox9';
+import {LiveMagic} from './live-magic.mjs?v=screenhit10';
 import {spellReach} from './live-spells.mjs?v=bolt17';
 import {describe as describeDesign} from './combo-design.mjs?v=bolt17';
 import {MeshFeedback} from './mesh-feedback.mjs';
@@ -200,7 +201,9 @@ function updateForces(dt){
  if(payload.burn||payload.slow||payload.shock||payload.push||payload.pull){if(hit(victim,payload.shock,away,0,w.owner)){applyPayload(victim,payload,w.owner);if(payload.push)victim.motion.start(away.x,away.z,payload.push);else if(payload.pull)victim.motion.start(away.x,away.z,-payload.pull);}if(payload.shock)boltEffect(victim.x,victim.z,elementalSpec('l'));else ring(victim.x,victim.z,payload.burn?0xff9c45:payload.slow?0x72dce8:0xb4e676,.7,.3);}}
  }if(w.life<=0||w.hp<=0){spellVfx.shatter(w.x,w.z,w.width);remove(w.m);wards.splice(i,1);}}
 }
-const liveMagic=new LiveMagic({scene,vfx:spellVfx,remove,targets,hit,applyPayload,clearPath,collides,wallBlocks,get wards(){return wards;}});
+const hitCamera=new T.PerspectiveCamera(38,1,.1,140);
+function screenHit(e,before,next,target){if(!clearPath(e.owner,target)||(e.owner===player&&!visibleTo(player,target)))return false;const fit=Math.max(1,1.1/camera.aspect);hitCamera.aspect=camera.aspect;hitCamera.position.set(player.x+12*fit,17*fit,player.z+15*fit);hitCamera.lookAt(player.x,0,player.z);hitCamera.updateProjectionMatrix();hitCamera.updateMatrixWorld(true);target.g.position.set(target.x,0,target.z);return projectileTouchesBody(e.mesh,before,next,target.body,hitCamera);}
+const liveMagic=new LiveMagic({scene,screenHit,vfx:spellVfx,remove,targets,hit,applyPayload,clearPath,collides,wallBlocks,get wards(){return wards;}});
 const burnVisuals=new BurnVisuals(scene);
 function spaceSmoke(){return onlineCore?[...onlineCore.magic.fire.smokeVolumes,...onlineCore.actors.flatMap(a=>a.roll.smoke)]:[...liveMagic.fire.smokeVolumes,...roll.smoke];}
 function visibleTo(a,b){return canSee(a,b,{obstacles,walls:wards,smoke:spaceSmoke()});}
@@ -376,7 +379,7 @@ let prev=performance.now();function frame(now){requestAnimationFrame(frame);if(o
  castingFeedback.charge(a,charging,stage||1,colors,u.puppet.lastPositions,camera);
  renderCastPresentation(a,castingFeedback);
 
- }frostVisuals.update(paused?0:dt,[player,enemy,...monsters]);burnVisuals.update(paused?0:dt,[player,enemy,...monsters]);visionShade.update(paused?0:dt,player,{obstacles,walls:wards,smoke:spaceSmoke()});spaceVisuals.update(onlineCore?onlineCore.actors:[{...player,roll}]);levelUpVfx.update(paused?0:dt,camera);hitboxView.update([player,enemy,...monsters],(onlineCore?onlineCore.magic:liveMagic).ice.effects);renderer.render(scene,camera)}requestAnimationFrame(frame);
+ }frostVisuals.update(paused?0:dt,[player,enemy,...monsters]);burnVisuals.update(paused?0:dt,[player,enemy,...monsters]);visionShade.update(paused?0:dt,player,{obstacles,walls:wards,smoke:spaceSmoke()});spaceVisuals.update(onlineCore?onlineCore.actors:[{...player,roll}]);levelUpVfx.update(paused?0:dt,camera);hitboxView.update([player,enemy,...monsters],(onlineCore?onlineCore.magic:liveMagic).ice.effects,camera);renderer.render(scene,camera)}requestAnimationFrame(frame);
 // Read-only diagnostics for input and rendering verification.
 window.mageDebug=()=>({audio:gameAudio.stats(),camera:{position:camera.position.toArray(),quaternion:camera.quaternion.toArray(),fov:camera.fov,aspect:camera.aspect},online:onlineCore?{tick:onlineCore.tick,index:pvp.index,time:onlineCore.time,finished:onlineCore.finished,winner:onlineCore.winner}:null,loadout:{...loadout},running,paused,bot,finished,charge:{queue:[...charge.queue],active:charge.active,parts:[...charge.parts],held:[...charge.held],progress:charge.progress,elapsed:charge.elapsed},history:[...history],roll:{...roll.snapshot(),active:roll.active,invulnerable:roll.invulnerable},progress:structuredClone(progress),monsters:monsters.filter(m=>!m.dead).map(m=>({id:m.id,x:m.x,z:m.z,hp:m.hp})),player:{x:player.x,z:player.z,hp:player.hp,mana:player.mana},vision:{enemyVisible:enemy.g.visible,smoke:spaceSmoke()},enemy:{progress:structuredClone(enemyProgress),target:enemyTarget?.monster?'monster':enemyTarget?'player':null,x:enemy.x,z:enemy.z,hp:enemy.hp,mana:enemy.mana,loadout:{...enemyLoadout},charge:{parts:[...enemyCharge.charge.parts],progress:enemyCharge.charge.progress,remaining:enemyCharge.remaining},lastSpell:enemy.lastSpell},groundZones:fields.filter(f=>f.ground).map(f=>({x:f.x,z:f.z,radius:f.r,life:f.life})),projectiles:shots.map(s=>({kind:s.spec.kind,radius:s.spec.radius,speed:s.spec.speed,distance:s.distance})),walls:wards.map(w=>({x:w.x,z:w.z,moving:w.speed>0,travelled:w.travelled})),vfx:spellVfx.stats(),pixelVfx:pixelVfx.stats(),objects:scene.children.length});
 

@@ -1,4 +1,4 @@
-import {PvpClient} from './pvp-client.mjs?v=hitbox9';
+import {PvpClient} from './pvp-client.mjs?v=screenhit10';
 import {PVP_SERVER} from './pvp-config.mjs';
 export function mountPvpUI(hooks){
  const $=id=>document.getElementById(id),selection=$('selection'),card=selection.querySelector('.select-card');
