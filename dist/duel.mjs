@@ -1,8 +1,8 @@
-import {ICE_BASIC} from './ice-basic.mjs?v=icecast3';
+import {ICE_BASIC} from './ice-basic.mjs?v=icepose4';
 import * as T from './three.module.js';
-import {LiveMagic} from './live-magic.mjs?v=icecast3';
+import {LiveMagic} from './live-magic.mjs?v=icepose4';
 import {QueuedCharge} from './queued-charge.mjs?v=continue3';
-import {SpaceSkill,interceptSpaceShots} from './space-skills.mjs?v=icecast3';
+import {SpaceSkill,interceptSpaceShots} from './space-skills.mjs?v=icepose4';
 import {ForcedMotion} from './motion.mjs';
 import {CastRecoil,chargeSetback} from './combat-response.mjs';
 import {chargeMoveScale} from './magic-motion.mjs';
