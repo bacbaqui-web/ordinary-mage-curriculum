@@ -1,0 +1,8 @@
+import * as T from './three.module.js';
+import {ICE_HIT_RADIUS} from './ice-basic.mjs?v=hitbox9';
+export class HitboxView{
+ constructor(scene){this.scene=scene;this.enabled=false;this.targets=new Map();this.shots=new Map();}
+ outline(shot=false){const pts=[],r=shot?.04:ICE_HIT_RADIUS;for(const y of [0.04,1.42])for(let i=0;i<64;i++){const a=i/64*Math.PI*2,b=(i+1)/64*Math.PI*2;pts.push(r*Math.cos(a),y,r*Math.sin(a),r*Math.cos(b),y,r*Math.sin(b));}for(let i=0;i<4;i++){const a=i*Math.PI/2;pts.push(r*Math.cos(a),.04,r*Math.sin(a),r*Math.cos(a),1.42,r*Math.sin(a));}const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pts,3));const mesh=new T.LineSegments(g,new T.LineBasicMaterial({color:shot?0x4cddff:0x71ff7c,depthTest:false,transparent:true,opacity:.9}));mesh.renderOrder=100;this.scene.add(mesh);return mesh;}
+ clear(){for(const map of [this.targets,this.shots]){for(const m of map.values()){m.removeFromParent();m.geometry.dispose();m.material.dispose();}map.clear();}}
+ update(actors,shots){if(!this.enabled){if(this.targets.size||this.shots.size)this.clear();return;}for(const [map,items,isShot] of [[this.targets,actors.filter(a=>!a.dead&&a.hp>0&&a.g?.visible!==false),false],[this.shots,shots.filter(e=>e.type==='shot'&&e.life>0),true]]){const active=new Set(items);for(const [key,m] of map)if(!active.has(key)){m.removeFromParent();m.geometry.dispose();m.material.dispose();map.delete(key);}for(const key of items){let m=map.get(key);if(!m){m=this.outline(isShot);map.set(key,m);}m.position.set(isShot?key.mesh.position.x:key.x,0,isShot?key.mesh.position.z:key.z);if(!isShot)m.material.color.set(key.hitFlash>0?0xffef54:0x71ff7c);}}}
+}
