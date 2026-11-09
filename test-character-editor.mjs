@@ -29,7 +29,7 @@ console.log('PASS: isolated character keys, original preservation, import guard,
 
 const records=new Map([[motionStorageKey('default'),JSON.stringify(original)],[motionStorageKey('ice'),JSON.stringify(ice)]]);
 globalThis.localStorage={getItem:key=>records.get(key)};
-const {useMotionCharacter,savedMotion}=await import('./dist/live-motions.mjs');
+const {useMotionCharacter,savedMotion}=await import('./dist/live-motions.mjs?v=character-editor-1');
 useMotionCharacter('ice');assert.equal(savedMotion('빙결 걷기').name,'빙결 걷기');assert.equal(savedMotion('걷기'),null);
 useMotionCharacter('fire');assert.ok(savedMotion('빙결 걷기')==null);
 useMotionCharacter('default');assert.equal(savedMotion('걷기').name,'걷기');assert.equal(records.get(motionStorageKey('default')),JSON.stringify(original));
