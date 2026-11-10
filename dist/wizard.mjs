@@ -1,7 +1,7 @@
-import {CharacterRig} from './character-rig.mjs?v=foot-lock-1';
+import {CharacterRig} from './character-rig.mjs?v=smooth-motion-1';
 import {characterProfile} from './character-profiles.mjs?v=heel-free-1';
 import * as T from './three.module.js';
-import {MotionPuppet} from './motion-puppet.mjs?v=foot-lock-1';
+import {MotionPuppet} from './motion-puppet.mjs?v=smooth-motion-1';
 export function createWizard(scene,color,trim){
  const g=new T.Group(),body=new T.Group();body.position.y=1;g.add(body);
  const palette=[],joints={},parts=[];
@@ -25,6 +25,7 @@ export function createWizard(scene,color,trim){
  g.userData={parts,body,arm:joints.rightArm,joints,palette,phase:0,stride:0,castTime:0};const puppet=new MotionPuppet(g);g.userData.puppet=puppet;puppet.visual.traverse(o=>{if(o.material)palette.push({material:o.material,color:o.material.color.clone()});});for(const p of parts)p.flat.visible=false;scene.add(g);return g;
 }
 export function animateWizard(g,dt,{speed=0,charging=false,chargeStage=1,cast=0,rolling=false,rollProgress=0,travelX=0,travelZ=1}={}){
+ if(dt>0)g.userData.puppet.blendTransitions=true;
  const u=g.userData,j=u.joints;u.modelDt=dt;if(!j)return;
  if(charging&&u.puppet.magic.mode!=='hold')u.puppet.magic.press();
  u.puppet.magic.update(dt,chargeStage);

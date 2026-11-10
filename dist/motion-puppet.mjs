@@ -1,5 +1,6 @@
-import {magicClipName} from './magic-clips.mjs?v=foot-lock-1';
-import {savedMotion,savedPose,createMotionReader} from './live-motions.mjs?v=foot-lock-1';
+import {PoseTransition} from './pose-transition.mjs?v=smooth-motion-1';
+import {magicClipName} from './magic-clips.mjs?v=smooth-motion-1';
+import {savedMotion,savedPose,createMotionReader} from './live-motions.mjs?v=smooth-motion-1';
 import * as T from './three.module.js';
 import {MagicMotion} from './magic-motion.mjs';
 import {actionClips} from './action-clips.mjs';
@@ -43,7 +44,7 @@ export class MotionPuppet{
   this.mixer=new T.AnimationMixer(root);this.select(0);this.time=0;
  }
  select(i){this.selectedClip=i;this.mixer.stopAllAction();this.action=this.mixer.clipAction(this.clips[i]);this.action.play();this.time=0;}
- update(dt,{speed=1,charging=false,cast=0}={}){if(this.basicAttack)this.basicAttack.time+=dt;this.time+=dt*speed;this.mixer.setTime(this.time);this.source.updateMatrixWorld(true);this.charging=charging;this.cast=cast;}
+ update(dt,{speed=1,charging=false,cast=0}={}){this.transitionDt=(this.transitionDt||0)+dt;if(this.basicAttack)this.basicAttack.time+=dt;this.time+=dt*speed;this.mixer.setTime(this.time);this.source.updateMatrixWorld(true);this.charging=charging;this.cast=cast;}
  render(camera){
   const {savedMotion:readMotion,savedPose:readPose}=this.motionReader||{savedMotion,savedPose};
   this.group.updateWorldMatrix(true,false);camera.updateWorldMatrix(true,false);
@@ -75,6 +76,15 @@ export class MotionPuppet{
   for(const n of Object.keys(positions))this.group.localToWorld(positions[n]);
   // Basic ice casts own the arm pose, after saved clips and body turning.
   if(this.icePose?.length&&!basicEdited){for(const side of ['Left','Right']){const shoulder=positions[side+'Arm'],elbow=positions[side+'ForeArm'],hand=positions[side+'Hand'];elbow.copy(shoulder).add(new T.Vector3(0,-.32,0));hand.copy(shoulder).add(new T.Vector3(0,-.64,0));const pose=this.icePose.find(p=>p.hand===side.toLowerCase());if(pose){const w=Math.max(0,Math.min(1,pose.weight));elbow.lerp(shoulder.clone().addScaledVector(pose.dir,.29).add(new T.Vector3(0,-.08,0)),w);const end=new T.Vector3().setFromMatrixPosition(this.group.matrixWorld).setY(pose.height??1.42).addScaledVector(pose.dir,pose.reach??.60);hand.lerp(end,w);}}}
+  if(this.blendTransitions){
+   const clip=readMotion(motionName),time=this.editorActionTime??(motionName==='대기'?this.idleTime||0:this.time);
+   const cycle=this.magic.mode==='idle'&&clip?Math.floor(time/(clip.frames/clip.fps)):0;
+   const state=[motionName,this.magic.mode,this.magic.stage,this.basicAttack?.name||'',this.icePose?.map(p=>p.hand).join(',')||'',cycle].join(':');
+   for(const v of Object.values(positions))this.group.worldToLocal(v);
+   (this.poseTransition??=new PoseTransition()).apply(positions,state,this.transitionDt||0);
+   for(const v of Object.values(positions))this.group.localToWorld(v);
+  }
+  this.transitionDt=0;
   this.lastPositions=positions;
   const q=camera.getWorldQuaternion(new T.Quaternion()),iq=q.clone().invert(),gq=this.group.getWorldQuaternion(new T.Quaternion()).invert();
   for(const p of this.parts){const a=positions[p.a],b=positions[p.b],delta=a.clone().sub(b).applyQuaternion(iq),len=Math.hypot(delta.x,delta.y);p.mesh.position.copy(this.group.worldToLocal(a.clone().add(b).multiplyScalar(.5)));p.mesh.quaternion.copy(gq).multiply(q).multiply(new T.Quaternion().setFromAxisAngle(new T.Vector3(0,0,1),Math.atan2(-delta.x,delta.y)));p.mesh.scale.set(p.w,Math.max(.001,(len+p.w)*.5),1); // round end caps join adjacent segments

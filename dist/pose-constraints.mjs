@@ -1,4 +1,4 @@
-import {withNeck} from './pose-data.mjs?v=foot-lock-1';
+import {withNeck} from './pose-data.mjs?v=smooth-motion-1';
 import {Vector3} from './three.module.js';
 export const BONES=[['Hips','Spine'],['Spine','Neck'],['Neck','Head'],['Spine','LeftArm'],['Spine','RightArm'],['LeftArm','LeftForeArm'],['LeftForeArm','LeftHand'],['RightArm','RightForeArm'],['RightForeArm','RightHand'],['Hips','LeftUpLeg'],['Hips','RightUpLeg'],['LeftUpLeg','LeftLeg'],['LeftLeg','LeftFoot'],['RightUpLeg','RightLeg'],['RightLeg','RightFoot']];
 const v=a=>new Vector3(...a);

@@ -1,9 +1,9 @@
-import {wardTouches} from './combat-hit.mjs?v=foot-lock-1';
+import {wardTouches} from './combat-hit.mjs?v=smooth-motion-1';
 import {ICE_BASIC} from './ice-basic.mjs?v=charge-step-1';
 import * as T from './three.module.js';
-import {LiveMagic} from './live-magic.mjs?v=foot-lock-1';
+import {LiveMagic} from './live-magic.mjs?v=smooth-motion-1';
 import {QueuedCharge} from './queued-charge.mjs?v=charge-step-1';
-import {SpaceSkill,interceptSpaceShots} from './space-skills.mjs?v=foot-lock-1';
+import {SpaceSkill,interceptSpaceShots} from './space-skills.mjs?v=smooth-motion-1';
 import {ForcedMotion} from './motion.mjs';
 import {CastRecoil,chargeSetback} from './combat-response.mjs';
 import {chargeMoveScale} from './magic-motion.mjs';

@@ -1,4 +1,4 @@
-import {validateProject,samplePose} from './pose-data.mjs?v=foot-lock-1';
+import {validateProject,samplePose} from './pose-data.mjs?v=smooth-motion-1';
 import {motionStorageKey,characterProfile} from './character-profiles.mjs?v=heel-free-1';
 import {migrateAnklePivot} from './ankle-pivot.mjs?v=heel-free-1';
 let storage=motionStorageKey('default'),ankleLift=0,ankleBack=0;

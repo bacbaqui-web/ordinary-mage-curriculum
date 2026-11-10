@@ -1,4 +1,4 @@
-import {PROTOCOL} from './duel.mjs?v=foot-lock-1';
+import {PROTOCOL} from './duel.mjs?v=smooth-motion-1';
 export class PvpClient {
  constructor(onMessage,onDisconnect){this.onMessage=onMessage;this.onDisconnect=onDisconnect;this.ws=null;this.round=null;this.index=null;this.generation=0;}
  async connect(url){this.disconnect();const generation=this.generation;return new Promise((resolve,reject)=>{const ws=this.ws=new WebSocket(url);let ready=false;const timeout=setTimeout(()=>{ws.close();reject(Error('서버에 연결하지 못했습니다. 서버 주소와 인터넷 연결을 확인하세요.'));},8000);

@@ -84,3 +84,16 @@ for(const [hand,clip] of [['left',left],['right',right]]){
  p.magic.reset();
 }
 console.log('PASS: left and right first-ring charge reuse the matching cast pose');
+
+// Real game transitions begin at the last displayed pose, including interrupted blends.
+stores.set(motionStorageKey('ice'),JSON.stringify({version:1,rigVersion:7,actions:[makeWalk(1.5),idle,left,right]}));
+const blendPuppet=iceWizard.userData.puppet;blendPuppet.magic.reset();blendPuppet.basicAttack=null;blendPuppet.icePose=[];
+animateWizard(iceWizard,.016,{speed:0});projectWizard(iceWizard,camera);
+const standing=blendPuppet.lastPositions.Head.clone();
+animateWizard(iceWizard,.016,{speed:4.4});projectWizard(iceWizard,camera);
+assert.ok(blendPuppet.lastPositions.Head.distanceTo(standing)<1e-8,'walk transition starts without a jump');
+animateWizard(iceWizard,.09,{speed:4.4});projectWizard(iceWizard,camera);
+const middle=blendPuppet.lastPositions.Head.clone();assert.ok(middle.distanceTo(standing)>0);
+blendPuppet.playBasicAttack('right');animateWizard(iceWizard,.016,{speed:0});projectWizard(iceWizard,camera);
+assert.ok(blendPuppet.lastPositions.Head.distanceTo(middle)<1e-8,'interrupted transition starts from rendered pose');
+console.log('PASS: smooth standing/walking transition and interruption without snapping');

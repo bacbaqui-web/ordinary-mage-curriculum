@@ -1,17 +1,17 @@
 import {ensureBasicAttacks,ensureIdle,actionGroups} from './motion-catalog.mjs?v=idle-pose-1';
 import {migrateAnklePivot} from './ankle-pivot.mjs?v=heel-free-1';
 import {CHARACTERS,characterProfile,motionStorageKey,projectForCharacter,assertCharacterImport} from './character-profiles.mjs?v=heel-free-1';
-import {CharacterRig,fitProjectToRig} from './character-rig.mjs?v=foot-lock-1';
-import {ensureMagicClips} from './magic-clips.mjs?v=foot-lock-1';
-import {uniqueMotions,mergeMotions} from './pose-library.mjs?v=foot-lock-1';
+import {CharacterRig,fitProjectToRig} from './character-rig.mjs?v=smooth-motion-1';
+import {ensureMagicClips} from './magic-clips.mjs?v=smooth-motion-1';
+import {uniqueMotions,mergeMotions} from './pose-library.mjs?v=smooth-motion-1';
 import * as T from './three.module.js';
 import {footFaces} from './foot-shape.mjs';
 import {PassiveFoot} from './passive-foot.mjs';
 const feet={LeftFoot:new PassiveFoot(),RightFoot:new PassiveFoot()};
 let footShapes={};
-import {moveJoint as movePoseJoint,applyFootLocks} from './pose-constraints.mjs?v=foot-lock-1';
-import {demoMotion} from './motion-puppet.mjs?v=foot-lock-1';
-import {JOINTS,LABELS,samplePose,validateProject} from './pose-data.mjs?v=foot-lock-1';
+import {moveJoint as movePoseJoint,applyFootLocks} from './pose-constraints.mjs?v=smooth-motion-1';
+import {demoMotion} from './motion-puppet.mjs?v=smooth-motion-1';
+import {JOINTS,LABELS,samplePose,validateProject} from './pose-data.mjs?v=smooth-motion-1';
 const $=id=>document.getElementById(id);
 const editableJoints=JOINTS.filter(n=>n!=='Neck');
 const footAnchors=()=>Object.fromEntries(Object.keys(current().footLocks||{}).filter(n=>current().footLocks[n]).map(n=>[n,current().keys[0].pose[n]]));
@@ -21,7 +21,7 @@ const modelScene=new T.Scene();modelScene.add(new T.HemisphereLight(0xffffff,0x8
 const light=new T.DirectionalLight(0xffffff,2);light.position.set(-3,6,5);modelScene.add(light);
 let modelRenderer=null;
 function renderer(){if(!modelRenderer){modelRenderer=new T.WebGLRenderer({alpha:true,antialias:true});modelRenderer.setPixelRatio(1);modelRenderer.setClearColor(0,0);}return modelRenderer;}
-function initial(){const {root,clips}=demoMotion(),mixer=new T.AnimationMixer(root);return {version:1,compactShoulders:true,actions:clips.map((clip,i)=>{mixer.stopAllAction();mixer.clipAction(clip).play();const samples=i===0?[[0,0],[3,.25],[6,.5],[9,.75],[12,1]]:i===4?[[0,.3],[1,1],[2,1.12],[6,1.12],[10,0]]:[[0,clip.tracks[0].times[1]],[1,clip.tracks[0].times[2]],[2,clip.tracks[0].times[i===1?4:3]],[6,clip.tracks[0].times[i===1?4:3]],[10,0]];return {name:clip.name,binding:clip.name,frames:i===0?13:12,fps:12,keys:samples.map(([frame,time],index)=>{mixer.setTime(time);root.updateMatrixWorld(true);const pose=Object.fromEntries(JOINTS.map(n=>[n,root.getObjectByName(n).getWorldPosition(new T.Vector3()).toArray()]));return {frame,ease:i===0?'linear':index===3?'smooth':'hold',pose};})};})};}
+function initial(){const {root,clips}=demoMotion(),mixer=new T.AnimationMixer(root);return {version:1,compactShoulders:true,actions:clips.map((clip,i)=>{mixer.stopAllAction();mixer.clipAction(clip).play();const samples=i===0?[[0,0],[3,.25],[6,.5],[9,.75],[12,1]]:i===4?[[0,.3],[1,1],[2,1.12],[6,1.12],[10,0]]:[[0,clip.tracks[0].times[1]],[1,clip.tracks[0].times[2]],[2,clip.tracks[0].times[i===1?4:3]],[6,clip.tracks[0].times[i===1?4:3]],[10,0]];return {name:clip.name,binding:clip.name,frames:i===0?13:12,fps:12,keys:samples.map(([frame,time],index)=>{mixer.setTime(time);root.updateMatrixWorld(true);const pose=Object.fromEntries(JOINTS.map(n=>[n,root.getObjectByName(n).getWorldPosition(new T.Vector3()).toArray()]));return {frame,ease:'smooth',pose};})};})};}
 let project=initial(),index=0,frame=0,selected='LeftHand',playing=false,history=[],future=[];
 try{const raw=localStorage.getItem(storage);if(raw)project=validateProject(JSON.parse(raw));}catch{$('status').textContent='저장한 동작을 읽지 못해 기본 동작을 열었습니다.';}
 function compactShoulders(p){
@@ -39,7 +39,7 @@ function prepare(p){
 }
 prepare(project);
 const current=()=>project.actions[index],pose=()=>samplePose(current(),frame);
-function save(message='브라우저에 저장됨'){current().updatedAt=Date.now();project.characterId=characterId;try{localStorage.setItem(storage,JSON.stringify(project));$('status').textContent=`${characterProfile(characterId).label} · ${message}`;unsaved=false;return true;}catch{unsaved=true;$('status').textContent='자동 저장 공간이 부족합니다. 파일 저장으로 보관하세요.';return false;}}
+function save(message='브라우저에 저장됨'){for(const action of project.actions)for(const key of action.keys)key.ease='smooth';current().updatedAt=Date.now();project.characterId=characterId;try{localStorage.setItem(storage,JSON.stringify(project));$('status').textContent=`${characterProfile(characterId).label} · ${message}`;unsaved=false;return true;}catch{unsaved=true;$('status').textContent='자동 저장 공간이 부족합니다. 파일 저장으로 보관하세요.';return false;}}
 function checkpoint(){history.push(JSON.stringify({project,index,frame}));if(history.length>60)history.shift();future=[];}
 function restore(s){const v=JSON.parse(s);project=v.project;index=v.index;frame=v.frame;playing=false;save();sync();}
 function stop(){playing=false;$('play').textContent='재생';}
@@ -82,7 +82,7 @@ function sync(){
  const visible=actionGroups(project.actions).flatMap(g=>g.entries);if(visible.length&&!visible.some(e=>e.index===index)){index=visible[0].index;frame=0;stop();}
  $('action').replaceChildren(...actionGroups(project.actions).map(group=>{const el=document.createElement('optgroup');el.label=group.label;el.append(...group.entries.map(({action,index})=>new Option(action.name,index)));return el;}));$('action').value=index;$('name').value=current().name;$('frames').value=current().frames;$('fps').value=current().fps;$('joint').value=selected;
  $('scrub').max=current().frames-1;$('scrub').value=frame;$('frameLabel').textContent=`${Math.floor(frame)+1} / ${current().frames} 프레임`;
- const p=pose()[selected];['x','y','z'].forEach((n,i)=>$(n).value=p[i].toFixed(3));const k=current().keys.find(k=>k.frame===frame);$('ease').value=k?.ease||'smooth';$('delete').disabled=!k||current().keys.length===1;
+ const p=pose()[selected];['x','y','z'].forEach((n,i)=>$(n).value=p[i].toFixed(3));const k=current().keys.find(k=>k.frame===frame);$('delete').disabled=!k||current().keys.length===1;
  $('undo').disabled=!history.length;$('redo').disabled=!future.length;$('play').textContent=playing?'일시정지':'재생';
  $('timeline').replaceChildren(...Array.from({length:current().frames},(_,i)=>{const b=document.createElement('button');const has=current().keys.some(k=>k.frame===i);b.textContent=(has?'◆ ':'')+(i+1);b.className=(has?'key ':'')+(i===frame?'selected':'');b.setAttribute('aria-label',`${i+1}프레임${has?' 키프레임':''}`);b.dataset.frame=i;b.onclick=()=>{if(loading)return;stop();frame=i;sync();};if(has)bindKeyDrag(b,i);return b;}));
 }
@@ -102,7 +102,6 @@ $('new').onclick=()=>{checkpoint();const p=pose();project.actions.push({name:'�
 $('copy').onclick=()=>{checkpoint();const a=structuredClone(current());a.name+=' 복사';delete a.binding;project.actions.push(a);index=project.actions.length-1;stop();save();sync();};
 for(const [i,n] of ['x','y','z'].entries())$(n).onchange=()=>{const value=Number($(n).value);if(!Number.isFinite(value)||Math.abs(value)>10){sync();return;}stop();frame=Math.floor(frame);checkpoint();const k=key(),target=[...k.pose[selected]];target[i]=value;k.pose=moveJoint(k.pose,selected,target);save();sync();};
 $('add').onclick=()=>{stop();frame=Math.floor(frame);checkpoint();key();save();sync();};$('delete').onclick=()=>{if(playing||!current().keys.some(k=>k.frame===frame))return;if(current().keys.length===1){$('status').textContent='키프레임은 하나 이상 있어야 합니다.';return;}checkpoint();current().keys=current().keys.filter(k=>k.frame!==frame);save();sync();$('status').textContent=`${frame+1}프레임의 키프레임을 삭제했습니다.`;};
-$('ease').onchange=()=>{const value=$('ease').value;stop();frame=Math.floor(frame);checkpoint();key().ease=value;save();sync();};
 $('frames').onchange=()=>{const n=Number($('frames').value);if(!Number.isInteger(n)||n<2||n>240){sync();return;}if(current().keys.some(k=>k.frame>=n)){$('status').textContent='뒤쪽 키프레임을 먼저 옮기거나 삭제하세요.';$('frames').value=current().frames;return;}checkpoint();current().frames=n;frame=Math.min(frame,n-1);save();sync();};
 $('fps').onchange=()=>{const n=Number($('fps').value);if(n<1||n>60||!Number.isFinite(n)){sync();return;}checkpoint();current().fps=n;save();};
 $('scrub').oninput=()=>{stop();frame=Number($('scrub').value);sync();};
