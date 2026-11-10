@@ -26,7 +26,7 @@ import {Duel,STEP} from './duel.mjs?v=ice-trail-fall-1';
 import {mountPvpUI} from './pvp-ui.mjs?v=game-selection-1';
 import {OBSTACLES,arenaCollision} from './arena-rules.mjs';
 import {buildTownMap,lightTown} from './town-map.mjs';
-import {TOWN_HALF,ENCOUNTERS,DISTRICTS} from './town-layout.mjs';
+import {TOWN_HALF,ENCOUNTERS,DISTRICTS,BUILDINGS} from './town-layout.mjs';
 import {createTownCamera,positionTownCamera} from './town-camera.mjs';
 let onlineCore=null,pvp=null,onlineResultShown=false,lastOnlineAim=0,onlineRenderAt=0,onlinePrevious=null;
 import {redLightningPlacement} from './red-lightning-spec.mjs?v=bolt17';
@@ -415,8 +415,8 @@ function updateCamera(){const zoomText='확대 '+Math.round(24/(mapOverview?over
 const mapButton=document.createElement('button');mapButton.textContent='전체 지도';mapButton.setAttribute('aria-pressed','false');document.querySelector('header .actions').prepend(mapButton);mapButton.onclick=()=>{mapOverview=!mapOverview;mapButton.textContent=mapOverview?'전투 시점':'전체 지도';mapButton.setAttribute('aria-pressed',String(mapOverview));updateCamera();};
 
 function renderHunt(){
- const canvas=$('minimap'),c=canvas.getContext('2d'),scale=(canvas.width-24)/(TOWN_HALF*4),sy=scale,cx=canvas.width/2,cy=canvas.height/2;
- // Top-down view, keeping the battlefield heading (45 degrees).
+ const canvas=$('minimap'),c=canvas.getContext('2d'),scale=(canvas.width-24)/(TOWN_HALF*4),sy=scale*.7,cx=canvas.width/2,cy=canvas.height/2+6;
+ // Slightly tilted map with the battlefield heading (45 degrees).
  const p=a=>({x:cx+(a.x-a.z)*scale,y:cy+(a.x+a.z)*sy});
  c.clearRect(0,0,canvas.width,canvas.height);
  c.save();c.setTransform(scale,sy,-scale,sy,cx,cy);
@@ -424,6 +424,15 @@ function renderHunt(){
  for(const d of DISTRICTS){c.fillStyle='#'+d.color.toString(16).padStart(6,'0');c.fillRect(d.x-24,d.z-24,48,48);}
  for(const o of obstacles){c.fillStyle='#39474c';c.fillRect(o.x-o.w/2,o.z-o.h/2,o.w,o.h);}
  c.restore();
+ // Extruded building footprints: shaded walls and a lighter roof.
+ const face=(points,color)=>{c.beginPath();points.forEach((q,i)=>i?c.lineTo(q.x,q.y):c.moveTo(q.x,q.y));c.closePath();c.fillStyle=color;c.fill();c.strokeStyle='#263b4266';c.lineWidth=.8;c.stroke();};
+ for(const b of [...BUILDINGS].sort((a,b)=>(a.x+a.z)-(b.x+b.z))){
+  const base=[{x:b.x-b.w/2,z:b.z-b.h/2},{x:b.x+b.w/2,z:b.z-b.h/2},{x:b.x+b.w/2,z:b.z+b.h/2},{x:b.x-b.w/2,z:b.z+b.h/2}].map(p);
+  const roof=base.map(q=>({x:q.x,y:q.y-b.height*1.35}));
+  face([base[1],base[2],roof[2],roof[1]],'#63777e');
+  face([base[2],base[3],roof[3],roof[2]],'#87979a');
+  face(roof,b.id==='factory'?'#a9bdc6':b.id==='office'?'#e1d9c4':'#c8c5b5');
+ }
  const corners=[{x:-TOWN_HALF,z:-TOWN_HALF},{x:TOWN_HALF,z:-TOWN_HALF},{x:TOWN_HALF,z:TOWN_HALF},{x:-TOWN_HALF,z:TOWN_HALF}].map(p);
  c.beginPath();corners.forEach((q,i)=>i?c.lineTo(q.x,q.y):c.moveTo(q.x,q.y));c.closePath();c.strokeStyle='#b4c3b9';c.lineWidth=1.5;c.stroke();
  for(const a of [...monsters,enemy,player]){if(a.dead||a!==player&&!visibleTo(player,a))continue;const q=p(a);c.fillStyle=a===player?'#55e477':a===enemy?'#549cff':'#ff5757';c.beginPath();c.arc(q.x,q.y,a.monster?5:7,0,Math.PI*2);c.fill();c.strokeStyle='#23332c';c.lineWidth=1;c.stroke();}

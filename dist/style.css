@@ -75,7 +75,7 @@ header{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:20px;align-item
 /* Match the battlefield projection; leave space outside the diamond transparent. */
 .minimap-panel{border:0;background:transparent;overflow:visible}.minimap-panel canvas{height:auto;filter:drop-shadow(0 2px 4px #0008)}.minimap-panel small{border-radius:5px;background:#152128df}
 
-/* Larger top-down minimap, retaining the same map heading. */
-.minimap-panel canvas{width:360px;height:auto}
-@media(max-width:850px),(max-height:720px){.minimap-panel canvas{width:240px}}
-@media(max-width:600px){.minimap-panel canvas{width:180px}}
+/* Compact tilted minimap, close to the upper edge. */
+.minimap-panel{top:10px;left:16px;bottom:auto}.minimap-panel canvas{width:300px;height:auto}
+@media(max-width:850px),(max-height:720px){.minimap-panel canvas{width:200px}}
+@media(max-width:650px){.minimap-panel{top:72px;left:8px}.minimap-panel canvas{width:150px}}
