@@ -1,7 +1,7 @@
 import {CharacterRig} from './character-rig.mjs?v=turn-rates-1';
 import {characterProfile} from './character-profiles.mjs?v=heel-free-1';
 import * as T from './three.module.js';
-import {MotionPuppet} from './motion-puppet.mjs?v=charge-move-1';
+import {MotionPuppet} from './motion-puppet.mjs?v=run-walk-1';
 export function createWizard(scene,color,trim){
  const g=new T.Group(),body=new T.Group();body.position.y=1;g.add(body);
  const palette=[],joints={},parts=[];
@@ -29,7 +29,7 @@ export function animateWizard(g,dt,{speed=0,charging=false,chargeStage=1,cast=0,
  const u=g.userData,j=u.joints;u.modelDt=dt;if(!j)return;
  if(charging&&u.puppet.magic.mode!=='hold')u.puppet.magic.press();
  u.puppet.magic.update(dt,chargeStage);
- u.puppet.locomotionName=speed<.05?'대기':'기본 걷기';u.puppet.idleTime=(u.puppet.idleTime||0)+(speed<.05?dt:-(u.puppet.idleTime||0));
+ const movingClip=charging&&chargeStage===1?'걷기':'달리기';const clipIndex=u.puppet.clips.findIndex(c=>c.name===movingClip);if(clipIndex>=0&&u.puppet.selectedClip!==clipIndex)u.puppet.select(clipIndex);u.puppet.locomotionName=speed<.05?'대기':movingClip;u.puppet.idleTime=(u.puppet.idleTime||0)+(speed<.05?dt:-(u.puppet.idleTime||0));
  u.puppet.update(dt,{speed:speed>0?speed/4.4:0,charging,cast});if(speed<.05&&!charging&&!cast){u.puppet.time=0;u.puppet.update(0,{speed:0});}
  u.stride+=(Math.min(1,speed/4.4)-u.stride)*(1-Math.exp(-dt*14));u.phase+=dt*speed*2.5;
  const swing=Math.sin(u.phase)*.65*u.stride;

@@ -1,7 +1,7 @@
-import {firstRingClip} from './motion-catalog.mjs?v=hand-clips-1';
+import {firstRingClip} from './motion-catalog.mjs?v=run-walk-1';
 import {PoseTransition} from './pose-transition.mjs?v=smooth-motion-1';
 import {magicClipName} from './magic-clips.mjs?v=smooth-motion-1';
-import {savedMotion,savedPose,createMotionReader} from './live-motions.mjs?v=loop-playback-2';
+import {savedMotion,savedPose,createMotionReader} from './live-motions.mjs?v=run-walk-1';
 import * as T from './three.module.js';
 import {MagicMotion} from './magic-motion.mjs?v=charge-move-1';
 import {actionClips} from './action-clips.mjs';
@@ -18,7 +18,8 @@ export function demoMotion(){
  for(const [side,x] of [['Left',-.36],['Right',.36]]){add(side+'Arm','Spine',x*2/3,0,0);add(side+'ForeArm',side+'Arm',0,-.32,0);add(side+'Hand',side+'ForeArm',0,-.32,0);add(side+'UpLeg','Hips',x*.45,-.08,0);add(side+'Leg',side+'UpLeg',0,-.4,0);add(side+'Foot',side+'Leg',0,-.4,.06);}
  const tracks=[],times=Array.from({length:33},(_,i)=>i/32);
  for(const [name,sign,amount,bend] of [['LeftUpLeg',1,.65,false],['RightUpLeg',-1,.65,false],['LeftArm',-1,.5,false],['RightArm',1,.5,false],['LeftLeg',-1,.8,true],['RightLeg',1,.8,true]]){const values=[];for(const t of times){let a=Math.sin(t*Math.PI*2)*sign*amount;if(bend)a=Math.max(0,a);values.push(...new T.Quaternion().setFromAxisAngle(new T.Vector3(1,0,0),a).toArray());}tracks.push(new T.QuaternionKeyframeTrack(name+'.quaternion',times,values));}
- return {root,clips:[new T.AnimationClip('기본 걷기',1,tracks),...actionClips(names)]};
+ const walkTracks=tracks.map(track=>{const t=track.clone();for(let i=0;i<t.values.length;i+=4){const q=new T.Quaternion().fromArray(t.values,i);q.slerp(new T.Quaternion(),.55).toArray(t.values,i);}for(let i=0;i<t.times.length;i++)t.times[i]*=1.4;return t;});
+ return {root,clips:[new T.AnimationClip('달리기',1,tracks),...actionClips(names),new T.AnimationClip('걷기',1.4,walkTracks)]};
 }
 export async function readMotion(file){
  const ext=file.name.split('.').pop().toLowerCase();
@@ -70,7 +71,7 @@ export class MotionPuppet{
    else if(clip){const basic=readPose(this.basicAttack.name,this.basicAttack.time);for(const [n,a] of Object.entries(basic))positions[n]=new T.Vector3(...a);positions.LeftToe=positions.LeftFoot.clone().add(new T.Vector3(0,0,.22));positions.RightToe=positions.RightFoot.clone().add(new T.Vector3(0,0,.22));basicEdited=true;}
   }
   const releaseName=this.chargeHand&&this.magic.stage===1?firstRingClip(this.chargeHand,'release'):magicClipName(this.magic.stage,'release');const magicClip=readMotion(releaseName)||readMotion('마법 시전');this.magic.splitRelease=!!readMotion(releaseName);this.magic.releaseDuration=magicClip?Math.max(10/12,magicClip.frames/magicClip.fps):10/12;
-  if(this.magic.mode==='hold'&&this.magic.stage===1&&this.moveSpeed>0){const walk=readPose('기본 걷기',this.time,{loop:true});for(const [n,p] of Object.entries(walkingLegs))positions[n]=walk?.[n]?new T.Vector3(...walk[n]):p;for(const side of ['Left','Right'])positions[side+'Toe']=positions[side+'Foot'].clone().add(new T.Vector3(0,0,.22));}
+  if(this.magic.mode==='hold'&&this.magic.stage===1&&this.moveSpeed>0){const walk=readPose('걷기',this.time,{loop:true});for(const [n,p] of Object.entries(walkingLegs))positions[n]=walk?.[n]?new T.Vector3(...walk[n]):p;for(const side of ['Left','Right'])positions[side+'Toe']=positions[side+'Foot'].clone().add(new T.Vector3(0,0,.22));}
   this.bodyFollow?.apply(positions,this.group);
   for(const n of Object.keys(positions))this.group.localToWorld(positions[n]);
   // Basic ice casts own the arm pose, after saved clips and body turning.

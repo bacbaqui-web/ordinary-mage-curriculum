@@ -1,13 +1,13 @@
 import {roundDamage} from './damage-number.mjs?v=integer-damage-1';
 import {castControlsLocked,followCastAim} from './cast-lock.mjs?v=charge-move-1';
 import {attackCooldown} from './attack-cooldown.mjs';
-import {wardTouches} from './combat-hit.mjs?v=charge-move-1';
+import {wardTouches} from './combat-hit.mjs?v=run-walk-1';
 import {ICE_BASIC} from './ice-basic.mjs?v=cast-light-1';
 import * as T from './three.module.js';
 import {spellAimHeight} from './cursor-aim.mjs?v=shift-trajectory-1';
-import {LiveMagic} from './live-magic.mjs?v=cast-light-1';
+import {LiveMagic} from './live-magic.mjs?v=run-walk-1';
 import {QueuedCharge} from './queued-charge.mjs?v=integer-damage-1';
-import {SpaceSkill,interceptSpaceShots} from './space-skills.mjs?v=charge-move-1';
+import {SpaceSkill,interceptSpaceShots} from './space-skills.mjs?v=run-walk-1';
 import {ForcedMotion} from './motion.mjs';
 import {CastRecoil,chargeSetback} from './combat-response.mjs';
 import {chargeMoveScale} from './magic-motion.mjs?v=charge-move-1';

@@ -1,5 +1,5 @@
 import {groundSpec} from './ground.mjs?v=integer-damage-1';
-import {mountPreview} from './spell-preview.mjs?v=charge-move-1';
+import {mountPreview} from './spell-preview.mjs?v=run-walk-1';
 import {RUNES,DEFAULT_LOADOUT,validLoadout,spellName} from './loadout.mjs?v=integer-damage-1';
 import {elementalSpec} from './elements.mjs?v=integer-damage-1';
 import {forceSpec,wardSpec} from './forces.mjs?v=zones1';

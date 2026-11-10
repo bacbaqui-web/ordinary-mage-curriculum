@@ -1,7 +1,7 @@
 export const BASIC_ATTACKS=['좌클릭 기본 공격','우클릭 기본 공격'];
 export const firstRingClip=(hand,mode)=>`1륜 ${hand==='right'?'우클릭':'좌클릭'} ${mode==='hold'?'충전':'발사'}`;
 export const FIRST_RING_CLIPS=['hold','release'].flatMap(mode=>['left','right'].map(hand=>firstRingClip(hand,mode)));
-export const ACTION_ORDER=['대기','기본 걷기',...FIRST_RING_CLIPS,'2륜 충전','2륜 발사','3륜 충전','3륜 발사'];
+export const ACTION_ORDER=['대기','달리기','걷기',...FIRST_RING_CLIPS,'2륜 충전','2륜 발사','3륜 충전','3륜 발사'];
 export function ensureBasicAttacks(project){
  const source=project.actions.find(a=>(a.binding||a.name)==='1륜 발사')||project.actions.find(a=>(a.binding||a.name)==='마법 시전');
  if(!source)return false;let changed=false;
@@ -17,7 +17,7 @@ export function actionGroups(actions){
 
 export function ensureIdle(project){
  if(project.actions.some(a=>(a.binding||a.name)==='대기'))return false;
- const walk=project.actions.find(a=>(a.binding||a.name)==='기본 걷기');
+ const walk=project.actions.find(a=>['달리기','기본 걷기'].includes(a.binding||a.name));
  if(!walk?.keys.length)return false;
  const base=structuredClone(walk.keys[0].pose);
  // A walking key may have one leg raised. Plant both feet for the new idle only.
@@ -42,4 +42,18 @@ export function ensureFirstRingClips(project){
   if(!source)continue;const action=structuredClone(source);action.name=action.binding=name;project.actions.push(action);changed=true;
  }
  return changed;
+}
+
+// Preserve the old authored running cycle; create walking only when absent.
+export function ensureLocomotion(project){
+ let changed=false;
+ const find=name=>project.actions.filter(a=>(a.binding||a.name)===name).sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0))[0];
+ if(!find('달리기'))for(const a of project.actions)if((a.binding||a.name)==='기본 걷기'){a.name=a.binding='달리기';changed=true;}
+ const run=find('달리기');if(!run?.keys?.length||find('걷기'))return changed;
+ const walk=structuredClone(run);walk.name=walk.binding='걷기';delete walk.updatedAt;delete walk.footLocks;
+ const duration=Math.max(1,run.frames-1);walk.frames=Math.max(run.frames,Math.round(duration*1.4)+1);
+ const joints=Object.keys(run.keys[0].pose),mean=Object.fromEntries(joints.map(n=>[n,[0,1,2].map(axis=>run.keys.reduce((sum,k)=>sum+k.pose[n][axis],0)/run.keys.length)]));
+ for(const side of ['Left','Right'])for(const part of ['Foot','Toe']){const n=side+part;if(mean[n])mean[n][1]=Math.min(...run.keys.map(k=>k.pose[n][1]));}
+ for(const k of walk.keys){k.frame=Math.round(k.frame/duration*(walk.frames-1));for(const n of joints)k.pose[n]=k.pose[n].map((v,axis)=>mean[n][axis]+(v-mean[n][axis])*.45);}
+ walk.loop=true;project.actions.push(walk);return true;
 }
