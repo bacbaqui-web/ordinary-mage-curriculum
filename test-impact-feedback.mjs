@@ -14,3 +14,12 @@ assert.deepEqual(normalize(DEFAULTS),DEFAULTS);assert.equal(readImpactSettings({
 assert.equal(attackPose(NONE,.2).offset,0);assert.equal(hitPose(NONE,.1).squash,0);assert.equal(numberOffset(NONE,.2).x,0);
 console.log('PASS: delayed casts, interruption, hit stop, render-only transforms, projectile restoration, cleanup and saved settings');
 feedback.hit(actor,dir,7);actor.dead=true;feedback.step(2);assert.equal(feedback.hits.size,0,'expired dead actors are released');feedback.clear();
+
+// Game updates yaw and knockdown separately. Preserve the Euler representation,
+// not only an equivalent quaternion, across temporary impact transforms.
+for(const yaw of [-3,-2,-Math.PI/2,Math.PI/2,2,3]){
+ g.rotation.set(0,yaw,0);feedback.hit(actor,dir,7);feedback.actor(actor);feedback.restore();
+ g.rotation.y=yaw+.01;g.rotation.z=0;
+ assert(new T.Vector3(0,1,0).applyQuaternion(g.quaternion).y>.999,'impact must not flip actor below ground at yaw '+yaw);
+ feedback.clear();
+}

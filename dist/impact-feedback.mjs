@@ -21,7 +21,7 @@ export class ImpactFeedback{
  const group=new T.Group();group.position.set(actor.x,actor.monster?.65:1.2,actor.z);group.quaternion.setFromUnitVectors(FORWARD,direction);this.scene.add(group);
  for(let i=0;i<s.particles;i++){const mesh=new T.Mesh(new T.OctahedronGeometry(.045),new T.MeshBasicMaterial({color:i%3?0xa8e5ff:0xffffff,transparent:true}));group.add(mesh);}this.bursts.push({group,s,born:this.time});if(this.bursts.length>12)this.disposeGroup(this.bursts.shift().group);
  }
- remember(mesh){const p=mesh.position.clone(),q=mesh.quaternion.clone(),s=mesh.scale.clone();this.restores.push(()=>{mesh.position.copy(p);mesh.quaternion.copy(q);mesh.scale.copy(s);mesh.updateMatrixWorld(true);});}
+ remember(mesh){const p=mesh.position.clone(),rotation=mesh.rotation.clone(),s=mesh.scale.clone();this.restores.push(()=>{mesh.position.copy(p);mesh.rotation.copy(rotation);mesh.scale.copy(s);mesh.updateMatrixWorld(true);});}
  actor(actor){if(!actor.g)return;const a=this.attacks.get(actor),h=this.hits.get(actor);if(!a&&!h)return;this.remember(actor.g);applyActorImpact(actor.g,a?attackPose(a.s,this.time-a.born):null,h?hitPose(h.s,this.time-h.born):null,a?.dir,h?.dir);
  if(h&&hitPose(h.s,this.time-h.born).flash){for(const entry of actor.g.userData.palette||[]){const m=entry.material,color=m.color.clone(),emissive=m.emissive?.clone();this.restores.push(()=>{m.color.copy(color);if(emissive)m.emissive.copy(emissive);});m.color.set(0xffffff);m.emissive?.set(0xffffff);}}
  if(a&&this.time-a.born>(a.s.anticipation+a.s.follow)/1000+.01)this.attacks.delete(actor);if(h&&this.time-h.born>Math.max(h.s.recovery/1000,h.s.flash/1000))this.hits.delete(actor);
