@@ -245,6 +245,12 @@ function draw(v,p){const {canvas,camera}=v,w=Math.round(canvas.clientWidth),h=Ma
  }
  if($('handles').checked){
   const links=segments.filter(([a,b])=>a!=='Neck'&&b!=='Neck').map(([a,b])=>[a,b]);links.push(['Spine','Head']);if(v.points.BagCenter)links.push(['BagCenter','BagDirection']);
+  const limbChains=['Left','Right'].flatMap(side=>[[side+'Arm',side+'ForeArm',side+'Hand'],[side+'UpLeg',side+'Leg',side+'Foot']]);
+  const highlighted=new Set(selection),highlightedLinks=new Set();
+  for(const chain of limbChains)if(chain.some(n=>selection.has(n))){
+   for(const n of chain)highlighted.add(n);
+   for(let i=1;i<chain.length;i++)highlightedLinks.add([chain[i-1],chain[i]].sort().join(':'));
+  }
   const nodes=Object.entries(v.points).filter(([n])=>n!=='Neck'),depths=nodes.map(([,p])=>p.z),near=Math.max(...depths),far=Math.min(...depths);
   const depth=p=>(p.z-far)/Math.max(.001,near-far),radius=(n,p)=>(selection.has(n)?5:3)+depth(p)*2.5;
   const edge=(n,p,ux,uy)=>{
@@ -263,10 +269,10 @@ function draw(v,p){const {canvas,camera}=v,w=Math.round(canvas.clientWidth),h=Ma
     const a=v.points[from],b=v.points[to],dx=b.x-a.x,dy=b.y-a.y,len=Math.hypot(dx,dy);if(len<1)continue;
     const end=edge(to,b,-dx/len,-dy/len)+.5,start=Math.abs(a.z-b.z)<1e-4?edge(from,a,dx/len,dy/len)+.5:0;if(len<=start+end)continue;
     ctx.beginPath();ctx.moveTo(a.x+dx/len*start,a.y+dy/len*start);ctx.lineTo(b.x-dx/len*end,b.y-dy/len*end);
-    ctx.strokeStyle=selection.has(from)||selection.has(to)?'#ffd37c':'#e4eff4';ctx.lineWidth=1+depth(a)+depth(b);ctx.stroke();
+    ctx.strokeStyle=highlightedLinks.has([from,to].sort().join(':'))||selection.has(from)||selection.has(to)?'#ffd37c':'#e4eff4';ctx.lineWidth=1+depth(a)+depth(b);ctx.stroke();
    }else{
-    const {n,p:a}=item,r=radius(n,a),active=selection.has(n);
-    ctx.beginPath();if(n==='Spine')ctx.rect(a.x-r,a.y-r,r*2,r*2);else if(n==='Hips'){ctx.moveTo(a.x-r,a.y-r);ctx.lineTo(a.x+r,a.y-r);ctx.lineTo(a.x,a.y+r);ctx.closePath();}else ctx.arc(a.x,a.y,r,0,Math.PI*2);ctx.fillStyle=active?'#f2c66d':'#314651';ctx.fill();ctx.lineWidth=1.2;ctx.strokeStyle=active?'#ffe5a0':'#e4eff4';ctx.stroke();
+    const {n,p:a}=item,r=radius(n,a),active=highlighted.has(n);
+    ctx.beginPath();if(n==='Spine')ctx.rect(a.x-r,a.y-r,r*2,r*2);else if(n==='Hips'){ctx.moveTo(a.x-r,a.y-r);ctx.lineTo(a.x+r,a.y-r);ctx.lineTo(a.x,a.y+r);ctx.closePath();}else ctx.arc(a.x,a.y,r,0,Math.PI*2);ctx.fillStyle='#314651';ctx.fill();ctx.lineWidth=1.2;ctx.strokeStyle=active?'#ffe5a0':'#e4eff4';ctx.stroke();
    }
   }
   ctx.restore();const a=v.points[selected];if(a){ctx.font='12px system-ui';ctx.fillStyle='#fff1bd';ctx.fillText(selection.size>1?`점 ${selection.size}개 선택`:jointLabel(selected),a.x+10,a.y-10);}
