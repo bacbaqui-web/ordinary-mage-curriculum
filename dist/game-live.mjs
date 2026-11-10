@@ -415,7 +415,19 @@ function updateCamera(){const zoomText='확대 '+Math.round(24/(mapOverview?over
 const mapButton=document.createElement('button');mapButton.textContent='전체 지도';mapButton.setAttribute('aria-pressed','false');document.querySelector('header .actions').prepend(mapButton);mapButton.onclick=()=>{mapOverview=!mapOverview;mapButton.textContent=mapOverview?'전투 시점':'전체 지도';mapButton.setAttribute('aria-pressed',String(mapOverview));updateCamera();};
 
 function renderHunt(){
- const c=$('minimap').getContext('2d');c.fillStyle='#596167';c.fillRect(0,0,180,160);const p=a=>({x:(a.x+TOWN_HALF)/(TOWN_HALF*2)*180,y:(a.z+TOWN_HALF)/(TOWN_HALF*2)*160});for(const d of DISTRICTS){const q=p(d);c.fillStyle='#'+d.color.toString(16).padStart(6,'0');c.fillRect(q.x-36,q.y-32,72,64);}for(const o of obstacles){const q=p(o);c.fillStyle='#39474c';c.fillRect(q.x-o.w*.75,q.y-o.h*2/3,o.w*1.5,o.h*4/3);}for(const a of [...monsters,enemy,player]){if(a.dead||a!==player&&!visibleTo(player,a))continue;const q=p(a);c.fillStyle=a===player?'#ffe3a0':a===enemy?'#ff837b':'#a7d878';c.beginPath();c.arc(q.x,q.y,a.monster?2.5:3.5,0,7);c.fill();}}
+ const canvas=$('minimap'),c=canvas.getContext('2d'),scale=(canvas.width-12)/(TOWN_HALF*4),sy=scale/Math.sqrt(3),cx=canvas.width/2,cy=canvas.height/2;
+ // Same ground-plane projection as the +X,+Y,+Z orthographic camera.
+ const p=a=>({x:cx+(a.x-a.z)*scale,y:cy+(a.x+a.z)*sy});
+ c.clearRect(0,0,canvas.width,canvas.height);
+ c.save();c.setTransform(scale,sy,-scale,sy,cx,cy);
+ c.fillStyle='#596167';c.fillRect(-TOWN_HALF,-TOWN_HALF,TOWN_HALF*2,TOWN_HALF*2);
+ for(const d of DISTRICTS){c.fillStyle='#'+d.color.toString(16).padStart(6,'0');c.fillRect(d.x-24,d.z-24,48,48);}
+ for(const o of obstacles){c.fillStyle='#39474c';c.fillRect(o.x-o.w/2,o.z-o.h/2,o.w,o.h);}
+ c.restore();
+ const corners=[{x:-TOWN_HALF,z:-TOWN_HALF},{x:TOWN_HALF,z:-TOWN_HALF},{x:TOWN_HALF,z:TOWN_HALF},{x:-TOWN_HALF,z:TOWN_HALF}].map(p);
+ c.beginPath();corners.forEach((q,i)=>i?c.lineTo(q.x,q.y):c.moveTo(q.x,q.y));c.closePath();c.strokeStyle='#b4c3b9';c.lineWidth=1.5;c.stroke();
+ for(const a of [...monsters,enemy,player]){if(a.dead||a!==player&&!visibleTo(player,a))continue;const q=p(a);c.fillStyle=a===player?'#ffe3a0':a===enemy?'#ff837b':'#a7d878';c.beginPath();c.arc(q.x,q.y,a.monster?2.5:3.5,0,Math.PI*2);c.fill();c.strokeStyle='#23332c';c.lineWidth=1;c.stroke();}
+}
 
 for(const k of KEYS){$('key-'+k).onclick=()=>{if(!running||paused||finished||onlineCore)return;if(learn(progress,k)){charge.clear();renderProgress();flash(RUNES[loadout[k]].name+(progress.ranks[k]===1?' 습득 · 마우스 조합에 추가':' 숙련도 상승')+(k==='q'&&loadout.q==='i'&&progress.ranks.q===2?' · 충전 중 Shift: 같은 속성 2륜':''));}};}
  syncLoadout();renderProgress();renderSelection();
