@@ -59,6 +59,12 @@ export class MotionPuppet{
   if(edited){for(const [n,a] of Object.entries(edited))positions[n]=new T.Vector3(...a);positions.LeftToe=positions.LeftFoot.clone().add(new T.Vector3(0,0,.22));positions.RightToe=positions.RightFoot.clone().add(new T.Vector3(0,0,.22));}
   if(this.magic.mode==='hold')this.basicAttack=null;
   let basicEdited=false;
+  if(this.chargeHand&&this.magic.mode==='hold'&&this.magic.stage===1){
+   const name=this.chargeHand==='right'?'우클릭 기본 공격':'좌클릭 기본 공격';
+   const attack=readMotion(name),releaseName=attack?.updatedAt?name:!this.chargeUsesIce?'1륜 발사':null;
+   const clip=releaseName&&readMotion(releaseName);
+   if(clip){const held=readPose(releaseName,Math.min(2,clip.frames-1)/clip.fps);for(const [n,a] of Object.entries(held))positions[n]=new T.Vector3(...a);positions.LeftToe=positions.LeftFoot.clone().add(new T.Vector3(0,0,.22));positions.RightToe=positions.RightFoot.clone().add(new T.Vector3(0,0,.22));basicEdited=true;}
+  }
   if(this.basicAttack){
    const clip=readMotion(this.basicAttack.name),duration=clip?clip.frames/clip.fps:.8;
    if(this.basicAttack.time>=duration)this.basicAttack=null;

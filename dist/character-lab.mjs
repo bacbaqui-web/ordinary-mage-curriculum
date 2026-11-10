@@ -3,7 +3,7 @@ import {useMotionCharacter} from './live-motions.mjs?v=actor-motion-1';
 import {CharacterRig} from './character-rig.mjs?v=bag-swing-1';
 import * as T from './three.module.js';
 import {ActionPlayback} from './action-playback.mjs';
-import {MotionPuppet,demoMotion,readMotion} from './motion-puppet.mjs?v=idle-pose-1';
+import {MotionPuppet,demoMotion,readMotion} from './motion-puppet.mjs?v=charge-pose-1';
 const $=id=>document.getElementById(id),scene=new T.Scene(),camera=new T.PerspectiveCamera(35,1,.1,100),renderer=new T.WebGLRenderer({antialias:false,alpha:true});renderer.setClearColor(0,0);renderer.setPixelRatio(1);
 const output=$('view'),ctx=output.getContext('2d'),mask=document.createElement('canvas'),maskCtx=mask.getContext('2d');
 const profile=characterProfile(new URLSearchParams(location.search).get('character'));useMotionCharacter(profile.id);let characterRig=null;const characterRoot=new T.Group();scene.add(characterRoot);scene.add(new T.HemisphereLight(0xffffff,0x84919d,2.4));const keyLight=new T.DirectionalLight(0xffffff,2);keyLight.position.set(-3,6,5);scene.add(keyLight);

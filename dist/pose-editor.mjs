@@ -10,7 +10,7 @@ import {PassiveFoot} from './passive-foot.mjs';
 const feet={LeftFoot:new PassiveFoot(),RightFoot:new PassiveFoot()};
 let footShapes={};
 import {moveJoint as movePoseJoint} from './pose-constraints.mjs?v=ankle-slide-1';
-import {demoMotion} from './motion-puppet.mjs?v=idle-pose-1';
+import {demoMotion} from './motion-puppet.mjs?v=charge-pose-1';
 import {JOINTS,LABELS,samplePose,validateProject} from './pose-data.mjs?v=cuff-pivot-1';
 const $=id=>document.getElementById(id);
 const editableJoints=JOINTS.filter(n=>n!=='Neck');

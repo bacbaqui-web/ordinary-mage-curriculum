@@ -3,7 +3,7 @@ import * as T from './dist/three.module.js';
 const listeners={};let data=null;
 globalThis.localStorage={getItem:()=>data};globalThis.addEventListener=(type,fn)=>listeners[type]=fn;
 const {MotionPuppet,demoMotion}=await import('./dist/motion-puppet.mjs');
-const {JOINTS}=await import('./dist/pose-data.mjs');
+const {JOINTS,samplePose}=await import('./dist/pose-data.mjs');
 const {root}=demoMotion();root.updateMatrixWorld(true);
 const pose=Object.fromEntries(JOINTS.map(n=>[n,root.getObjectByName(n).getWorldPosition(new T.Vector3()).toArray()]));
 const project={version:1,actions:[{name:'수정한 걷기',binding:'기본 걷기',frames:12,fps:12,keys:[{frame:0,ease:'hold',pose}]}]};
@@ -74,3 +74,13 @@ assert.equal(iceWizard.userData.puppet.lastPositions.Head.y,1.5,'moving returns 
 animateWizard(iceWizard,0,{speed:0});iceWizard.userData.puppet.playBasicAttack('left');projectWizard(iceWizard,camera);
 assert.equal(iceWizard.userData.puppet.lastPositions.Head.y,2.2,'attack overrides idle');
 console.log('PASS: saved idle in actual game, walking transition, attack priority');
+
+stores.set(motionStorageKey('ice'),JSON.stringify({version:1,rigVersion:7,actions:[makeWalk(1.5),left,right]}));
+for(const [hand,clip] of [['left',left],['right',right]]){
+ const p=iceWizard.userData.puppet;p.chargeHand=hand;p.chargeUsesIce=true;p.magic.press();p.magic.update(.4,1);projectWizard(iceWizard,camera);
+ const held=samplePose(clip,2);
+ assert.deepEqual(p.lastPositions.Head.toArray(),held.Head,'first ring holds the matching basic cast pose');
+ assert.deepEqual(p.lastPositions.LeftHand.toArray(),held.LeftHand,'charge arm correction preserves authored cast pose');
+ p.magic.reset();
+}
+console.log('PASS: left and right first-ring charge reuse the matching cast pose');
