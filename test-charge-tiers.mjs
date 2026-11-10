@@ -10,10 +10,10 @@ assert.equal(spell(2.4).sequence,'iq');assert.equal(spell(3.6).sequence,'iqw');
 const loads=[{q:'i',w:'q',e:'w'},{q:'q',w:'i',e:'w'}];
 for(const hand of ['left','right'])for(const elapsed of [.1,.8,1.2,2.39]){
  let cast;const d=new Duel(loads,{onCast:s=>cast=s});const a=d.actors[0];
- for(const key of ['q','w'])d.input(0,{action:'queue',key});d.input(0,{action:'begin',hand,point:{x:0,z:4}});a.charge.tick(elapsed);d.input(0,{action:'release',point:{x:0,z:4}});
+ for(const key of ['q','w'])d.input(0,{action:'queue',key});d.input(0,{action:'begin',hand,point:{x:0,z:4}});a.charge.tick(elapsed);d.input(0,{action:'release',point:{x:0,z:4}});a.charge.tick(1);d.castResult(a,a.charge.takeRelease());
  assert.equal(cast.power,1);assert.equal(cast.rangeScale,elapsed>=1.2?1.25:1);
- const effect=d.magic.ice.effects.find(e=>e.type===(hand==='left'?'iceWindup':'iceMist'));
- if(hand==='left'){d.magic.ice.update(.18);const shot=d.magic.ice.effects.find(e=>e.type==='shot');assert.ok(Math.abs(shot.life*shot.speed-7*cast.rangeScale)<1e-8);assert.equal(shot.damage,7);}
+ const effect=d.magic.ice.effects.find(e=>e.type===(hand==='left'?'shot':'iceMist'));
+ if(hand==='left'){const shot=d.magic.ice.effects.find(e=>e.type==='shot');assert.ok(Math.abs(shot.life*shot.speed-7*cast.rangeScale)<1e-8);assert.equal(shot.damage,7);}
  else{assert.equal(effect.range,2.6*cast.rangeScale);assert.equal(effect.max,1.2);}
  d.dispose();
 }

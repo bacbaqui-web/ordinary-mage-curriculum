@@ -13,7 +13,7 @@ test('server validates input, movement speed and collisions',()=>{
 });
 test('both fighters use identical charge, damage, mana and roll immunity',()=>{
  const d=new Duel(loads),[a,b]=d.actors;a.x=0;a.z=0;b.x=1.5;b.z=0;
- cast(d,0,['q'],{x:2,z:0});assert.ok(b.hp<100);assert.equal(a.mana,96);const hp=b.hp;cast(d,0,['q'],{x:2,z:0});assert.equal(b.hp,hp);assert.equal(a.mana,96);
+ cast(d,0,['q'],{x:2,z:0});assert.equal(b.hp,100);steps(d,10);assert.ok(b.hp<100);assert.ok(a.mana>=96&&a.mana<97);const mana=a.mana,hp=b.hp;cast(d,0,['q'],{x:2,z:0});assert.equal(b.hp,hp);assert.equal(a.mana,mana);
  d.dispose();
  for(const id of [0,1]){const duel=new Duel([{q:'l',w:'w',e:'e'},{q:'l',w:'w',e:'e'}]),actor=duel.actors[id],source=duel.actors[1-id];duel.input(id,{action:'roll',point:{x:actor.x+1,z:actor.z}});assert.equal(duel.hit(actor,20,source.dir,0,source),false);steps(duel,9);assert.equal(duel.hit(actor,20,source.dir,0,source),true);assert.equal(actor.hp,80);duel.dispose();}
 });

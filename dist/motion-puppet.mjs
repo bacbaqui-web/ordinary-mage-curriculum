@@ -78,7 +78,7 @@ export class MotionPuppet{
    const cycle=this.magic.mode==='idle'&&clip?Math.floor(time/(clip.frames/clip.fps)):0;
    const state=[motionName,this.magic.mode,this.magic.stage,this.basicAttack?.name||'',this.icePose?.map(p=>p.hand).join(',')||'',cycle].join(':');
    for(const v of Object.values(positions))this.group.worldToLocal(v);
-   (this.poseTransition??=new PoseTransition()).apply(positions,state,this.transitionDt||0);
+   this.poseTransition??=new PoseTransition();this.poseTransition.duration=this.magic.mode==='hold'?1/12:.18;this.poseTransition.apply(positions,state,this.transitionDt||0);
    for(const v of Object.values(positions))this.group.localToWorld(v);
   }
   this.transitionDt=0;
