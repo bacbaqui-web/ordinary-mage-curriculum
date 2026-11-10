@@ -14,18 +14,23 @@ export class ChargeCamera{
    y:(Math.sin(this.time*57+.7)+Math.cos(this.time*83)*.25)*shake*.7,flash:this.flash};
  }
 }
-export const RUNE_STROKE=.0408;
-const ringGeometry=new T.RingGeometry(.94,1.06,80),glowGeometry=new T.PlaneGeometry(2.6,2.6),lineGeometry=new T.PlaneGeometry(1,1);
+export const RUNE_STROKE=.0816;
+const ringGeometry=new T.TorusGeometry(1,.12,10,96),glowGeometry=new T.PlaneGeometry(2.6,2.6),lineGeometry=new T.PlaneGeometry(1,1);
 function material(color,opacity){const m=new T.MeshBasicMaterial({color,transparent:true,opacity,blending:T.AdditiveBlending,depthWrite:false,side:T.DoubleSide});m.userData.opacity=opacity;return m;}
 // A radial alpha texture keeps the center fully transparent, with light only at the rim.
 const glowSize=256,glowPixels=new Uint8Array(glowSize*glowSize*4);
 for(let y=0;y<glowSize;y++)for(let x=0;x<glowSize;x++){
  const r=Math.hypot((x+.5)/glowSize*2.6-1.3,(y+.5)/glowSize*2.6-1.3),i=(y*glowSize+x)*4;
  glowPixels[i]=glowPixels[i+1]=glowPixels[i+2]=255;
- glowPixels[i+3]=r<.80||r>1.20?0:Math.round(255*Math.exp(-(((r-1)/.085)**2)));
+ glowPixels[i+3]=r<.68||r>1.30?0:Math.round(255*Math.exp(-(((r-1)/.145)**2)));
 }
 const rimGlow=new T.DataTexture(glowPixels,glowSize,glowSize);rimGlow.magFilter=T.LinearFilter;rimGlow.minFilter=T.LinearFilter;rimGlow.needsUpdate=true;
-function runeRing(){const g=new T.Group();for(const [geo,alpha] of [[glowGeometry,.45],[glowGeometry,.7],[ringGeometry,1]]){const mat=material('#ffffff',alpha);if(geo===glowGeometry)mat.map=rimGlow;g.add(new T.Mesh(geo,mat));}return g;}
+export function runeRing(){const g=new T.Group();for(const [geo,alpha] of [[glowGeometry,.85],[glowGeometry,1],[ringGeometry,1]]){const mat=material('#ffffff',alpha);if(geo===glowGeometry)mat.map=rimGlow;g.add(new T.Mesh(geo.clone(),mat));}return g;}
+export function castFlash(color='#8fe2ff',tier=1){
+ const group=new T.Group(),size=.28+tier*.12;
+ for(const [radius,opacity,tint] of [[size*.5,1,'#ffffff'],[size,.65,color],[size*1.55,.16,color]]){const mat=new T.ShaderMaterial({uniforms:{tint:{value:new T.Color(tint)},alpha:{value:opacity}},vertexShader:'varying vec3 n; varying vec3 p; void main(){vec4 v=modelViewMatrix*vec4(position,1.0);p=v.xyz;n=normalMatrix*normal;gl_Position=projectionMatrix*v;}',fragmentShader:'uniform vec3 tint; uniform float alpha; varying vec3 n; varying vec3 p; void main(){float rim=pow(max(0.0,dot(normalize(n),normalize(-p))),2.0);gl_FragColor=vec4(tint,alpha*rim);}',transparent:true,blending:T.AdditiveBlending,depthWrite:false});mat.opacity=opacity;mat.userData.opacity=opacity;const m=new T.Mesh(new T.SphereGeometry(radius,24,16),mat);m.onBeforeRender=()=>{mat.uniforms.alpha.value=mat.opacity;};m.scale.z=.55;group.add(m);}
+ const light=new T.PointLight(color,8+tier*3,4+tier,2);light.userData.intensity=light.intensity;group.add(light);return group;
+}
 export function runeLayout(stage,colors){
  const c=Array.isArray(colors)?colors:[colors],main=c[0]||'#ffffff',level=Math.max(1,Math.min(3,stage));
  const rings=[{x:0,y:0,r:.34,color:main,white:level===1}];
@@ -50,7 +55,7 @@ export class CastingFeedback{
  s.dots.forEach((dot,i)=>{const life=.45+noise(i)*.55,age=this.time/life+i*.618,cycle=Math.floor(age),t=age-cycle,spec=layout.rings[i%layout.rings.length],angle=noise(i+cycle*49)*Math.PI*2,travel=t*(.25+noise(i+cycle+80)*.45),r=spec.r+travel;
  dot.position.set(spec.x+Math.cos(angle)*r,spec.y+Math.sin(angle)*r-t*t*.10,.04);dot.material.color.set(i%4===0?'#ffffff':spec.color);dot.material.opacity=(1-t)*(.65+.3*Math.sin(t*30+i)**2);dot.scale.setScalar(.5+noise(i+cycle*13));});
  }
- fire(position,direction,colors,tier=1){if(this.bursts.length>=12)dispose(this.bursts.shift().group);const state=diagram(),{group}=state;arrange(state,tier,colors);group.position.copy(typeof position==='function'?position():position);group.quaternion.setFromUnitVectors(new T.Vector3(0,0,1),direction.clone().normalize());this.scene.add(group);this.bursts.push({group,age:0,tier,follow:typeof position==='function'?position:null});}
+ fire(position,direction,colors,tier=1){if(this.bursts.length>=12)dispose(this.bursts.shift().group);const state=diagram(),{group}=state;arrange(state,tier,colors);group.add(castFlash(Array.isArray(colors)?colors[0]:colors,tier));group.position.copy(typeof position==='function'?position():position);group.quaternion.setFromUnitVectors(new T.Vector3(0,0,1),direction.clone().normalize());this.scene.add(group);this.bursts.push({group,age:0,tier,follow:typeof position==='function'?position:null});}
  beam(start,target,colors,visible=()=>true,tier=1){
   const color=Array.isArray(colors)?colors[0]:colors,follow=typeof start==='function'?start:null;start=follow?follow():start;
   if(this.beams.length>=12)dispose(this.beams.shift().group);
@@ -64,7 +69,7 @@ export class CastingFeedback{
   for(let i=0;i<=8;i++){const t=i/8,offset=i===0||i===8?0:Math.sin(i*7.13)*Math.min(.16,length*.025);points.push(b.start.clone().addScaledVector(delta,t).addScaledVector(side,offset));}
   for(let i=0;i<8;i++){const a=points[i],c=points[i+1],d=c.clone().sub(a),n=d.length();for(const mesh of b.segments[i]){mesh.position.copy(a).add(c).multiplyScalar(.5);mesh.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),d.normalize());mesh.scale.y=n;mesh.material.opacity=mesh.material.userData.opacity*(b.fade===null?1:Math.max(0,1-b.fade/.24));}}
  }
- update(dt){this.time+=dt;for(let i=this.beams.length-1;i>=0;i--){const b=this.beams[i];this.updateBeam(b,dt);if(b.fade>=.24){dispose(b.group);this.beams.splice(i,1);}}for(let i=this.bursts.length-1;i>=0;i--){const b=this.bursts[i];b.age+=dt;if(b.follow)b.group.position.copy(b.follow());const t=b.age/.32;b.group.scale.setScalar(.7+t*(2+b.tier*.4));b.group.traverse(o=>{if(o.material)o.material.opacity=Math.max(0,1-t)*o.material.userData.opacity;});if(t>=1){dispose(b.group);this.bursts.splice(i,1);}}}
+ update(dt){this.time+=dt;for(let i=this.beams.length-1;i>=0;i--){const b=this.beams[i];this.updateBeam(b,dt);if(b.fade>=.24){dispose(b.group);this.beams.splice(i,1);}}for(let i=this.bursts.length-1;i>=0;i--){const b=this.bursts[i];b.age+=dt;if(b.follow)b.group.position.copy(b.follow());const t=b.age/.22;b.group.scale.setScalar(.85+t*(.55+b.tier*.15));b.group.traverse(o=>{if(o.material)o.material.opacity=Math.max(0,1-t)*o.material.userData.opacity;if(o.isPointLight)o.intensity=o.userData.intensity*Math.max(0,1-t);});if(t>=1){dispose(b.group);this.bursts.splice(i,1);}}}
  clear(){for(const b of this.beams)dispose(b.group);this.beams=[];for(const b of this.bursts)dispose(b.group);this.bursts=[];for(const s of this.actors.values())s.group.visible=false;}
 }
 

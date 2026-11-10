@@ -1,5 +1,5 @@
 import {Vector3} from './three.module.js';
-import {ICE_BASIC} from './ice-basic.mjs';
+import {ICE_BASIC} from './ice-basic.mjs?v=cast-light-1';
 import {hasIceRecipe,iceSpec} from './ice-spec.mjs?v=shift-trajectory-1';
 import {hasFireRecipe,fireSpec} from './fire-spec.mjs';
 import {compileSpell,spellReach} from './live-spells.mjs?v=integer-damage-1';

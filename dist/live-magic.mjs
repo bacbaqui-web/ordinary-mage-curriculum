@@ -3,7 +3,7 @@ import {CAST_RELEASE_SECONDS} from './cast-lock.mjs?v=charge-move-1';
 import {IceSpells} from './ice-spells.mjs?v=integer-damage-1';
 import {hasIceRecipe} from './ice-spec.mjs?v=shift-trajectory-1';
 import {areaTouches,shotTouches,shotContact} from './combat-hit.mjs?v=charge-move-1';
-import {IceBasic} from './ice-basic.mjs?v=ring-origin-2';
+import {IceBasic} from './ice-basic.mjs?v=cast-light-1';
 import {hasFireRecipe} from './fire-spec.mjs?v=bolt17';
 import {FireSpells} from './fire-spells.mjs?v=charge-move-1';
 import * as T from './three.module.js';

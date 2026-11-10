@@ -6,7 +6,7 @@ for(const tier of [1,2,3]){let state;for(let i=0;i<180;i++)state=camera.update(1
 assert.ok(stages[2].distance<stages[1].distance&&stages[1].distance<stages[0].distance);
 assert.ok(stages[2].fov>stages[1].fov);assert.ok(Math.abs(stages[2].x)>0);assert.ok(Math.abs(stages[0].x)===0);
 let state;for(let i=0;i<600;i++)state=camera.update(1/60,false,1);assert.ok(Math.abs(state.fov-38)<.001);
-const scene=new T.Scene(),feedback=new CastingFeedback(scene),view=new T.PerspectiveCamera(),actor={g:{visible:true}};
+const scene=new T.Scene(),feedback=new CastingFeedback(scene),view=new T.PerspectiveCamera(),actor={g:{visible:true,userData:{}}};
 const hands={LeftHand:new T.Vector3(-1,1,0),RightHand:new T.Vector3(1,1,0)};
 feedback.charge(actor,true,1,'#ff9869',hands,view);const a=feedback.actors.get(actor);assert.deepEqual(a.group.position.toArray(),[0,1,0]);assert.equal(a.rings.filter(r=>r.visible).length,1);assert.equal(a.rings[0].children[0].material.color.getHexString(),'ff9869');
 for(let i=0;i<20;i++)feedback.fire(new T.Vector3(),new T.Vector3(0,0,1),'#8fe2ff');assert.equal(feedback.bursts.length,12);

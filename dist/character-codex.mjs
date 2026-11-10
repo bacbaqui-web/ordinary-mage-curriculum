@@ -1,7 +1,7 @@
 import {CHARACTERS} from './characters.mjs';
 import {RUNES,describe} from './combo-design.mjs?v=shift-trajectory-1';
 import {SPACE_SKILLS} from './space-skills.mjs?v=charge-move-1';
-import {ICE_BASIC} from './ice-basic.mjs?v=ring-origin-2';
+import {ICE_BASIC} from './ice-basic.mjs?v=cast-light-1';
 
 export function mountCharacterCodex(host){
  host.innerHTML=`<summary>캐릭터 도감 <span>${CHARACTERS.length}명</span></summary><div class="codex-grid" aria-label="캐릭터 선택">${CHARACTERS.map(c=>`<button type="button" data-character="${c.id}" aria-pressed="false" aria-label="${c.name} · ${RUNES[c.rune].name}"><img src="${c.image}" alt="" loading="lazy"><b>${c.name}</b><small>${RUNES[c.rune].icon} ${RUNES[c.rune].name}</small></button>`).join('')}</div><div class="codex-detail" aria-live="polite"></div>`;
