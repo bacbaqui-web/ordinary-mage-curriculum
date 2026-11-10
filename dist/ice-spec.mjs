@@ -12,6 +12,6 @@ export const ICE_RECIPES={
  ih:['빙결주먹','얼음 주먹을 내밀며 짧게 돌진합니다. 맞은 적을 조금 밀고 잠깐 이동을 막습니다.']
 };
 export const hasIceRecipe=seq=>Object.hasOwn(ICE_RECIPES,seq);
-export function iceSpec(seq,power=1){if(!hasIceRecipe(seq))return null;const op=seq[1];return {seq,op,name:ICE_RECIPES[seq][0],power,damage:({q:0,i:12,l:10,d:8,p:4,e:0,t:5,w:7,g:1,s:9,h:12}[op])*power,range:({q:3.8,i:8.5,l:7,d:7,p:3,e:6,t:6,w:8,g:6,s:3,h:3}[op]),radius:({q:3.8,i:.16,l:1.25,d:1.5,p:3,e:1.8,t:2.6,w:1.35,g:2.8,s:3,h:.7}[op]),life:({q:3,e:4.5,t:4,g:3,p:.55}[op]||.6),slow:({q:.8,i:2,l:2.5,d:1,p:5,e:1,t:.8,w:1.8,g:1,s:1.2,h:1}[op]),speed:op==='i'?30:op==='w'?8:9};}
+export function iceSpec(seq,power=1){if(!hasIceRecipe(seq))return null;const op=seq[1];return {seq,op,name:ICE_RECIPES[seq][0],power,damage:({q:0,i:12,l:10,d:8,p:4,e:0,t:5,w:7,g:1,s:9,h:12}[op])*power,range:({q:3.8,i:8.5,l:7,d:7,p:3,e:6,t:6,w:8,g:6,s:3,h:3}[op]),radius:({q:3.8,i:.16,l:1.25,d:1.275,p:3,e:1.8,t:2.6,w:1.35,g:2.8,s:3,h:.7}[op]),life:({q:3,e:4.5,t:4,g:3,p:.55}[op]||.6),slow:({q:.8,i:2,l:2.5,d:1,p:5,e:1,t:.8,w:1.8,g:1,s:1.2,h:1}[op]),speed:op==='i'?30:op==='w'?8:9};}
 
 export const ICE_BEAM={name:'집중 얼음안개',range:5.5,width:.45,life:1.6,interval:.2,damage:2,freezeAfter:1,freezeTime:1};

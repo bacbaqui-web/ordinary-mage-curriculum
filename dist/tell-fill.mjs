@@ -1,0 +1,3 @@
+import * as T from './three.module.js';
+// Triangulate each closed contour separately, including compound strike circles.
+export function tellFillGeometry(points){const vertices=[];let start=0;while(start<points.length-2){let end=start+1;while(end<points.length&&points[end].distanceToSquared(points[start])>1e-8)end++;const contour=points.slice(start,end);if(contour.length>=3){const faces=T.ShapeUtils.triangulateShape(contour.map(p=>new T.Vector2(p.x,p.z)),[]);for(const face of faces)for(const i of face)vertices.push(...contour[i].toArray());}start=end+1;}const geometry=new T.BufferGeometry();geometry.setAttribute('position',new T.Float32BufferAttribute(vertices,3));return geometry;}

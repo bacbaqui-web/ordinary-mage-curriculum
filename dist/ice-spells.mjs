@@ -1,7 +1,7 @@
 import {IceSurface} from './ice-surface.mjs';
 import {roundDamage} from './damage-number.mjs?v=integer-damage-1';
 import * as T from './three.module.js';
-import {iceSpec,hasIceRecipe,ICE_BEAM} from './ice-spec.mjs?v=iceberg-rise-1';
+import {iceSpec,hasIceRecipe,ICE_BEAM} from './ice-spec.mjs?v=filled-tells-1';
 import {crossesWard} from './forces.mjs?v=iceberg-rise-1';
 const V=(x=0,y=0,z=0)=>new T.Vector3(x,y,z);
 export class IceSpells{
@@ -21,7 +21,7 @@ export class IceSpells{
  // Keep the original faceted boulder; only narrow and lift its upper shoulder.
  const geometry=new T.IcosahedronGeometry(1,1),positions=geometry.attributes.position;
  for(let i=0;i<positions.count;i++){const x=positions.getX(i),y=positions.getY(i),z=positions.getZ(i),t=(y+1)/2,tip=Math.max(0,(t-.58)/.42),wide=(1-.32*t)*(1-.22*tip);positions.setXYZ(i,x*1.45*wide+.18*t,(y+1)*1.65+.18*tip*tip,z*1.3*wide+.12*Math.sin(y*4));}
- geometry.computeVertexNormals();const body=this.mesh(geometry,0x9bdbe8,.55);body.material.roughness=.2;body.material.metalness=.08;body.material.emissiveIntensity=.1;rock.add(body);
+ geometry.scale(.85,.85,.85);geometry.computeVertexNormals();const body=this.mesh(geometry,0x9bdbe8,.55);body.material.roughness=.2;body.material.metalness=.08;body.material.emissiveIntensity=.1;rock.add(body);
  const edges=new T.LineSegments(new T.EdgesGeometry(geometry,24),new T.LineBasicMaterial({color:0xd5f6ff,transparent:true,opacity:.32}));rock.add(edges);rock.position.y=-3.3;
  this.area(e,p,s.radius,{force:3.2,once:true});
  const cracks=new T.Group();e.mesh.add(cracks);e.cracks=cracks;
@@ -30,7 +30,7 @@ export class IceSpells{
  for(let i=0;i<9;i++){const angle=i*2.399+.19*Math.sin(i*3),length=1.25+(i%4)*.16,points=[];for(let j=0;j<5;j++){const r=.48+(length-.48)*j/4,a=angle+Math.sin(i*4+j*2.3)*.14;points.push(V(Math.cos(a)*r,0,Math.sin(a)*r));}fissure(points,.032+(i%3)*.008);const start=points[2],a=angle+(i%2?-.65:.55),end=V(start.x+Math.cos(a)*.33,0,start.z+Math.sin(a)*.33);fissure([start,V((start.x+end.x)/2+.035,0,(start.z+end.z)/2-.025),end],.017);}
  cracks.scale.setScalar(.1);
  for(let i=0;i<80;i++){const a=i*2.4,r=.4+(i%7)*.12,speed=2+(i%5)*.65;this.a.vfx.particle?.('shard',[p.x+Math.cos(a)*r,.12,p.z+Math.sin(a)*r],[Math.cos(a)*speed,2+(i%6)*.6,Math.sin(a)*speed],.025+(i%4)*.018,i%3?0xd9f8ff:0x8ad9f2,.65+(i%5)*.1,{gravity:8,stretch:1.5});}
- const ward={owner,m:e.mesh,x:p.x,z:p.z,nx:dir.x,nz:dir.z,width:2.6,radius:1.25,hp:24,maxHp:24,baseY:0,life:e.life,travelled:0,speed:0,effectCooldown:.8,spec:{moving:false,travel:0}};
+ const ward={owner,m:e.mesh,x:p.x,z:p.z,nx:dir.x,nz:dir.z,width:2.21,radius:1.0625,hp:24,maxHp:24,baseY:0,life:e.life,travelled:0,speed:0,effectCooldown:.8,spec:{moving:false,travel:0}};
  this.a.wards.push(ward);e.ward=ward;return true;
  }
  if(s.op==='e'){const e=this.add('wall',s,owner,p,dir,4.5),width=3.6;const wall=this.mesh(new T.BoxGeometry(width,1.9,.45),0x93d9fa,.75);e.mesh.add(wall);wall.position.y=.95;e.mesh.rotation.y=Math.atan2(dir.x,dir.z);for(let i=0;i<7;i++)this.shard(e.mesh,(i-3)*width/7,1.75,0,.2);const ward={owner,m:e.mesh,x:p.x,z:p.z,nx:dir.x,nz:dir.z,width,hp:48,maxHp:48,baseY:0,life:e.life,travelled:0,speed:0,effectCooldown:.8,spec:{slow:1,shock:0,moving:false,travel:0}};this.a.wards.push(ward);e.ward=ward;return true;}
@@ -73,7 +73,7 @@ export class IceSpells{
  for(const face of faces){add(...face);for(let j=0;j<3;j++){const a=face[j],b=face[(j+1)%3],k=[key(a),key(b)].sort().join('|');if(edges.has(k))edges.delete(k);else edges.set(k,[a,b]);}}for(const [a,b] of edges.values())add(a,core,b);
  const geometry=new T.BufferGeometry();geometry.setAttribute('position',new T.Float32BufferAttribute(vertices,3));geometry.computeVertexNormals();const shard=new T.Mesh(geometry,source.material.clone());shard.material.side=T.DoubleSide;shard.position.copy(center).add(e.rock.position);debris.mesh.add(shard);
  const angle=n*2.4,outward=V(center.x-core.x,0,center.z-core.z);if(outward.lengthSq()<.01)outward.set(Math.cos(angle),0,Math.sin(angle));outward.normalize();const rotation=V(.45+n*.14,(n%2?1:-1)*.5,.35+n*.1),q=new T.Quaternion().setFromEuler(new T.Euler(rotation.x,rotation.y,rotation.z));let minY=Infinity;for(let j=0;j<geometry.attributes.position.count;j++)minY=Math.min(minY,V().fromBufferAttribute(geometry.attributes.position,j).applyQuaternion(q).y);
- Object.assign(shard.userData,{origin:shard.position.clone(),velocity:outward.multiplyScalar(.8+(n%3)*.25),rotation,land:.65+n*.045,minY,opacity:source.material.opacity});
+ Object.assign(shard.userData,{origin:shard.position.clone(),velocity:outward.multiplyScalar(2+(n%3)*.6),rotation,land:.65+n*.045,minY,opacity:source.material.opacity});
  }
  }
 

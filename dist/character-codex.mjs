@@ -1,5 +1,5 @@
 import {CHARACTERS} from './characters.mjs';
-import {RUNES,describe} from './combo-design.mjs?v=iceberg-rise-1';
+import {RUNES,describe} from './combo-design.mjs?v=filled-tells-1';
 import {SPACE_SKILLS} from './space-skills.mjs?v=ice-trail-fall-1';
 import {ICE_BASIC} from './ice-basic.mjs?v=forward-glow-1';
 

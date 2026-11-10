@@ -1,3 +1,4 @@
+import {tellFillGeometry} from './tell-fill.mjs?v=filled-tells-1';
 import {mountSettingsWindow} from './settings-window.mjs?v=impact-dock-1';
 import {drawMinimapLandmarks} from './minimap-landmarks.mjs';
 import {FacingMotion} from './facing-motion.mjs?v=prepare-turn-1';
@@ -7,9 +8,9 @@ import {toolbarIcon} from './toolbar-icons.mjs?v=toolbar-icons-1';
 import {ImpactFeedback} from './impact-feedback.mjs?v=game-impact-1';
 import {iceMovement} from './ice-motion.mjs?v=ice-detail-1';
 import {roundDamage} from './damage-number.mjs?v=integer-damage-1';
-import {projectileGuideSpec,projectileGuidePoints} from './projectile-guide.mjs?v=iceberg-rise-1';
-import {cursorAim,spellAimHeight} from './cursor-aim.mjs?v=iceberg-rise-1';
-import {hasIceRecipe,iceSpec} from './ice-spec.mjs?v=iceberg-rise-1';
+import {projectileGuideSpec,projectileGuidePoints} from './projectile-guide.mjs?v=filled-tells-1';
+import {cursorAim,spellAimHeight} from './cursor-aim.mjs?v=filled-tells-1';
+import {hasIceRecipe,iceSpec} from './ice-spec.mjs?v=filled-tells-1';
 import {HealthHUD} from './health-hud.mjs?v=game-impact-1';
 import {renderSkillUpgrades} from './skill-upgrades.mjs?v=shift-trajectory-1';
 import {readMovement} from './character-movement.mjs?v=turn-rates-1';
@@ -22,11 +23,11 @@ import {FrostVisuals} from './frost-visuals.mjs?v=shift-trajectory-1';
 import {ICE_BASIC} from './ice-basic.mjs?v=forward-glow-1';
 import {SpaceSkill,SPACE_SKILLS,interceptSpaceShots} from './space-skills.mjs?v=ice-trail-fall-1';
 import {SpaceVisuals} from './space-visuals.mjs?v=ice-trail-fall-1';
-import {CHARACTERS,characterFor,chooseCharacter,chooseSupport} from './character-loadout.mjs?v=iceberg-rise-1';
+import {CHARACTERS,characterFor,chooseCharacter,chooseSupport} from './character-loadout.mjs?v=filled-tells-1';
 import {GameAudio} from './game-audio.mjs?v=game-impact-1';
 import {damageSummary} from './damage-display.mjs?v=integer-damage-1';
-import {Duel,STEP} from './duel.mjs?v=iceberg-chunks-1';
-import {mountPvpUI} from './pvp-ui.mjs?v=iceberg-chunks-1';
+import {Duel,STEP} from './duel.mjs?v=filled-tells-1';
+import {mountPvpUI} from './pvp-ui.mjs?v=filled-tells-1';
 import {OBSTACLES,arenaCollision} from './arena-rules.mjs';
 import {buildTownMap,lightTown} from './town-map.mjs';
 import {TOWN_HALF,ENCOUNTERS,DISTRICTS,BUILDINGS} from './town-layout.mjs';
@@ -35,7 +36,7 @@ let onlineCore=null,pvp=null,onlineResultShown=false,lastOnlineAim=0,onlineRende
 import {redLightningPlacement} from './red-lightning-spec.mjs?v=bolt17';
 import {steamPlacement} from './steam-spec.mjs?v=bolt17';
 import {BurnVisuals,applyBurnVisual} from './burn-visuals.mjs?v=iceberg-rise-1';
-import {castWithPresentation,renderCastPresentation} from './cast-presentation.mjs?v=iceberg-rise-1';
+import {castWithPresentation,renderCastPresentation} from './cast-presentation.mjs?v=filled-tells-1';
 import {CastRecoil,HitScreen,chargeSetback} from './combat-response.mjs?v=rim9';
 import {VisionShade} from './vision-shade.mjs?v=iceberg-rise-1';
 import {CastingFeedback,ChargeCamera,impactFeedback,RUNE_FORWARD} from './casting-feedback.mjs?v=forward-glow-1';
@@ -49,9 +50,9 @@ let walkDirection={x:0,z:0},icePressHand='left',moveSpeedScale=1;
 const slotLabel=k=>({q:'기본',w:'좌클릭',e:'우클릭'}[k]);
 import {createWizard,animateWizard,projectWizard,setWizardCharacter} from './wizard.mjs?v=no-floor-rings-1';
 import {QueuedCharge} from './queued-charge.mjs?v=instant-first-ring-1';
-import {LiveMagic} from './live-magic.mjs?v=iceberg-chunks-1';
-import {spellReach} from './live-spells.mjs?v=iceberg-rise-1';
-import {describe as describeDesign} from './combo-design.mjs?v=iceberg-rise-1';
+import {LiveMagic} from './live-magic.mjs?v=filled-tells-1';
+import {spellReach} from './live-spells.mjs?v=filled-tells-1';
+import {describe as describeDesign} from './combo-design.mjs?v=filled-tells-1';
 import {MeshFeedback} from './mesh-feedback.mjs';
 import {groundSpec,groundPoint,inGround,advanceGround} from './ground.mjs?v=integer-damage-1';
 import {projectileAsset,groundAsset} from './effect-map.mjs?v=zones1';
@@ -61,14 +62,14 @@ import {FALL_SECONDS,overheadDelivery,segmentCircleHit} from './delivery.mjs?v=z
 import {createProgress,awardKill,requiredXP,learn,mastery,MAX_LEVEL,MAX_RANK} from './progression.mjs?v=zones1';
 import {ForcedMotion} from './motion.mjs?v=zones1';
 import {LowPolyVFX} from './lowpoly-vfx.mjs';
-import {chooseLoadout,choosePlan,chooseLearnedPlan,spendEnemyPoints,OpponentCharge} from './live-opponent.mjs?v=iceberg-rise-1';
+import {chooseLoadout,choosePlan,chooseLearnedPlan,spendEnemyPoints,OpponentCharge} from './live-opponent.mjs?v=filled-tells-1';
 import {forceSpec,wardSpec,displacement,crossesWard,distanceToWard} from './forces.mjs?v=iceberg-rise-1';
 import {elementalSpec,inElementCone,lightningPoint,lightningHits} from './elements.mjs?v=integer-damage-1';
 const describeSpell=seq=>describeDesign(seq).steps.join(' ')+' '+damageSummary(seq)+' (완충·숙련 1·정지 표적 비교값)';
 import * as T from './three.module.js';
-import {Charge,ELEMENTS,NAMES,resolveSpell} from './live-charge-spells.mjs?v=iceberg-rise-1';
+import {Charge,ELEMENTS,NAMES,resolveSpell} from './live-charge-spells.mjs?v=filled-tells-1';
 import {Roll,ROLL_DURATION,incomingThreat,enemyChargeProgress} from './combat.mjs?v=zones1';
-import {RUNES,KEYS,DEFAULT_LOADOUT,validLoadout,assignRune,mapSequence,spellName,composition} from './live-loadout.mjs?v=iceberg-rise-1';
+import {RUNES,KEYS,DEFAULT_LOADOUT,validLoadout,assignRune,mapSequence,spellName,composition} from './live-loadout.mjs?v=filled-tells-1';
 let loadout={...DEFAULT_LOADOUT};try{const saved=JSON.parse(localStorage.getItem('mage-loadout-v1'));if(validLoadout(saved))loadout=saved}catch{}
 loadout=chooseCharacter(loadout,characterFor(loadout).id);
 let progress=createProgress(loadout),monsters=[],spawnTimer=0,monsterId=0;
@@ -343,10 +344,10 @@ else if(s.lightning&&s.op==='l'){for(let j=-1;j<=1;j++)for(let i=0;i<=48;i++){co
 else for(let i=0;i<=48;i++){const a=i/48*Math.PI*2;points.push(new T.Vector3(p.x+Math.cos(a)*r,0,p.z+Math.sin(a)*r));}
 border.geometry.dispose();border.geometry=new T.BufferGeometry().setFromPoints(points);border.material.color.set(s.steam?0xb8cbd0:s.op==='i'?0xaaaaaa:s.op==='p'?0x9cba39:0xff5436);border.visible=true;}
 function drawIceTell(caster,seq,border){
- const s=iceSpec(seq),beam=seq==='ii'&&caster===player&&icePressHand==='right';if(beam){s.range=5.5;s.radius=.45;}const dir=caster.dir,reference=caster===player?aim:(enemyTarget||player),origin=new T.Vector3(caster.x,0,caster.z),delta=new T.Vector3(reference.x-caster.x,0,reference.z-caster.z),points=[];
+ const s=iceSpec(seq),beam=seq==='ii'&&(caster===player?icePressHand:onlineCore?.actors[1-pvp.index]?.iceHand)==='right';if(beam){s.range=5.5;s.radius=.45;}const dir=caster.dir,reference=caster===player?aim:(enemyTarget||player),origin=new T.Vector3(caster.x,0,caster.z),delta=new T.Vector3(reference.x-caster.x,0,reference.z-caster.z),points=[];
  if(delta.length()>s.range)delta.setLength(s.range);
- let p=origin.clone();if(['l','e','t','g'].includes(s.op))p.add(delta);if(s.op==='d')p.addScaledVector(dir,2);
- if(['i','w','h','e','d'].includes(s.op)){
+ let p=origin.clone();if(['l','e','t','g','d'].includes(s.op))p.add(delta);
+ if(['i','w','h','e'].includes(s.op)){
   const wall=['e','d'].includes(s.op),width=wall?(s.op==='e'?1.8:1.2):s.op==='i'?(beam?.45:.16):s.op==='w'?.43:.5;
   const side=new T.Vector3(-dir.z,0,dir.x).multiplyScalar(width),end=wall?p.clone().addScaledVector(dir,.225):p.clone().addScaledVector(dir,s.range);
   if(wall)p.addScaledVector(dir,-.225);
@@ -354,12 +355,19 @@ function drawIceTell(caster,seq,border){
  }else {const cone=['q','p','s'].includes(s.op),a=Math.atan2(dir.z,dir.x),arc=cone?1.05:Math.PI;if(cone)points.push(p.clone());for(let i=0;i<=48;i++){const t=a-arc+i/48*arc*2;points.push(new T.Vector3(p.x+Math.cos(t)*s.radius,.01,p.z+Math.sin(t)*s.radius));}if(cone)points.push(p.clone());}
  border.geometry.dispose();border.geometry=new T.BufferGeometry().setFromPoints(points);border.material.color.set(s.op==='p'?0x8fe8ae:0x86dfff);border.visible=true;
 }
-function drawTell(caster,seq,fill,border){border.position.y=.15;if(drawProjectileTell(caster,seq,border))return;if(hasIceRecipe(seq)){drawIceTell(caster,seq,border);return;}if(hasFireRecipe(seq)){drawFireTell(caster,seq,border);return;}const spec=describeDesign(seq),reference=caster===player?aim:(enemyTarget||player),range=spellReach(seq);let center={x:caster.x,z:caster.z},radius=1.2+seq.length*.25;
+function drawTellOutline(caster,seq,fill,border){border.position.y=.15;if(drawProjectileTell(caster,seq,border))return;if(hasIceRecipe(seq)){drawIceTell(caster,seq,border);return;}if(hasFireRecipe(seq)){drawFireTell(caster,seq,border);return;}const spec=describeDesign(seq),reference=caster===player?aim:(enemyTarget||player),range=spellReach(seq);let center={x:caster.x,z:caster.z},radius=1.2+seq.length*.25;
 if(['field','wall','strike','coat'].includes(spec.shape)||spec.motion==='fall'||spec.motion==='pull'){const d=new T.Vector3(reference.x-caster.x,0,reference.z-caster.z);if(d.length()>range)d.setLength(range);center={x:caster.x+d.x,z:caster.z+d.z};}
 if(spec.shape==='spread')radius*=1.6;if(spec.shape==='condensed')radius*=.6;
 const points=[];if(spec.motion==='forward'){const side=new T.Vector3(-caster.dir.z,0,caster.dir.x).multiplyScalar(.55),start=new T.Vector3(caster.x,0,caster.z),end=start.clone().addScaledVector(caster.dir,range);points.push(start.clone().add(side),end.clone().add(side),end.clone().sub(side),start.clone().sub(side),start.clone().add(side));}else if(spec.shape==='wall'){const side=new T.Vector3(-caster.dir.z,0,caster.dir.x).multiplyScalar(1.6),normal=caster.dir.clone().multiplyScalar(.15),p=new T.Vector3(center.x,0,center.z);points.push(p.clone().add(side).add(normal),p.clone().sub(side).add(normal),p.clone().sub(side).sub(normal),p.clone().add(side).sub(normal),p.clone().add(side).add(normal));}else if(['q','i','w','g'].includes(seq[0])&&spec.motion==='still'&&['spread','condensed'].includes(spec.shape)){points.push(new T.Vector3(center.x,0,center.z));for(let i=0;i<=32;i++){const angle=Math.atan2(caster.dir.z,caster.dir.x)-1.1+i/32*2.2;points.push(new T.Vector3(center.x+Math.cos(angle)*radius,0,center.z+Math.sin(angle)*radius));}points.push(new T.Vector3(center.x,0,center.z));}else for(let i=0;i<=48;i++){const angle=i/48*Math.PI*2;points.push(new T.Vector3(center.x+Math.cos(angle)*radius,0,center.z+Math.sin(angle)*radius));}
 border.geometry.dispose();border.geometry=new T.BufferGeometry().setFromPoints(points);border.material.color.set(RUNES[seq[0]].color);border.visible=true;}
-function renderAttackTell(){attackTell.visible=tellBorder.visible=playerTell.visible=playerBorder.visible=wardGhost.visible=false;if(bot&&running&&!finished&&enemy.g.visible&&enemyCharge.active)drawTell(enemy,mapSequence(enemyCharge.plan,enemyLoadout),attackTell,tellBorder);if(running&&!finished&&charge.active)drawTell(player,mapSequence(charge.parts,loadout),playerTell,playerBorder);}
+function drawTell(caster,seq,fill,border){
+ drawTellOutline(caster,seq,fill,border);if(!border.visible)return;
+ const attr=border.geometry.attributes.position;let points=Array.from({length:attr.count},(_,i)=>new T.Vector3().fromBufferAttribute(attr,i));
+ if(border.position.y===0&&points.length===7)points=[...points.slice(2,6),points[2]];
+ fill.geometry.dispose();fill.geometry=tellFillGeometry(points);fill.position.copy(border.position);fill.material.color.copy(border.material.color);fill.material.opacity=.28;fill.material.depthTest=false;fill.renderOrder=2;fill.visible=true;
+ border.material.opacity=.65;border.material.depthTest=false;border.renderOrder=3;
+}
+function renderAttackTell(){attackTell.visible=tellBorder.visible=playerTell.visible=playerBorder.visible=wardGhost.visible=false;if(running&&!finished&&enemyCharge.active)drawTell(enemy,mapSequence(enemyCharge.charge.parts.length?enemyCharge.charge.parts:enemyCharge.plan,enemyLoadout),attackTell,tellBorder);if(running&&!finished&&charge.active)drawTell(player,mapSequence(charge.parts,loadout),playerTell,playerBorder);}
 
 const iceAttackIcons={left:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m10 4 10 8-10 8-4-8Z M6 12h14 M10 4v16 M2 8h3 M1 16h3"/></svg>',right:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M3 7h11c5 0 5-5 1-5 M5 12h13c5 0 5 5 1 5 M2 17h9 M6 21h9"/></svg>'};
 function ui(dt=0){const movement=readMovement(characterFor(loadout).id);moveSpeedScale=movement.moveSpeed;if(onlineCore)syncOnlineActors();for(const hand of ['left','right']){const state=attackCooldown(player,hand,loadout.q==='i'),node=$(hand+'AttackCool');const rune=RUNES[loadout.q],skillName=loadout.q==='i'?ICE_BASIC[hand].name:rune.name,icon=loadout.q==='i'?iceAttackIcons[hand]:rune.icon;if(node.dataset.icon!==icon){node.querySelector('b').innerHTML=icon;node.dataset.icon=icon;}node.style.setProperty('--cool-color',rune.color);node.title=(hand==='left'?'좌클릭':'우클릭')+' · '+skillName;node.style.setProperty('--fill',state.progress*360+'deg');node.classList.toggle('ready',state.ready);node.classList.toggle('denied',performance.now()<deniedAttacks[hand]);node.setAttribute('aria-valuenow',String(Math.round(state.progress*100)));node.setAttribute('aria-label',node.title+(state.ready?' 준비':' · '+state.remaining.toFixed(1)+'초 남음'));}setWizardCharacter(player.g,characterFor(loadout).id);setWizardCharacter(enemy.g,characterFor(enemyLoadout).id);updateCamera();refreshAim(aimingSequence(),undefined,dt);if(onlineCore&&hasCursor&&performance.now()-lastOnlineAim>50){lastOnlineAim=performance.now();pvp.input({action:'aim',point:{x:aim.x,z:aim.z}});}updateVisibility();renderHunt();for(const a of[player,enemy]){const burning=a.burn>0,chilled=a.slow>0,tinted=chilled||a.poison>0;const c=new T.Color(a.poison>0&&!burning?0x88c957:burning&&(!chilled||Math.floor(clock*4)%2===0)?0xff543e:0x479eff);for(const entry of a.g.userData.palette){entry.material.color.copy(entry.color);if(tinted)entry.material.color.lerp(new T.Color(a.poison>0?0x88c957:0x479eff),.35);if(a.hitFlash>0)entry.material.color.set(0xffffff);}a.g.position.set(a.x,0,a.z);a.g.rotation.y=Math.atan2(a.dir.x,a.dir.z);const shield=shields.get(a);shield.position.set(a.x,1,a.z);if(a.shield>0&&!shield.userData.active)pixelVfx.play('shield-bubble',a.x,a.z,{width:1.8,duration:a.shieldTime,loop:true,follow:()=>a.shield>0?{x:a.x,z:a.z,y:.12}:null});shield.userData.active=a.shield>0;shield.rotation.y=clock*.6}label($('playerLabel'),player);label($('enemyLabel'),enemy);if(!enemy.g.visible)$('enemyLabel').style.display='none';$('manaBar').style.width=player.mana+'%';$('manaText').textContent=Math.floor(player.mana);$('enemyCast').textContent=onlineCore?(enemyCharge.active?'친구 · 충전 중':'친구'):!bot?'연습 상대':enemyCharge.active?spellName(mapSequence(enemyCharge.charge.parts,enemyLoadout),NAMES)+' · 충전':enemy.lastSpellTime>0?enemy.lastSpell+' · 발사':enemy.slow>0?'감속 중':enemy.burn>0?'화상 중':(enemyTarget?.monster?'몬스터 사냥 중':'상대 마법사');updateNameplate('player',progress,loadout);updateNameplate('enemy',enemyProgress,enemyLoadout);

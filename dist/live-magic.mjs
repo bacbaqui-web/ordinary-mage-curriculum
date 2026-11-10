@@ -1,14 +1,14 @@
 import {roundDamage} from './damage-number.mjs?v=integer-damage-1';
 import {CAST_RELEASE_SECONDS} from './cast-lock.mjs?v=charge-move-1';
-import {IceSpells} from './ice-spells.mjs?v=iceberg-chunks-1';
-import {hasIceRecipe} from './ice-spec.mjs?v=iceberg-rise-1';
+import {IceSpells} from './ice-spells.mjs?v=filled-tells-1';
+import {hasIceRecipe} from './ice-spec.mjs?v=filled-tells-1';
 import {areaTouches,shotTouches,shotContact} from './combat-hit.mjs?v=no-floor-rings-1';
 import {IceBasic} from './ice-basic.mjs?v=forward-glow-1';
 import {hasFireRecipe} from './fire-spec.mjs?v=bolt17';
 import {FireSpells} from './fire-spells.mjs?v=iceberg-rise-1';
 import * as T from './three.module.js';
-import {compileSpell,spellReach,spellPayload} from './live-spells.mjs?v=iceberg-rise-1';
-import {RUNES} from './combo-design.mjs?v=iceberg-rise-1';
+import {compileSpell,spellReach,spellPayload} from './live-spells.mjs?v=filled-tells-1';
+import {RUNES} from './combo-design.mjs?v=filled-tells-1';
 import {crossesWard,distanceToWard} from './forces.mjs?v=iceberg-rise-1';
 export class LiveMagic {
  constructor(api){api.areaHit=areaTouches;api.screenHit=(e,a,b,t)=>api.clearPath(e.owner,t)&&shotTouches(e,a,b,t);this.a=api;this.castPoses=new Map();this.ice=new IceBasic(api);this.iceCombos=new IceSpells(api);const interrupt=api.interrupt;api.interrupt=v=>{interrupt?.(v);this.castPoses.delete(v);v.hitPose=null;v.castFlash=0;v.g?.userData.puppet?.magic.reset();this.fire.effects=this.fire.effects.filter(e=>{if(e.owner!==v||e.type!=='punch')return true;api.remove(e.mesh);return false;});this.ice.effects=this.ice.effects.filter(e=>{if(e.owner!==v||!['iceWindup','iceMist','iceHandRing','castFlash'].includes(e.type))return true;api.remove(e.mesh);return false;});for(const e of this.iceCombos.effects)if(e.owner===v&&['punch','beam'].includes(e.type))e.life=0;};this.effects=[];this.fire=new FireSpells(api);}
