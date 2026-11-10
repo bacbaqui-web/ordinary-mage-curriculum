@@ -1,5 +1,5 @@
 import * as T from './three.module.js';
-import {IceSurface} from './ice-surface.mjs?v=ice-surface-1';
+import {IceSurface} from './ice-surface.mjs?v=ice-alpha-1';
 import {SPACE_SKILLS} from './space-skills.mjs?v=ice-surface-1';
 export class SpaceVisuals{
  constructor(scene){this.scene=scene;this.iceSurface=new IceSurface(scene);this.pool=[];this.used=0;this.geometries={sphere:new T.IcosahedronGeometry(1,1),cone:new T.ConeGeometry(1,1,7),box:new T.BoxGeometry(1,1,1),ring:new T.TorusGeometry(1,.045,5,36)};}

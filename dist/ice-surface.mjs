@@ -17,6 +17,6 @@ export function iceSurfaceGeometry(zones){
  geometry.setAttribute('position',new T.Float32BufferAttribute([...top,...sides],3));geometry.addGroup(0,top.length/3,0);geometry.addGroup(top.length/3,sides.length/3,1);geometry.computeVertexNormals();return geometry;
 }
 export class IceSurface{
- constructor(scene){this.mesh=new T.Mesh(new T.BufferGeometry(),[new T.MeshStandardMaterial({color:0xa4e6f6,roughness:.2,metalness:.08,side:T.DoubleSide}),new T.MeshStandardMaterial({color:0x489bbd,roughness:.28,side:T.DoubleSide})]);this.mesh.receiveShadow=true;this.mesh.visible=false;scene.add(this.mesh);this.key='';}
+ constructor(scene){this.mesh=new T.Mesh(new T.BufferGeometry(),[new T.MeshStandardMaterial({color:0xa4e6f6,roughness:.2,metalness:.08,side:T.DoubleSide,transparent:true,opacity:.5,depthWrite:false}),new T.MeshStandardMaterial({color:0x489bbd,roughness:.28,side:T.DoubleSide,transparent:true,opacity:.5,depthWrite:false})]);this.mesh.receiveShadow=true;this.mesh.visible=false;scene.add(this.mesh);this.key='';}
  update(zones){const ice=zones.filter(z=>z.kind==='i'&&z.life>0),key=ice.map(z=>[z.x,z.z,z.radius,Math.min(8,Math.ceil(z.life/.4*8))].join(',')).join(';');if(key===this.key)return;this.key=key;this.mesh.geometry.dispose();this.mesh.geometry=iceSurfaceGeometry(ice);this.mesh.visible=ice.length>0;}
 }
