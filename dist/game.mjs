@@ -1,5 +1,5 @@
 import {chargeMoveScale} from './magic-motion.mjs?v=charge-move-1';
-import {createWizard,animateWizard,projectWizard} from './wizard.mjs?v=ice-step-1';
+import {createWizard,animateWizard,projectWizard} from './wizard.mjs?v=no-floor-rings-1';
 import {groundSpec,groundPoint,inGround,advanceGround} from './ground.mjs?v=integer-damage-1';
 import {projectileAsset,groundAsset} from './effect-map.mjs?v=zones1';
 import {PixelVFX} from './pixel-vfx.mjs?v=zones1';
@@ -40,7 +40,6 @@ for(const o of obstacles){box(o.x,.55,o.z,o.w,1.1,o.h,wallMat);box(o.x,1.16,o.z,
 const grass=mat(0x667955);for(let i=0;i<95;i++){let x=(rand()-.5)*25,z=(rand()-.5)*22;if(Math.abs(x)<10&&Math.abs(z)<9)continue;mesh(new T.ConeGeometry(.08+rand()*.07,.2+rand()*.25,3),grass,x,.12,z)}
 for(const x of[-9,8]){box(x,1.8,-11, .13,3.6,.13,mat(0x514838));const flag=box(x+.52,2.8,-11,1,.95,.05,mat(0x37596b));flag.rotation.z=-.08;}
 // Ground markings are actual geometry and remain readable beneath spells.
-const emblem=mesh(new T.RingGeometry(2.1,2.15,64),mat(0xb7bca6,{transparent:true,opacity:.45}),0,.045,0);emblem.rotation.x=-Math.PI/2;emblem.castShadow=false;
 const wizard=(color,trim)=>createWizard(scene,color,trim);
 const player={g:wizard(0x394351,0xe7b367),x:-5,z:4,hp:100,mana:100,shield:0,shieldTime:0,shieldHeat:false,dir:new T.Vector3(1,0,-1).normalize(),cool:0};
 const enemy={g:wizard(0x73899c,0xc2d6df),x:5,z:-4,hp:100,mana:100,shield:0,shieldTime:0,dir:new T.Vector3(-1,0,1).normalize(),cool:2,wind:0};

@@ -1,4 +1,4 @@
-import {areaTouches} from './combat-hit.mjs?v=ice-step-1';
+import {areaTouches} from './combat-hit.mjs?v=no-floor-rings-1';
 export const SPACE_SKILLS={
  q:{name:'불길 돌파',duration:.32,distance:2.6,cooldown:4,color:0xff6828,desc:'짧게 돌진하고 출발 지점에 2초간 불길을 남깁니다. 불길은 0.5초마다 피해 2를 줍니다.'},
  i:{name:'얼음걸음',duration:2,distance:0,cooldown:4.5,color:0x8bdcff,desc:'2초 동안 이동 속도가 60% 빨라집니다. 발밑이 빛나고 지나간 자리에 3초간 얼음이 남습니다. 얼음을 밟은 적은 느려집니다.'},

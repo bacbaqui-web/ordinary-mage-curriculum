@@ -21,7 +21,6 @@ export function createWizard(scene,color,trim){
  limb('leftArm',-.4,.53,.32,.3,.19,leftArmMat);limb('rightArm',.4,.53,.32,.3,.19,rightArmMat);
  const leftFoot=limb('leftLeg',-.17,-.08,.39,.39,.23,leftLegMat),rightFoot=limb('rightLeg',.17,-.08,.39,.39,.23,rightLegMat);
  box(leftFoot,.25,.13,.39,0,-.39,.08,leftLegMat);box(rightFoot,.25,.13,.39,0,-.39,.08,rightLegMat);
- const selection=new T.Mesh(new T.RingGeometry(.59,.65,40),new T.MeshBasicMaterial({color:trim,side:T.DoubleSide}));selection.rotation.x=-Math.PI/2;selection.position.y=.025;g.add(selection);
  g.userData={parts,body,arm:joints.rightArm,joints,palette,phase:0,stride:0,castTime:0};const puppet=new MotionPuppet(g);g.userData.puppet=puppet;puppet.visual.traverse(o=>{if(o.material)palette.push({material:o.material,color:o.material.color.clone()});});for(const p of parts)p.flat.visible=false;scene.add(g);return g;
 }
 export function animateWizard(g,dt,{speed=0,charging=false,chargeStage=1,cast=0,mobility=false,rolling=false,rollProgress=0,travelX=0,travelZ=1}={}){

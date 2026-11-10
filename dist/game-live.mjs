@@ -9,23 +9,23 @@ import {renderSkillUpgrades} from './skill-upgrades.mjs?v=shift-trajectory-1';
 import {readMovement} from './character-movement.mjs?v=turn-rates-1';
 import {BodyFollow} from './body-follow.mjs?v=turn-rates-1';
 import {attackCooldown} from './attack-cooldown.mjs';
-import {wardTouches,setCombatCamera} from './combat-hit.mjs?v=ice-step-1';
-import {HitboxView} from './hitbox-view.mjs?v=ice-step-1';
+import {wardTouches,setCombatCamera} from './combat-hit.mjs?v=no-floor-rings-1';
+import {HitboxView} from './hitbox-view.mjs?v=no-floor-rings-1';
 import {LevelUpVfx} from './level-up-vfx.mjs?v=screenhit10';
 import {FrostVisuals} from './frost-visuals.mjs?v=shift-trajectory-1';
 import {ICE_BASIC} from './ice-basic.mjs?v=forward-glow-1';
-import {SpaceSkill,SPACE_SKILLS,interceptSpaceShots} from './space-skills.mjs?v=ice-detail-1';
-import {SpaceVisuals} from './space-visuals.mjs?v=ice-detail-1';
+import {SpaceSkill,SPACE_SKILLS,interceptSpaceShots} from './space-skills.mjs?v=no-floor-rings-1';
+import {SpaceVisuals} from './space-visuals.mjs?v=no-floor-rings-1';
 import {CHARACTERS,characterFor,chooseCharacter,chooseSupport} from './character-loadout.mjs?v=integer-damage-1';
 import {GameAudio} from './game-audio.mjs?v=game-impact-1';
 import {damageSummary} from './damage-display.mjs?v=integer-damage-1';
-import {Duel,STEP} from './duel.mjs?v=ice-detail-1';
-import {mountPvpUI} from './pvp-ui.mjs?v=ice-detail-1';
+import {Duel,STEP} from './duel.mjs?v=no-floor-rings-1';
+import {mountPvpUI} from './pvp-ui.mjs?v=no-floor-rings-1';
 import {OBSTACLES} from './arena-rules.mjs';
 let onlineCore=null,pvp=null,onlineResultShown=false,lastOnlineAim=0,onlineRenderAt=0,onlinePrevious=null;
 import {redLightningPlacement} from './red-lightning-spec.mjs?v=bolt17';
 import {steamPlacement} from './steam-spec.mjs?v=bolt17';
-import {BurnVisuals,applyBurnVisual} from './burn-visuals.mjs?v=ice-step-1';
+import {BurnVisuals,applyBurnVisual} from './burn-visuals.mjs?v=no-floor-rings-1';
 import {castWithPresentation,renderCastPresentation} from './cast-presentation.mjs?v=forward-glow-1';
 import {CastRecoil,HitScreen,chargeSetback} from './combat-response.mjs?v=rim9';
 import {VisionShade} from './vision-shade.mjs';
@@ -38,9 +38,9 @@ import {bindDuelControls,mouseRecipe} from './duel-controls.mjs?v=shift-trajecto
 let walkDirection={x:0,z:0},icePressHand='left',moveSpeedScale=1;
 
 const slotLabel=k=>({q:'기본',w:'좌클릭',e:'우클릭'}[k]);
-import {createWizard,animateWizard,projectWizard,setWizardCharacter} from './wizard.mjs?v=ice-step-1';
+import {createWizard,animateWizard,projectWizard,setWizardCharacter} from './wizard.mjs?v=no-floor-rings-1';
 import {QueuedCharge} from './queued-charge.mjs?v=instant-first-ring-1';
-import {LiveMagic} from './live-magic.mjs?v=ice-step-1';
+import {LiveMagic} from './live-magic.mjs?v=no-floor-rings-1';
 import {spellReach} from './live-spells.mjs?v=integer-damage-1';
 import {describe as describeDesign} from './combo-design.mjs?v=shift-trajectory-1';
 import {MeshFeedback} from './mesh-feedback.mjs';
@@ -94,7 +94,6 @@ for(const o of obstacles){box(o.x,.55,o.z,o.w,1.1,o.h,wallMat);box(o.x,1.16,o.z,
 const grass=mat(0x667955);for(let i=0;i<95;i++){let x=(rand()-.5)*25,z=(rand()-.5)*22;if(Math.abs(x)<10&&Math.abs(z)<9)continue;mesh(new T.ConeGeometry(.08+rand()*.07,.2+rand()*.25,3),grass,x,.12,z)}
 for(const x of[-9,8]){box(x,1.8,-11, .13,3.6,.13,mat(0x514838));const flag=box(x+.52,2.8,-11,1,.95,.05,mat(0x37596b));flag.rotation.z=-.08;}
 // Ground markings are actual geometry and remain readable beneath spells.
-const emblem=mesh(new T.RingGeometry(2.1,2.15,64),mat(0xb7bca6,{transparent:true,opacity:.45}),0,.045,0);emblem.rotation.x=-Math.PI/2;emblem.castShadow=false;
 function wizard(color,trim){return createWizard(scene,color,trim);}
 const visionShade=new VisionShade(scene);
 const player={g:wizard(0x394351,0xe7b367),x:-5,z:4,hp:100,mana:100,shield:0,shieldTime:0,shieldHeat:false,dir:new T.Vector3(1,0,-1).normalize(),cool:0};
