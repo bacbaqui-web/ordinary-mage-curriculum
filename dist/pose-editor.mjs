@@ -173,6 +173,7 @@ $('import').onchange=async()=>{try{const file=$('import').files[0];if(!file)retu
 function defaultRest(){const {root}=demoMotion();root.updateMatrixWorld(true);return Object.fromEntries(JOINTS.map(n=>[n,root.getObjectByName(n).getWorldPosition(new T.Vector3()).toArray()]));}
 function setBusy(value){loading=value;$('motionControls').disabled=value;for(const id of ['export','import','saveMotion','play','previous','next','frames','fps','scrub','character','loopMotion'])$(id).disabled=value;}
 async function selectCharacter(id){
+ if(id==='wolf'){if(unsaved&&!save())return;const url=new URL(location.href);url.searchParams.set('character','wolf');location.href=url;return;}
  if(loading)return;
  document.activeElement?.blur();if(keyDrag)finishKeyDrag(true);stop();
  if(unsaved&&!save()){$('character').value=characterId;return;}
@@ -197,7 +198,7 @@ async function selectCharacter(id){
  }catch(e){nextRig?.dispose();$('character').value=characterId;$('status').textContent=e.message;}
  finally{setBusy(false);}
 }
-$('character').replaceChildren(...CHARACTERS.map(c=>new Option(c.label,c.id)));
+$('character').replaceChildren(...CHARACTERS.map(c=>new Option(c.label,c.id)),new Option('몬스터 · 잿빛 늑대','wolf'));
 $('character').onchange=()=>void selectCharacter($('character').value);
 const segments=[['Hips','Spine',.36,'#55b9cd'],['Spine','Neck',.28,'#55b9cd'],['Neck','Head',.16,'#55b9cd'],['Spine','LeftArm',.18,'#55b9cd'],['Spine','RightArm',.18,'#55b9cd'],['LeftArm','LeftForeArm',.19,'#f18d65'],['LeftForeArm','LeftHand',.17,'#f18d65'],['RightArm','RightForeArm',.19,'#bb8bdd'],['RightForeArm','RightHand',.17,'#bb8bdd'],['Hips','LeftUpLeg',.23,'#55b9cd'],['Hips','RightUpLeg',.23,'#55b9cd'],['LeftUpLeg','LeftLeg',.22,'#86ba6d'],['LeftLeg','LeftFoot',.20,'#86ba6d'],['RightUpLeg','RightLeg',.22,'#688ee1'],['RightLeg','RightFoot',.20,'#688ee1']];
 const views=[['앞',[0,0,6]],['옆',[6,0,0]],['위',[0,6,0]],['쿼터뷰',[5,4,6]]].map(([name,dir])=>{
