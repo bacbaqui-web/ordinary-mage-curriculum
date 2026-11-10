@@ -1,6 +1,6 @@
 import {roundDamage} from './damage-number.mjs?v=integer-damage-1';
 import {CAST_RELEASE_SECONDS} from './cast-lock.mjs?v=charge-move-1';
-import {IceSpells} from './ice-spells.mjs?v=iceberg-shatter-1';
+import {IceSpells} from './ice-spells.mjs?v=iceberg-boulder-1';
 import {hasIceRecipe} from './ice-spec.mjs?v=iceberg-rise-1';
 import {areaTouches,shotTouches,shotContact} from './combat-hit.mjs?v=no-floor-rings-1';
 import {IceBasic} from './ice-basic.mjs?v=forward-glow-1';

@@ -18,10 +18,9 @@ export class IceSpells{
  if(s.op==='l'){const e=this.add('fall',s,owner,p,dir,.95),ring=this.mesh(new T.RingGeometry(s.radius-.07,s.radius,40),0x86ddff,.75);ring.rotation.x=-Math.PI/2;ring.position.y=.025;e.mesh.add(ring);e.ice=this.shard(e.mesh,0,5,0,.5);e.ice.visible=false;return true;}
  if(s.op==='d'){
  const e=this.add('iceberg',s,owner,p,dir,3),rock=new T.Group();e.mesh.add(rock);e.rock=rock;
- // Broad triangular foot tapering to a narrow, slightly leaning peak.
- const geometry=new T.CylinderGeometry(.035,1.55,3.3,3,3),positions=geometry.attributes.position;
- for(let i=0;i<positions.count;i++){const x=positions.getX(i),y=positions.getY(i)+1.65,z=positions.getZ(i),t=y/3.3;positions.setXYZ(i,x+.2*t,y,z+.12*t);}
- geometry.rotateY(.35);
+ // Keep the original faceted boulder; only narrow and lift its upper shoulder.
+ const geometry=new T.IcosahedronGeometry(1,1),positions=geometry.attributes.position;
+ for(let i=0;i<positions.count;i++){const x=positions.getX(i),y=positions.getY(i),z=positions.getZ(i),t=(y+1)/2,tip=Math.max(0,(t-.58)/.42),wide=(1-.32*t)*(1-.22*tip);positions.setXYZ(i,x*1.45*wide+.18*t,(y+1)*1.65+.18*tip*tip,z*1.3*wide+.12*Math.sin(y*4));}
  geometry.computeVertexNormals();const body=this.mesh(geometry,0x9bdbe8,.55);body.material.roughness=.2;body.material.metalness=.08;body.material.emissiveIntensity=.1;rock.add(body);
  const edges=new T.LineSegments(new T.EdgesGeometry(geometry,24),new T.LineBasicMaterial({color:0xd5f6ff,transparent:true,opacity:.32}));rock.add(edges);rock.position.y=-3.3;
  this.area(e,p,s.radius,{force:3.2,once:true});

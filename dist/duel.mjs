@@ -6,7 +6,7 @@ import {wardTouches} from './combat-hit.mjs?v=no-floor-rings-1';
 import {ICE_BASIC} from './ice-basic.mjs?v=forward-glow-1';
 import * as T from './three.module.js';
 import {spellAimHeight} from './cursor-aim.mjs?v=iceberg-rise-1';
-import {LiveMagic} from './live-magic.mjs?v=iceberg-shatter-1';
+import {LiveMagic} from './live-magic.mjs?v=iceberg-boulder-1';
 import {QueuedCharge} from './queued-charge.mjs?v=instant-first-ring-1';
 import {SpaceSkill,interceptSpaceShots} from './space-skills.mjs?v=ice-trail-fall-1';
 import {ForcedMotion} from './motion.mjs';
