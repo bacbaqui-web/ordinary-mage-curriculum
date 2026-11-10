@@ -247,17 +247,22 @@ function draw(v,p){const {canvas,camera}=v,w=Math.round(canvas.clientWidth),h=Ma
   const links=segments.filter(([a,b])=>a!=='Neck'&&b!=='Neck').map(([a,b])=>[a,b]);links.push(['Spine','Head']);if(v.points.BagCenter)links.push(['BagCenter','BagDirection']);
   const nodes=Object.entries(v.points).filter(([n])=>n!=='Neck'),depths=nodes.map(([,p])=>p.z),near=Math.max(...depths),far=Math.min(...depths);
   const depth=p=>(p.z-far)/Math.max(.001,near-far),radius=(n,p)=>(selection.has(n)?5:3)+depth(p)*2.5;
-  ctx.save();ctx.lineCap='round';
-  links.sort((a,b)=>(v.points[a[0]].z+v.points[a[1]].z)-(v.points[b[0]].z+v.points[b[1]].z));
-  for(const [from,to] of links){const a=v.points[from],b=v.points[to],dx=b.x-a.x,dy=b.y-a.y,len=Math.hypot(dx,dy);if(len<1)continue;
-   const ra=radius(from,a),rb=radius(to,b);if(len<=ra+rb)continue;
-   ctx.globalAlpha=.35+.3*(depth(a)+depth(b))/2;ctx.beginPath();ctx.moveTo(a.x+dx/len*ra,a.y+dy/len*ra);ctx.lineTo(b.x-dx/len*rb,b.y-dy/len*rb);
-   ctx.strokeStyle=selection.has(from)||selection.has(to)?'#ffd37c':'#d9eaf0';ctx.lineWidth=1+depth(a)+depth(b);ctx.stroke();
-  }
-  for(const [n,a] of nodes.sort((a,b)=>a[1].z-b[1].z)){
-   const r=radius(n,a),active=selection.has(n);ctx.globalAlpha=active?.85:.45+depth(a)*.25;
-   const fill=ctx.createRadialGradient(a.x-r*.3,a.y-r*.3,.3,a.x,a.y,r);fill.addColorStop(0,active?'#fff4c7':'#cedde3');fill.addColorStop(1,active?'#b78a37':'#293e48');
-   ctx.beginPath();ctx.arc(a.x,a.y,r,0,Math.PI*2);ctx.fillStyle=fill;ctx.fill();ctx.lineWidth=1;ctx.strokeStyle=active?'#ffdc88':'#dce9ee';ctx.stroke();
+  ctx.save();ctx.lineCap='butt';ctx.globalAlpha=.8;
+  // Draw far point -> connecting line -> near point. The line starts inside
+  // the far disk but stops at the near disk's rim, keeping its face clear.
+  const layers=[...nodes.map(([n,p])=>({kind:'point',n,p,z:p.z})),...links.map(([from,to])=>({kind:'line',from,to,z:(v.points[from].z+v.points[to].z)/2}))];
+  layers.sort((a,b)=>a.z-b.z||(a.kind==='line'?-1:1));
+  for(const item of layers){
+   if(item.kind==='line'){
+    let from=item.from,to=item.to;if(v.points[from].z>v.points[to].z)[from,to]=[to,from];
+    const a=v.points[from],b=v.points[to],dx=b.x-a.x,dy=b.y-a.y,len=Math.hypot(dx,dy);if(len<1)continue;
+    const end=radius(to,b)+.5,start=Math.abs(a.z-b.z)<1e-4?radius(from,a)+.5:0;if(len<=start+end)continue;
+    ctx.beginPath();ctx.moveTo(a.x+dx/len*start,a.y+dy/len*start);ctx.lineTo(b.x-dx/len*end,b.y-dy/len*end);
+    ctx.strokeStyle=selection.has(from)||selection.has(to)?'#ffd37c':'#e4eff4';ctx.lineWidth=1+depth(a)+depth(b);ctx.stroke();
+   }else{
+    const {n,p:a}=item,r=radius(n,a),active=selection.has(n);
+    ctx.beginPath();ctx.arc(a.x,a.y,r,0,Math.PI*2);ctx.fillStyle=active?'#f2c66d':'#314651';ctx.fill();ctx.lineWidth=1.2;ctx.strokeStyle=active?'#ffe5a0':'#e4eff4';ctx.stroke();
+   }
   }
   ctx.restore();const a=v.points[selected];if(a){ctx.font='12px system-ui';ctx.fillStyle='#fff1bd';ctx.fillText(selection.size>1?`점 ${selection.size}개 선택`:jointLabel(selected),a.x+10,a.y-10);}
  }
