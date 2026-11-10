@@ -1,5 +1,5 @@
 import * as T from './three.module.js';
-import {WolfRig,savedWolfProject} from './wolf-rig.mjs?v=1';
+import {WolfRig,savedWolfProject} from './wolf-rig.mjs?v=points-1';
 export function attachWolf(g){
  g.userData.wolfLoading=true;
  WolfRig.load().then(rig=>{if(g.userData.disposed){rig.dispose();return;}for(const m of g.userData.monsterParts)m.visible=false;g.add(rig.group);g.userData.wolf=rig;g.userData.wolfLoading=false;g.userData.wolfSource='wolf-rig-edited.glb';g.userData.wolfPalette=rig.meshes.flatMap(m=>(Array.isArray(m.material)?m.material:[m.material]).map(material=>({material,color:material.color.clone()})));
