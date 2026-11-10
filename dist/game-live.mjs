@@ -7,23 +7,23 @@ import {renderSkillUpgrades} from './skill-upgrades.mjs?v=shift-trajectory-1';
 import {readMovement} from './character-movement.mjs?v=turn-rates-1';
 import {BodyFollow} from './body-follow.mjs?v=turn-rates-1';
 import {attackCooldown} from './attack-cooldown.mjs';
-import {wardTouches,setCombatCamera} from './combat-hit.mjs?v=run-walk-1';
-import {HitboxView} from './hitbox-view.mjs?v=run-walk-1';
+import {wardTouches,setCombatCamera} from './combat-hit.mjs?v=ice-step-1';
+import {HitboxView} from './hitbox-view.mjs?v=ice-step-1';
 import {LevelUpVfx} from './level-up-vfx.mjs?v=screenhit10';
 import {FrostVisuals} from './frost-visuals.mjs?v=shift-trajectory-1';
 import {ICE_BASIC} from './ice-basic.mjs?v=forward-glow-1';
-import {SpaceSkill,SPACE_SKILLS,interceptSpaceShots} from './space-skills.mjs?v=run-walk-1';
-import {SpaceVisuals} from './space-visuals.mjs?v=run-walk-1';
+import {SpaceSkill,SPACE_SKILLS,interceptSpaceShots} from './space-skills.mjs?v=ice-step-1';
+import {SpaceVisuals} from './space-visuals.mjs?v=ice-step-1';
 import {CHARACTERS,characterFor,chooseCharacter,chooseSupport} from './character-loadout.mjs?v=integer-damage-1';
 import {GameAudio} from './game-audio.mjs?v=sync5';
 import {damageSummary} from './damage-display.mjs?v=integer-damage-1';
-import {Duel,STEP} from './duel.mjs?v=forward-glow-1';
-import {mountPvpUI} from './pvp-ui.mjs?v=forward-glow-1';
+import {Duel,STEP} from './duel.mjs?v=ice-step-1';
+import {mountPvpUI} from './pvp-ui.mjs?v=ice-step-1';
 import {OBSTACLES} from './arena-rules.mjs';
 let onlineCore=null,pvp=null,onlineResultShown=false,lastOnlineAim=0,onlineRenderAt=0,onlinePrevious=null;
 import {redLightningPlacement} from './red-lightning-spec.mjs?v=bolt17';
 import {steamPlacement} from './steam-spec.mjs?v=bolt17';
-import {BurnVisuals,applyBurnVisual} from './burn-visuals.mjs?v=run-walk-1';
+import {BurnVisuals,applyBurnVisual} from './burn-visuals.mjs?v=ice-step-1';
 import {castWithPresentation,renderCastPresentation} from './cast-presentation.mjs?v=forward-glow-1';
 import {CastRecoil,HitScreen,chargeSetback} from './combat-response.mjs?v=rim9';
 import {VisionShade} from './vision-shade.mjs';
@@ -36,9 +36,9 @@ import {bindDuelControls,mouseRecipe} from './duel-controls.mjs?v=shift-trajecto
 let walkDirection={x:0,z:0},icePressHand='left',moveSpeedScale=1;
 
 const slotLabel=k=>({q:'기본',w:'좌클릭',e:'우클릭'}[k]);
-import {createWizard,animateWizard,projectWizard,setWizardCharacter} from './wizard.mjs?v=bag-free-length-1';
+import {createWizard,animateWizard,projectWizard,setWizardCharacter} from './wizard.mjs?v=ice-step-1';
 import {QueuedCharge} from './queued-charge.mjs?v=instant-first-ring-1';
-import {LiveMagic} from './live-magic.mjs?v=forward-glow-1';
+import {LiveMagic} from './live-magic.mjs?v=ice-step-1';
 import {spellReach} from './live-spells.mjs?v=integer-damage-1';
 import {describe as describeDesign} from './combo-design.mjs?v=shift-trajectory-1';
 import {MeshFeedback} from './mesh-feedback.mjs';
@@ -257,14 +257,14 @@ function repeatIceCharge(){if(charge.pending||loadout.q!=='i'||(!onlineCore&&!ch
 const controls=bindDuelControls(canvas,window,{
  enabled:()=>running&&!paused&&!finished&&!((player.knockdown>0||player.frozen>0))&&$('selection').classList.contains('hidden')&&$('intro').classList.contains('hidden'),
  walk:d=>{walkDirection=d;sendWalk();},
- begin:(buttons,e,extending)=>{const pressedHand=e.button===2?'right':'left',actor=onlineCore?onlineCore.actors[pvp.index]:player;if((onlineCore?actor.roll.active:roll.active)||charge.pending||(!extending&&(charge.active||playerCastLocked()))||!attackCooldown(actor,pressedHand,loadout.q==='i').ready){deniedAttacks[pressedHand]=performance.now()+450;return false;}point(e);const recipe=mouseRecipe(buttons,progress.ranks,onlineCore?null:loadout);
+ begin:(buttons,e,extending)=>{const pressedHand=e.button===2?'right':'left',actor=onlineCore?onlineCore.actors[pvp.index]:player;if((onlineCore?actor.roll.blocking:roll.blocking)||charge.pending||(!extending&&(charge.active||playerCastLocked()))||!attackCooldown(actor,pressedHand,loadout.q==='i').ready){deniedAttacks[pressedHand]=performance.now()+450;return false;}point(e);const recipe=mouseRecipe(buttons,progress.ranks,onlineCore?null:loadout);
   if(extending){if(repeatingIce)return;if(onlineCore)pvp.input({action:'extend',keys:recipe});else if(charge.queue.join('')==='qq'&&loadout.q==='i')charge.retarget(recipe);else charge.extend(recipe);return;}
   repeatingIce=false;icePressHand=buttons===2?'right':'left';
   if(onlineCore){pvp.input({action:'cancel'});for(const key of recipe)pvp.input({action:'queue',key});pvp.input({action:'begin',hand:icePressHand,point:{x:aim.x,z:aim.z}});if(e.shiftKey&&loadout.q==='i'){repeatingIce=true;pvp.input({action:'repeat'});}return;}
   charge.clear();for(const key of recipe)charge.enqueue(key);charge.begin();if(e.shiftKey)repeatIceCharge();castPointer.copy(pointer);
  },
  repeat:repeatIceCharge,
- release:e=>{point(e);castPointer.copy(pointer);if(onlineCore){pvp.input({action:'release',point:{x:aim.x,z:aim.z}});return;}if(roll.active){roll.pendingRelease=true;return;}const result=charge.requestRelease();if(result)cast(result);},
+ release:e=>{point(e);castPointer.copy(pointer);if(onlineCore){pvp.input({action:'release',point:{x:aim.x,z:aim.z}});return;}if(roll.blocking){roll.pendingRelease=true;return;}const result=charge.requestRelease();if(result)cast(result);},
  cancel:()=>{if(onlineCore)pvp.input({action:'cancel'});else charge.clear();}
 });
 window.addEventListener('blur',()=>pause(true));document.addEventListener('visibilitychange',()=>{if(document.hidden)pause(true)});
@@ -286,9 +286,9 @@ function ai(dt){
 }
 function update(dt){clock+=dt;updateHunt(dt);
  for(const a of[player,enemy,...monsters.filter(m=>!m.dead)]){if(a.frozen>0)a.motion.clear();if(a.motion.active){const step=a.motion.tick(dt),count=Math.max(1,Math.ceil(Math.hypot(step.x,step.z)/.08));for(let i=0;i<count;i++){const dx=step.x/count,dz=step.z/count;if(collides(a.x+dx,a.z+dz)||wallBlocks(a,{x:a.x+dx,z:a.z+dz})){a.motion.clear();break;}a.x+=dx;a.z+=dz;}}}
-const spaceStep=roll.tick(dt,player,{targets:()=>[enemy,...monsters.filter(m=>!m.dead)],clearPath:(a,b)=>clearPath(a,b),hit:(a,d,v,f,o)=>hit(a,d,new T.Vector3(v.x,0,v.z),f,o)});charge.tick(spaceStep.chargeDt);const queuedBasic=charge.takeRelease();if(queuedBasic)cast(queuedBasic);const chargeSpeed=chargeMoveScale(charge.active,charge.parts.length);const rolling=spaceStep.chargeDt<dt;const beforeX=player.x,beforeZ=player.z;if(rolling){for(let i=0;i<8;i++)move(player,spaceStep.x/8,spaceStep.z/8);}if(!roll.active&&roll.pendingRelease){roll.pendingRelease=false;const result=charge.requestRelease();if(result)cast(result);}
+const spaceStep=roll.tick(dt,player,{targets:()=>[enemy,...monsters.filter(m=>!m.dead)],clearPath:(a,b)=>clearPath(a,b),hit:(a,d,v,f,o)=>hit(a,d,new T.Vector3(v.x,0,v.z),f,o)});charge.tick(spaceStep.chargeDt);const queuedBasic=charge.takeRelease();if(queuedBasic)cast(queuedBasic);const chargeSpeed=chargeMoveScale(charge.active,charge.parts.length);const rolling=spaceStep.chargeDt<dt;const beforeX=player.x,beforeZ=player.z;if(rolling){for(let i=0;i<8;i++)move(player,spaceStep.x/8,spaceStep.z/8);}if(!roll.blocking&&roll.pendingRelease){roll.pendingRelease=false;const result=charge.requestRelease();if(result)cast(result);}
 player.castControlLock=Math.max(0,(player.castControlLock||0)-dt);enemy.castControlLock=Math.max(0,(enemy.castControlLock||0)-dt);player.cool=Math.max(0,player.cool-dt);player.iceCastLock=Math.max(0,(player.iceCastLock||0)-dt);player.iceLeftCool=Math.max(0,(player.iceLeftCool||0)-dt);player.iceRightCool=Math.max(0,(player.iceRightCool||0)-dt);player.mana=bot?Math.min(100,player.mana+dt*(charge.active?3:10)):100;
- if(!playerCastLocked()&&!((player.knockdown>0||player.frozen>0))&&!(player.rooted>0)&&!(player.iceCastLock>0)&&!rolling&&!player.motion.active&&!player.recoil?.active&&chargeSpeed>0){const speed=4.4*moveSpeedScale*(roll.speedBoost?1.35:1)*chargeSpeed*(player.frostSlow>0?.35:player.slow>0?.55:1);move(player,walkDirection.x*dt*speed,walkDirection.z*dt*speed);}
+ if(!playerCastLocked()&&!((player.knockdown>0||player.frozen>0))&&!(player.rooted>0)&&!(player.iceCastLock>0)&&!rolling&&!player.motion.active&&!player.recoil?.active&&chargeSpeed>0){const speed=4.4*moveSpeedScale*roll.moveScale*chargeSpeed*(player.frostSlow>0?.35:player.slow>0?.55:1);move(player,walkDirection.x*dt*speed,walkDirection.z*dt*speed);}
 
  player.velocity=new T.Vector3((player.x-beforeX)/dt,0,(player.z-beforeZ)/dt);
  const facing=aim.clone().sub(new T.Vector3(player.x,0,player.z));if(facing.length()>.1)player.dir.copy(facing.normalize());
@@ -355,7 +355,7 @@ function ui(dt=0){const movement=readMovement(characterFor(loadout).id);moveSpee
  $('enemyOrbs').classList.toggle('charging',enemyCharging);
  enemyAimLine.visible=enemyCharging&&enemyLoadout[ec.parts[0]]==='e';if(enemyCharging){const seq=mapSequence(ec.parts,enemyLoadout),spec={range:spellReach(seq)},end=new T.Vector3(enemy.x,.13,enemy.z).addScaledVector(enemy.dir,spec.range);enemyAimLine.geometry.dispose();enemyAimLine.geometry=new T.BufferGeometry().setFromPoints([new T.Vector3(enemy.x,.13,enemy.z),end]);enemyAimLine.material.color.set(RUNES[seq[0]].color);}
  $('enemyLoadout').innerHTML=KEYS.map(k=>{const r=RUNES[enemyLoadout[k]];const rank=enemyProgress.ranks[k];return `<span style="color:${rank?r.color:'#75838c'}" title="${rank?'숙련 '+rank:'미습득'}">${rank?r.icon:'🔒'} ${r.name}${rank?' '+rank:''}</span>`}).join(' · ');
- for(const a of[player,enemy]){const body=a.g.userData.body;if(!body)continue;const angle=a.g.rotation.y,m=a.motion,localX=m.x*Math.cos(angle)-m.z*Math.sin(angle),localZ=m.x*Math.sin(angle)+m.z*Math.cos(angle);body.rotation.x=m.lean*localZ;body.rotation.z=-m.lean*localX;a.castFlash=Math.max(0,(a.castFlash||0)-.016);body.rotation.x-=Math.sin(a.castFlash/.3*Math.PI)*.18;const preparing=a===player?charge.active:enemyCharge.active;if(a.g.userData.arm)a.g.userData.arm.rotation.x=preparing?-.45:-Math.sin(a.castFlash/.3*Math.PI)*.6;const shownRoll=a===player?roll:onlineCore?.actors[1-pvp.index].roll;if(shownRoll?.active){const bends={q:.32,i:.16,l:.22,d:.12,p:-.18,e:.06,t:.15,g:-.24,s:.12,h:.48};body.rotation.x=bends[shownRoll.kind]||0;body.rotation.z=['e','s'].includes(shownRoll.kind)?-.18:0;}}
+ for(const a of[player,enemy]){const body=a.g.userData.body;if(!body)continue;const angle=a.g.rotation.y,m=a.motion,localX=m.x*Math.cos(angle)-m.z*Math.sin(angle),localZ=m.x*Math.sin(angle)+m.z*Math.cos(angle);body.rotation.x=m.lean*localZ;body.rotation.z=-m.lean*localX;a.castFlash=Math.max(0,(a.castFlash||0)-.016);body.rotation.x-=Math.sin(a.castFlash/.3*Math.PI)*.18;const preparing=a===player?charge.active:enemyCharge.active;if(a.g.userData.arm)a.g.userData.arm.rotation.x=preparing?-.45:-Math.sin(a.castFlash/.3*Math.PI)*.6;const shownRoll=a===player?roll:onlineCore?.actors[1-pvp.index].roll;if(shownRoll?.active){const bends={q:.32,i:0,l:.22,d:.12,p:-.18,e:.06,t:.15,g:-.24,s:.12,h:.48};body.rotation.x=bends[shownRoll.kind]||0;body.rotation.z=['e','s'].includes(shownRoll.kind)?-.18:0;}}
  for(const k of['q','w','e'])$('key-'+k).classList.toggle('active',charge.queue.includes(k));
  $('orbs').parentElement.classList.toggle('charging',charge.active&&charge.elapsed>=.22);
  $('orbs').innerHTML=(charge.active&&charge.elapsed>=.22?charge.queue:[]).map((k,i)=>{const amount=charge.active?Math.max(0,Math.min(1,charge.elapsed/1.2-i)):0;return `<div class="orb" style="--c:${RUNES[loadout[k]].color};--p:${amount*100}%"><span>${RUNES[loadout[k]].icon}</span></div>`}).join('');
@@ -407,7 +407,7 @@ for(const k of KEYS){$('key-'+k).onclick=()=>{if(!running||paused||finished||onl
 function resize(){renderer.setSize(innerWidth,innerHeight);camera.aspect=innerWidth/innerHeight;camera.fov=38;const fit=Math.max(1,1.4/camera.aspect);camera.position.set(player.x+12*fit,17*fit,player.z+15*fit);camera.far=140*fit;camera.lookAt(player.x,0,player.z);camera.updateProjectionMatrix()}window.addEventListener('resize',resize);resize();
 const hitboxView=new HitboxView(scene);$('hitboxToggle').onclick=()=>{hitboxView.enabled=!hitboxView.enabled;$('hitboxToggle').textContent=hitboxView.enabled?'히트박스 끄기':'히트박스 켜기';$('hitboxToggle').setAttribute('aria-pressed',String(hitboxView.enabled));$('hitboxNote').hidden=!hitboxView.enabled;};
 const levelUpVfx=new LevelUpVfx(scene,remove);const spaceVisuals=new SpaceVisuals(scene);const frostVisuals=new FrostVisuals(scene,remove);
-let prev=performance.now();function frame(now){requestAnimationFrame(frame);if(onlineCore&&running&&now-lastOnlineMove>50&&(walkDirection.x||walkDirection.z)){lastOnlineMove=now;sendWalk();}const dt=Math.min(.04,(now-prev)/1000);prev=now;gameAudio.update({active:running&&!paused&&!finished,charging:charge.active&&!roll.active,stage:charge.parts.length||1,rolling:roll.active});if(!paused)hitScreen.tick(dt);if(running&&!paused&&!finished&&!onlineCore)update(dt);if(!paused)for(let i=fx.length-1;i>=0;i--){const f=fx[i];f.life-=dt;if(f.ring){f.m.scale.setScalar(f.r*(.55+.45*(1-f.life/f.max)));f.m.material.opacity=Math.max(0,f.life/f.max*.65)}else if(f.v){f.m.position.addScaledVector(f.v,dt);f.v.y-=dt*8}else if(f.m.material.transparent)f.m.material.opacity=Math.max(0,f.life/f.max*.5);if(f.life<=0){remove(f.m);fx.splice(i,1)}}if(!paused){spellVfx.update(dt);pixelVfx.update(dt);}const feedbackDt=paused?0:dt;castingFeedback.update(feedbackDt);chargeView=chargeCamera.update(feedbackDt,running&&!finished&&charge.active,charge.parts.length||1,charge.progress);for(const a of [player,enemy,...monsters])a.hitFlash=Math.max(0,(a.hitFlash||0)-feedbackDt);ui(feedbackDt);for(const a of [player,enemy]){
+let prev=performance.now();function frame(now){requestAnimationFrame(frame);if(onlineCore&&running&&now-lastOnlineMove>50&&(walkDirection.x||walkDirection.z)){lastOnlineMove=now;sendWalk();}const dt=Math.min(.04,(now-prev)/1000);prev=now;gameAudio.update({active:running&&!paused&&!finished,charging:charge.active&&!roll.blocking,stage:charge.parts.length||1,rolling:roll.blocking});if(!paused)hitScreen.tick(dt);if(running&&!paused&&!finished&&!onlineCore)update(dt);if(!paused)for(let i=fx.length-1;i>=0;i--){const f=fx[i];f.life-=dt;if(f.ring){f.m.scale.setScalar(f.r*(.55+.45*(1-f.life/f.max)));f.m.material.opacity=Math.max(0,f.life/f.max*.65)}else if(f.v){f.m.position.addScaledVector(f.v,dt);f.v.y-=dt*8}else if(f.m.material.transparent)f.m.material.opacity=Math.max(0,f.life/f.max*.5);if(f.life<=0){remove(f.m);fx.splice(i,1)}}if(!paused){spellVfx.update(dt);pixelVfx.update(dt);}const feedbackDt=paused?0:dt;castingFeedback.update(feedbackDt);chargeView=chargeCamera.update(feedbackDt,running&&!finished&&charge.active,charge.parts.length||1,charge.progress);for(const a of [player,enemy,...monsters])a.hitFlash=Math.max(0,(a.hitFlash||0)-feedbackDt);ui(feedbackDt);for(const a of [player,enemy]){
  const u=a.g.userData,active=running&&!paused&&!finished,step=active&&!(a.frozen>0)?dt:0;
  const actorCharge=onlineCore?onlineCore.actors[a===player?pvp.index:1-pvp.index].charge:a===player?charge:enemyCharge.charge;
  const charging=active&&actorCharge.active&&!actorCharge.releasePose,stage=a===player?charge.parts.length:enemyCharge.charge.parts.length;
@@ -415,7 +415,7 @@ let prev=performance.now();function frame(now){requestAnimationFrame(frame);if(o
  if(!charging&&u.puppet.magic.mode==='hold')u.puppet.magic.reset();
  const previous=u.animationPosition||{x:a.x,z:a.z},speed=step?Math.hypot(a.x-previous.x,a.z-previous.z)/step:0;
  const activeSpace=a===player?roll:onlineCore?.actors[1-pvp.index].roll;
- animateWizard(a.g,step,{speed:activeSpace?.active?0:speed,charging,chargeStage:stage||1,cast:a.castFlash||0});
+ animateWizard(a.g,step,{speed:activeSpace?.blocking?0:speed,mobility:!!activeSpace?.active&&activeSpace.kind==='i',charging,chargeStage:stage||1,cast:a.castFlash||0});
  u.puppet.chargeHand=onlineCore?onlineCore.actors[a===player?pvp.index:1-pvp.index].iceHand||'left':a===player?icePressHand:'left';u.puppet.chargeUsesIce=(a===player?loadout:enemyLoadout).q==='i';
  const iceEngine=onlineCore?onlineCore.magic.ice:liveMagic.ice,iceOwner=onlineCore?onlineCore.actors[a===player?pvp.index:1-pvp.index]:a;
  u.puppet.icePose=(onlineCore?onlineCore.magic:liveMagic).pose(iceOwner);

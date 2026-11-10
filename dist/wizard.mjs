@@ -1,7 +1,7 @@
 import {CharacterRig} from './character-rig.mjs?v=bag-free-length-1';
 import {characterProfile} from './character-profiles.mjs?v=heel-free-1';
 import * as T from './three.module.js';
-import {MotionPuppet} from './motion-puppet.mjs?v=bag-free-length-1';
+import {MotionPuppet} from './motion-puppet.mjs?v=ice-step-1';
 export function createWizard(scene,color,trim){
  const g=new T.Group(),body=new T.Group();body.position.y=1;g.add(body);
  const palette=[],joints={},parts=[];
@@ -24,12 +24,12 @@ export function createWizard(scene,color,trim){
  const selection=new T.Mesh(new T.RingGeometry(.59,.65,40),new T.MeshBasicMaterial({color:trim,side:T.DoubleSide}));selection.rotation.x=-Math.PI/2;selection.position.y=.025;g.add(selection);
  g.userData={parts,body,arm:joints.rightArm,joints,palette,phase:0,stride:0,castTime:0};const puppet=new MotionPuppet(g);g.userData.puppet=puppet;puppet.visual.traverse(o=>{if(o.material)palette.push({material:o.material,color:o.material.color.clone()});});for(const p of parts)p.flat.visible=false;scene.add(g);return g;
 }
-export function animateWizard(g,dt,{speed=0,charging=false,chargeStage=1,cast=0,rolling=false,rollProgress=0,travelX=0,travelZ=1}={}){
+export function animateWizard(g,dt,{speed=0,charging=false,chargeStage=1,cast=0,mobility=false,rolling=false,rollProgress=0,travelX=0,travelZ=1}={}){
  if(dt>0)g.userData.puppet.blendTransitions=true;
  const u=g.userData,j=u.joints;u.modelDt=dt;if(!j)return;
  if(charging&&u.puppet.magic.mode!=='hold')u.puppet.magic.press();
  u.puppet.magic.update(dt,chargeStage);
- const movingClip=charging&&chargeStage===1?'걷기':'달리기';const clipIndex=u.puppet.clips.findIndex(c=>c.name===movingClip);if(clipIndex>=0&&u.puppet.selectedClip!==clipIndex)u.puppet.select(clipIndex);u.puppet.locomotionName=speed<.05?'대기':movingClip;u.puppet.idleTime=(u.puppet.idleTime||0)+(speed<.05?dt:-(u.puppet.idleTime||0));
+ const movingClip=charging&&chargeStage===1?'걷기':'달리기';const clipIndex=u.puppet.clips.findIndex(c=>c.name===movingClip);if(clipIndex>=0&&u.puppet.selectedClip!==clipIndex)u.puppet.select(clipIndex);u.puppet.mobilityTime=mobility?(u.puppet.mobilityTime||0)+dt:0;u.puppet.locomotionName=mobility?'이동기':speed<.05?'대기':movingClip;u.puppet.idleTime=(u.puppet.idleTime||0)+(speed<.05?dt:-(u.puppet.idleTime||0));
  u.puppet.update(dt,{speed:speed>0?speed/4.4:0,charging,cast});if(speed<.05&&!charging&&!cast){u.puppet.time=0;u.puppet.update(0,{speed:0});}
  u.stride+=(Math.min(1,speed/4.4)-u.stride)*(1-Math.exp(-dt*14));u.phase+=dt*speed*2.5;
  const swing=Math.sin(u.phase)*.65*u.stride;

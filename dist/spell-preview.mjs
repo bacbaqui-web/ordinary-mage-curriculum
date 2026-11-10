@@ -1,5 +1,5 @@
 import * as T from './three.module.js';
-import {createWizard,animateWizard,projectWizard} from './wizard.mjs?v=bag-free-length-1';
+import {createWizard,animateWizard,projectWizard} from './wizard.mjs?v=ice-step-1';
 import {PixelVFX,frameAt} from './pixel-vfx.mjs?v=studio1';
 import {RUNES} from './loadout.mjs?v=integer-damage-1';
 import {groundSpec} from './ground.mjs?v=integer-damage-1';

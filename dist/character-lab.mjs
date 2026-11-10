@@ -1,18 +1,18 @@
 import {readMovement} from './character-movement.mjs?v=turn-rates-1';
 import {BodyFollow} from './body-follow.mjs?v=turn-rates-1';
 import {characterProfile} from './character-profiles.mjs?v=heel-free-1';
-import {useMotionCharacter} from './live-motions.mjs?v=bag-free-length-1';
+import {useMotionCharacter} from './live-motions.mjs?v=ice-step-1';
 import {CharacterRig} from './character-rig.mjs?v=bag-free-length-1';
 import * as T from './three.module.js';
 import {ActionPlayback} from './action-playback.mjs';
-import {MotionPuppet,demoMotion,readMotion} from './motion-puppet.mjs?v=bag-free-length-1';
+import {MotionPuppet,demoMotion,readMotion} from './motion-puppet.mjs?v=ice-step-1';
 const $=id=>document.getElementById(id),scene=new T.Scene(),camera=new T.PerspectiveCamera(35,1,.1,100),renderer=new T.WebGLRenderer({antialias:false,alpha:true});renderer.setClearColor(0,0);renderer.setPixelRatio(1);
 const output=$('view'),ctx=output.getContext('2d'),mask=document.createElement('canvas'),maskCtx=mask.getContext('2d');
 const profile=characterProfile(new URLSearchParams(location.search).get('character'));useMotionCharacter(profile.id);let characterRig=null;const characterRoot=new T.Group();scene.add(characterRoot);scene.add(new T.HemisphereLight(0xffffff,0x84919d,2.4));const keyLight=new T.DirectionalLight(0xffffff,2);keyLight.position.set(-3,6,5);scene.add(keyLight);
 const grid=new T.GridHelper(10,20,0x78939a,0x40535c);const puppet=new MotionPuppet(scene);puppet.blendTransitions=true;let playing=true,pending=null,actionMode=false,magicMode=false,magicHeld=false,magicElapsed=0;const playback=new ActionPlayback(puppet);
 const magicRings=[0,1].map(()=>{const m=new T.Mesh(new T.RingGeometry(.15,.20,16),new T.MeshBasicMaterial({color:0xffd46a,side:T.DoubleSide}));scene.add(m);return m;});const magicBall=new T.Mesh(new T.CircleGeometry(.15,12),new T.MeshBasicMaterial({color:0xffaa44,side:T.DoubleSide}));scene.add(magicBall);
 if(profile.model)CharacterRig.load(profile.model,profile.accessories,profile.garment,profile.ankleLift,profile.ankleBack).then(r=>{characterRig=r;characterRoot.add(r.group);puppet.visual.visible=false;$('status').textContent=profile.label+' · 저장한 동작 확인';}).catch(()=>{$('status').textContent='캐릭터 모델을 불러오지 못했습니다. 새로고침해 주세요.';});
-const editorLink=document.querySelector('a[href^="pose-editor.html"]');if(editorLink)editorLink.href='pose-editor.html?v=run-walk-1&character='+profile.id;
+const editorLink=document.querySelector('a[href^="pose-editor.html"]');if(editorLink)editorLink.href='pose-editor.html?v=ice-step-1&character='+profile.id;
 function clips(){ $('clip').replaceChildren(...puppet.clips.map((c,i)=>new Option(c.name||'동작 '+(i+1),i))); }clips();
 function selectClip(i){
  magicMode=false;magicHeld=false;puppet.group.position.set(0,0,0);puppet.magic.reset();

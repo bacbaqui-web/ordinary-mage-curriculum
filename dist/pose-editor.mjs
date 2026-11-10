@@ -2,19 +2,19 @@ import {BAG_POINTS,BAG_LABELS,bagHandles,moveBag} from './bag-controls.mjs?v=bag
 import {loopFrame} from './motion-timing.mjs';
 import {normalizeMovement,readMovement} from './character-movement.mjs?v=turn-rates-1';
 import {syncLoop,resizeLoop,loopEndpoint} from './pose-loop.mjs?v=bag-free-length-1';
-import {ensureLocomotion,ensureBasicAttacks,ensureIdle,ensureFirstRingClips,actionGroups} from './motion-catalog.mjs?v=run-walk-1';
+import {ensureMobility,ensureLocomotion,ensureBasicAttacks,ensureIdle,ensureFirstRingClips,actionGroups} from './motion-catalog.mjs?v=ice-step-1';
 import {migrateAnklePivot} from './ankle-pivot.mjs?v=heel-free-1';
 import {CHARACTERS,characterProfile,motionStorageKey,projectForCharacter,assertCharacterImport} from './character-profiles.mjs?v=heel-free-1';
 import {CharacterRig,fitProjectToRig} from './character-rig.mjs?v=bag-free-length-1';
 import {ensureMagicClips} from './magic-clips.mjs?v=bag-translate-1';
-import {uniqueMotions,mergeMotions} from './pose-library.mjs?v=run-walk-1';
+import {uniqueMotions,mergeMotions} from './pose-library.mjs?v=ice-step-1';
 import * as T from './three.module.js';
 import {footFaces} from './foot-shape.mjs';
 import {PassiveFoot} from './passive-foot.mjs';
 const feet={LeftFoot:new PassiveFoot(),RightFoot:new PassiveFoot()};
 let footShapes={};
 import {moveJoint as movePoseJoint,applyFootLocks} from './pose-constraints.mjs?v=bag-free-length-1';
-import {demoMotion} from './motion-puppet.mjs?v=bag-free-length-1';
+import {demoMotion} from './motion-puppet.mjs?v=ice-step-1';
 import {JOINTS,LABELS,samplePose,validateProject} from './pose-data.mjs?v=bag-free-length-1';
 const $=id=>document.getElementById(id);
 const jointLabel=n=>BAG_LABELS[n]||LABELS[JOINTS.indexOf(n)];
@@ -41,7 +41,7 @@ function prepare(p){
  p.movementSettings=normalizeMovement(p.movementSettings||readMovement(p.characterId||'default'));
  compactShoulders(p);
  for(const a of p.actions)if(!a.binding&&['기본 걷기','베기','주먹 타격','방어','마법 시전'].includes(a.name))a.binding=a.name;
- p.actions=uniqueMotions(p.actions);ensureMagicClips(p);ensureBasicAttacks(p);ensureFirstRingClips(p);ensureLocomotion(p);ensureIdle(p);for(const a of p.actions)syncLoop(a);return p;
+ p.actions=uniqueMotions(p.actions);ensureMagicClips(p);ensureBasicAttacks(p);ensureFirstRingClips(p);ensureLocomotion(p);ensureMobility(p);ensureIdle(p);for(const a of p.actions)syncLoop(a);return p;
 }
 prepare(project);
 const current=()=>project.actions[index],pose=()=>samplePose(current(),frame);
@@ -165,7 +165,7 @@ document.addEventListener('keydown',e=>{
  else if(command==='z'||command==='y'){e.preventDefault();(command==='y'||e.shiftKey?redo:undo)();}
 });
 $('export').onclick=()=>{const url=URL.createObjectURL(new Blob([JSON.stringify(projectForCharacter(project,characterId),null,2)],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download=`ordinary-mage-${characterId}-motions.json`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
-$('import').onchange=async()=>{try{const file=$('import').files[0];if(!file)return;if(file.size>10*1024*1024)throw Error('10MB 이하의 동작 파일을 선택하세요.');const targetId=characterId;const incoming=validateProject(JSON.parse(await file.text()));if(targetId!==characterId)throw Error('캐릭터가 바뀌었습니다. 파일을 다시 선택하세요.');assertCharacterImport(incoming,characterId);compactShoulders(incoming);ensureMagicClips(incoming);ensureBasicAttacks(incoming);ensureFirstRingClips(incoming);ensureLocomotion(incoming);if(rig&&!incoming.rigVersion){const fitted=fitProjectToRig(incoming,rig.restPose,defaultRest());incoming.actions=fitted.actions;incoming.rigVersion=7;}if(rig)migrateAnklePivot(incoming,rig.ankleLift,rig.ankleBack);incoming.actions=uniqueMotions(incoming.actions);for(const a of incoming.actions)a.updatedAt=Date.now();const merged=mergeMotions(project.actions,incoming.actions);if(merged.length>100)throw Error('동작은 최대 100개까지 보관할 수 있습니다.');checkpoint();if(incoming.movementSettings)project.movementSettings=normalizeMovement(incoming.movementSettings);project.actions=merged;index=Math.max(0,project.actions.indexOf(incoming.actions[0]));frame=0;stop();save();sync();}catch(e){$('status').textContent='불러오지 못했습니다. '+e.message;}};
+$('import').onchange=async()=>{try{const file=$('import').files[0];if(!file)return;if(file.size>10*1024*1024)throw Error('10MB 이하의 동작 파일을 선택하세요.');const targetId=characterId;const incoming=validateProject(JSON.parse(await file.text()));if(targetId!==characterId)throw Error('캐릭터가 바뀌었습니다. 파일을 다시 선택하세요.');assertCharacterImport(incoming,characterId);compactShoulders(incoming);ensureMagicClips(incoming);ensureBasicAttacks(incoming);ensureFirstRingClips(incoming);ensureLocomotion(incoming);ensureMobility(incoming);if(rig&&!incoming.rigVersion){const fitted=fitProjectToRig(incoming,rig.restPose,defaultRest());incoming.actions=fitted.actions;incoming.rigVersion=7;}if(rig)migrateAnklePivot(incoming,rig.ankleLift,rig.ankleBack);incoming.actions=uniqueMotions(incoming.actions);for(const a of incoming.actions)a.updatedAt=Date.now();const merged=mergeMotions(project.actions,incoming.actions);if(merged.length>100)throw Error('동작은 최대 100개까지 보관할 수 있습니다.');checkpoint();if(incoming.movementSettings)project.movementSettings=normalizeMovement(incoming.movementSettings);project.actions=merged;index=Math.max(0,project.actions.indexOf(incoming.actions[0]));frame=0;stop();save();sync();}catch(e){$('status').textContent='불러오지 못했습니다. '+e.message;}};
 function defaultRest(){const {root}=demoMotion();root.updateMatrixWorld(true);return Object.fromEntries(JOINTS.map(n=>[n,root.getObjectByName(n).getWorldPosition(new T.Vector3()).toArray()]));}
 function setBusy(value){loading=value;$('motionControls').disabled=value;for(const id of ['export','import','saveMotion','play','previous','next','frames','fps','scrub','character','loopMotion'])$(id).disabled=value;}
 async function selectCharacter(id){
@@ -187,7 +187,7 @@ async function selectCharacter(id){
   try{localStorage.setItem('ordinary-mage-editor-character',characterId);}catch{}
   $('character').value=characterId;$('import').value='';
   $('status').textContent='';
-  $('labLink').href='character-lab.html?v=run-walk-1&character='+characterId;
+  $('labLink').href='character-lab.html?v=ice-step-1&character='+characterId;
   const url=new URL(location.href);url.searchParams.set('character',characterId);window.history.replaceState(null,'',url);
   $('status').textContent=`${profile.label} 동작을 열었습니다. 이 캐릭터에만 저장됩니다.`;sync();
  }catch(e){nextRig?.dispose();$('character').value=characterId;$('status').textContent=e.message;}

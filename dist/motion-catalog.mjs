@@ -1,7 +1,7 @@
 export const BASIC_ATTACKS=['좌클릭 기본 공격','우클릭 기본 공격'];
 export const firstRingClip=(hand,mode)=>`1륜 ${hand==='right'?'우클릭':'좌클릭'} ${mode==='hold'?'충전':'발사'}`;
 export const FIRST_RING_CLIPS=['hold','release'].flatMap(mode=>['left','right'].map(hand=>firstRingClip(hand,mode)));
-export const ACTION_ORDER=['대기','달리기','걷기',...FIRST_RING_CLIPS,'2륜 충전','2륜 발사','3륜 충전','3륜 발사'];
+export const ACTION_ORDER=['대기','달리기','걷기','이동기',...FIRST_RING_CLIPS,'2륜 충전','2륜 발사','3륜 충전','3륜 발사'];
 export function ensureBasicAttacks(project){
  const source=project.actions.find(a=>(a.binding||a.name)==='1륜 발사')||project.actions.find(a=>(a.binding||a.name)==='마법 시전');
  if(!source)return false;let changed=false;
@@ -56,4 +56,10 @@ export function ensureLocomotion(project){
  for(const side of ['Left','Right'])for(const part of ['Foot','Toe']){const n=side+part;if(mean[n])mean[n][1]=Math.min(...run.keys.map(k=>k.pose[n][1]));}
  for(const k of walk.keys){k.frame=Math.round(k.frame/duration*(walk.frames-1));for(const n of joints)k.pose[n]=k.pose[n].map((v,axis)=>mean[n][axis]+(v-mean[n][axis])*.45);}
  walk.loop=true;project.actions.push(walk);return true;
+}
+
+export function ensureMobility(project){
+ if(project.actions.some(a=>(a.binding||a.name)==='이동기'))return false;
+ const source=project.actions.filter(a=>(a.binding||a.name)==='달리기').sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0))[0];if(!source)return false;
+ const action=structuredClone(source);action.name=action.binding='이동기';action.loop=true;delete action.updatedAt;delete action.footLocks;project.actions.push(action);return true;
 }

@@ -1,4 +1,4 @@
-import {PvpClient} from './pvp-client.mjs?v=forward-glow-1';
+import {PvpClient} from './pvp-client.mjs?v=ice-step-1';
 import {PVP_SERVER} from './pvp-config.mjs';
 export function mountPvpUI(hooks){
  const $=id=>document.getElementById(id),selection=$('selection'),card=selection.querySelector('.select-card');

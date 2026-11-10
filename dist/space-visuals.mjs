@@ -1,5 +1,5 @@
 import * as T from './three.module.js';
-import {SPACE_SKILLS} from './space-skills.mjs?v=run-walk-1';
+import {SPACE_SKILLS} from './space-skills.mjs?v=ice-step-1';
 export class SpaceVisuals{
  constructor(scene){this.scene=scene;this.pool=[];this.used=0;this.geometries={sphere:new T.IcosahedronGeometry(1,1),cone:new T.ConeGeometry(1,1,7),box:new T.BoxGeometry(1,1,1),ring:new T.TorusGeometry(1,.045,5,36)};}
  mesh(shape,color,x,y,z,sx,sy,sz,opacity=.7,ry=0){const index=this.used++;let m=this.pool[index];if(!m){m=new T.Mesh(this.geometries[shape],new T.MeshBasicMaterial({transparent:true,depthWrite:false}));this.pool.push(m);this.scene.add(m);}m.geometry=this.geometries[shape];m.material.color.setHex(color);m.material.opacity=opacity;m.position.set(x,y,z);m.scale.set(sx,sy,sz);m.rotation.set(shape==='ring'?Math.PI/2:0,ry,0);m.visible=true;return m;}
@@ -13,7 +13,8 @@ export class SpaceVisuals{
  else if(z.kind==='t'){this.mesh('ring',c,z.x,.06,z.z,z.radius,z.radius,z.radius,.8*fade);for(let j=0;j<4;j++){const angle=j*Math.PI/2;this.mesh('box',c,z.x+Math.cos(angle)*1.25,.05,z.z+Math.sin(angle)*1.25,.45,.06,.2,.5*fade,angle);}}
  }
  if(!r.active)continue;const angle=Math.atan2(r.faceX,r.faceZ);
- if(r.kind==='d'){for(let j=0;j<7;j++){const t=j/7*Math.PI*2;this.mesh('sphere',j%2?color:0x725640,a.x+Math.cos(t)*.45,.6+(j%2)*.35,a.z+Math.sin(t)*.45,.3,.5,.3,.95);}}
+ if(r.kind==='i'){const fade=Math.min(1,r.remaining/.25),pulse=.65+.08*Math.sin(r.age*12);this.mesh('sphere',0x8cecff,a.x,.055,a.z,.78,.025,.78,.26*fade);this.mesh('ring',0xbdf7ff,a.x,.065,a.z,pulse,pulse,pulse,.95*fade);for(let j=0;j<6;j++){const t=j*Math.PI/3+r.age*.5;this.mesh('box',0xe0fcff,a.x+Math.cos(t)*.48,.075,a.z+Math.sin(t)*.48,.18,.018,.035,.8*fade,-t);}}
+ else if(r.kind==='d'){for(let j=0;j<7;j++){const t=j/7*Math.PI*2;this.mesh('sphere',j%2?color:0x725640,a.x+Math.cos(t)*.45,.6+(j%2)*.35,a.z+Math.sin(t)*.45,.3,.5,.3,.95);}}
  else if(r.kind==='e'){this.mesh('box',color,a.x+r.faceX*.8,1,a.z+r.faceZ*.8,1.7,1.8,.12,.55,angle);}
  else if(r.kind==='s'){const arc=this.mesh('ring',color,a.x+r.faceX*.7,.8,a.z+r.faceZ*.7,1,1,1,.8);arc.geometry=this.arcGeometry??=new T.TorusGeometry(1,.065,5,24,Math.PI);arc.rotation.set(Math.PI/2,0,-angle);}
  else if(r.kind==='g'){const length=2.3;this.mesh('box',color,a.x+r.faceX*length/2,.3,a.z+r.faceZ*length/2,.035,.035,length,.7,angle);}
