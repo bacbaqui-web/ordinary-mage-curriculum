@@ -12,11 +12,12 @@ window.addEventListener('blur',()=>{audio.focused=false;audio.stopAll();});
 window.addEventListener('focus',()=>{audio.focused=true;});
 document.addEventListener('visibilitychange',()=>{if(document.hidden)audio.stopAll();});
 
-export function mountPlanAudio(container,sequence){
+export function mountPlanAudio(container,sequence,{compact=false}={}){
  container.innerHTML='<div class="sound-actions"><button type="button" data-preview-sound></button><a href="sound-check.html" target="_blank" rel="noopener">전체 효과음 듣기 ↗</a></div><p data-sound-status role="status"></p>';
+ if(compact)container.innerHTML='<button type="button" data-preview-sound class="preview-speaker"></button><span data-sound-status role="status" hidden></span>';
  const button=container.querySelector('[data-preview-sound]'),status=container.querySelector('[data-sound-status]');
  let disposed=false;
- function label(){button.textContent=enabled?'미리보기 소리 끄기':'미리보기 소리 켜기';button.setAttribute('aria-pressed',String(enabled));}
+ function label(){const text=enabled?'미리보기 소리 끄기':'미리보기 소리 켜기';button.textContent=compact?(enabled?'🔊':'🔇'):text;button.title=text;button.setAttribute('aria-label',text);button.setAttribute('aria-pressed',String(enabled));}
  function message(){
   const text=!enabled?'미리보기 소리를 껐습니다.':!audio.available?'이 브라우저에서는 소리를 재생할 수 없습니다.':audio.failures.length&&audio.buffers.size<14?'효과음을 불러오지 못했습니다. 다시 시전을 눌러 재시도해 주세요.':audio.context?.state==='running'&&audio.buffers.size===14?'충전·시전·명중 소리가 미리보기와 함께 재생됩니다.':'마법을 선택하거나 다시 시전을 누르면 소리도 함께 재생됩니다.';
   if(status.textContent!==text)status.textContent=text;
