@@ -85,10 +85,10 @@ function sync(){
  $('loopMotion').checked=!!current().loop;
  for(const side of ['Left','Right'])$('lock'+side+'Foot').checked=!!current().footLocks?.[side+'Foot'];
  const visible=actionGroups(project.actions).flatMap(g=>g.entries);if(visible.length&&!visible.some(e=>e.index===index)){index=visible[0].index;frame=0;stop();}
- $('action').replaceChildren(...actionGroups(project.actions).map(group=>{const el=document.createElement('optgroup');el.label=group.label;el.append(...group.entries.map(({action,index})=>new Option(action.name,index)));return el;}));$('action').value=index;$('name').value=current().name;$('frames').value=current().frames;$('fps').value=current().fps;$('joint').value=selected;
+ $('action').replaceChildren(...actionGroups(project.actions).map(group=>{const el=document.createElement('optgroup');el.label=group.label;el.append(...group.entries.map(({action,index})=>new Option(action.name,index)));return el;}));$('action').value=index;$('frames').value=current().frames;$('fps').value=current().fps;$('joint').value=selected;
  $('scrub').max=current().frames-1;$('scrub').value=frame;$('frameLabel').textContent=`${Math.floor(frame)+1} / ${current().frames} 프레임`;
- const p=pose()[selected];['x','y','z'].forEach((n,i)=>$(n).value=p[i].toFixed(3));const k=current().keys.find(k=>k.frame===frame);$('delete').disabled=!k||current().keys.length===1||loopEndpoint(current(),frame);
- $('undo').disabled=!history.length;$('redo').disabled=!future.length;$('play').textContent=playing?'일시정지':'재생';
+ const p=pose()[selected];['x','y','z'].forEach((n,i)=>$(n).value=p[i].toFixed(3));
+ $('play').textContent=playing?'일시정지':'재생';
  $('timeline').replaceChildren(...Array.from({length:current().frames},(_,i)=>{const b=document.createElement('button');const has=current().keys.some(k=>k.frame===i);b.textContent=(has?'◆ ':'')+(i+1);b.className=(has?'key ':'')+(i===frame?'selected':'');b.setAttribute('aria-label',`${i+1}프레임${has?' 키프레임':''}`);b.dataset.frame=i;b.onclick=()=>{if(loading)return;stop();frame=i;sync();};if(has&&!loopEndpoint(current(),i))bindKeyDrag(b,i);return b;}));
 }
 for(const side of ['Left','Right'])$('lock'+side+'Foot').onchange=()=>{
@@ -106,17 +106,27 @@ for(const [id,key] of Object.entries(movementFields)){$(id).oninput=()=>{$(id+'V
 $('resetMovement').onclick=()=>{checkpoint();project.movementSettings=normalizeMovement();save('이동 설정 초기화됨');syncMovement();};
 $('joint').replaceChildren(...editableJoints.map(n=>new Option(LABELS[JOINTS.indexOf(n)],n)));$('joint').onchange=()=>{selected=$('joint').value;sync();};
 $('action').onchange=()=>{stop();index=Number($('action').value);frame=0;sync();};
-$('name').oninput=()=>{const n=$('name').value.trim();if(!n||n===current().name)return;checkpoint();current().name=n;save();$('action').selectedOptions[0].textContent=n;};
-$('name').onchange=()=>sync();
-$('new').onclick=()=>{checkpoint();const p=pose();project.actions.push({name:'새 동작',frames:12,fps:12,keys:[{frame:0,ease:'smooth',pose:p}]});index=project.actions.length-1;frame=0;stop();save();sync();};
-$('copy').onclick=()=>{checkpoint();const a=structuredClone(current());a.name+=' 복사';delete a.binding;project.actions.push(a);index=project.actions.length-1;stop();save();sync();};
-for(const [i,n] of ['x','y','z'].entries())$(n).onchange=()=>{const value=Number($(n).value);if(!Number.isFinite(value)||Math.abs(value)>10){sync();return;}stop();frame=Math.floor(frame);checkpoint();const k=key(),target=[...k.pose[selected]];target[i]=value;k.pose=moveJoint(k.pose,selected,target);save();sync();};
-$('add').onclick=()=>{stop();frame=Math.floor(frame);checkpoint();key();save();sync();};$('delete').onclick=()=>{if(loopEndpoint(current(),frame))return;if(playing||!current().keys.some(k=>k.frame===frame))return;if(current().keys.length===1){$('status').textContent='키프레임은 하나 이상 있어야 합니다.';return;}checkpoint();current().keys=current().keys.filter(k=>k.frame!==frame);save();sync();$('status').textContent=`${frame+1}프레임의 키프레임을 삭제했습니다.`;};
+for(const [i,n] of ['x','y','z'].entries()){
+ const input=$(n);let drag=null;
+ input.title='좌우로 드래그하여 조절';
+ input.onchange=()=>{if(drag?.moved)return;const value=Number(input.value);if(value===Number(pose()[selected][i].toFixed(3)))return;if(!Number.isFinite(value)||Math.abs(value)>10){sync();return;}stop();frame=Math.floor(frame);checkpoint();const k=key(),target=[...k.pose[selected]];target[i]=value;k.pose=moveJoint(k.pose,selected,target);save();sync();};
+ input.onpointerdown=e=>{if(loading||e.button!==0)return;drag={pointer:e.pointerId,x:e.clientX,moved:false};};
+ input.onpointermove=e=>{
+  if(!drag)return;const dx=e.clientX-drag.x;
+  if(!drag.moved){if(Math.abs(dx)<4)return;stop();frame=Math.floor(frame);checkpoint();drag.moved=true;drag.key=key();drag.base=structuredClone(drag.key.pose);drag.target=[...drag.base[selected]];input.setPointerCapture(drag.pointer);input.classList.add('scrubbing');}
+  e.preventDefault();const target=[...drag.target];target[i]=T.MathUtils.clamp(target[i]+dx*.005,-10,10);
+  drag.key.pose=moveJoint(drag.base,selected,target);syncLoop(current(),frame);sync();
+ };
+ const finish=()=>{if(!drag)return;const changed=drag.moved,pointer=drag.pointer;if(changed){input.blur();save();}drag=null;input.classList.remove('scrubbing');if(input.hasPointerCapture(pointer))input.releasePointerCapture(pointer);};
+ input.onpointerup=finish;input.onpointercancel=finish;input.onlostpointercapture=finish;
+ input.onpointerleave=()=>{if(drag&&!drag.moved)drag=null;};
+}
+function deleteKey(){if(loopEndpoint(current(),frame))return;if(playing||!current().keys.some(k=>k.frame===frame))return;if(current().keys.length===1){$('status').textContent='키프레임은 하나 이상 있어야 합니다.';return;}checkpoint();current().keys=current().keys.filter(k=>k.frame!==frame);save();sync();$('status').textContent=`${frame+1}프레임의 키프레임을 삭제했습니다.`;};
 $('frames').onchange=()=>{const n=Number($('frames').value);if(!Number.isInteger(n)||n<2||n>240){sync();return;}const candidate=structuredClone(current());if(!resizeLoop(candidate,n)){$('status').textContent='뒤쪽 키프레임을 먼저 옮기거나 삭제하세요.';$('frames').value=current().frames;return;}stop();checkpoint();Object.assign(current(),candidate);frame=0;save();sync();};
 $('fps').onchange=()=>{const n=Number($('fps').value);if(n<1||n>60||!Number.isFinite(n)){sync();return;}checkpoint();current().fps=n;save();};
 $('scrub').oninput=()=>{stop();frame=Number($('scrub').value);sync();};
 $('play').onclick=()=>{playing=!playing;sync();};$('previous').onclick=()=>{stop();frame=current().keys.filter(k=>k.frame<frame).at(-1)?.frame??0;sync();};$('next').onclick=()=>{stop();frame=current().keys.find(k=>k.frame>frame)?.frame??current().frames-1;sync();};
-$('undo').onclick=()=>{if(!history.length)return;future.push(JSON.stringify({project,index,frame}));restore(history.pop());};$('redo').onclick=()=>{if(!future.length)return;history.push(JSON.stringify({project,index,frame}));restore(future.pop());};
+function undo(){if(!history.length)return;future.push(JSON.stringify({project,index,frame}));restore(history.pop());};function redo(){if(!future.length)return;history.push(JSON.stringify({project,index,frame}));restore(future.pop());};
 let copiedKey=null;
 const editingText=e=>e.target.matches('input,textarea,[contenteditable=true]');
 function copyKey(){if(loading)return false;const source=current().keys.find(k=>k.frame===Math.floor(frame));if(!source){$('status').textContent='복사할 키프레임을 먼저 선택하세요.';return false;}copiedKey=structuredClone(source);$('status').textContent=`${source.frame+1}프레임 자세를 복사했습니다.`;return true;}
@@ -131,12 +141,12 @@ document.addEventListener('keydown',e=>{
  if(loading)return;
  if((e.ctrlKey||e.metaKey)&&!e.altKey&&e.key.toLowerCase()==='s'){e.preventDefault();$('saveMotion').click();return;}
  if(editingText(e))return;
- if((e.key==='Delete'||e.key==='Backspace')&&!e.ctrlKey&&!e.metaKey&&!e.altKey){e.preventDefault();if(!e.repeat)$('delete').click();return;}
+ if((e.key==='Delete'||e.key==='Backspace')&&!e.ctrlKey&&!e.metaKey&&!e.altKey){e.preventDefault();if(!e.repeat)deleteKey();return;}
  if(!(e.ctrlKey||e.metaKey)||e.altKey)return;
  const command=e.key.toLowerCase();
  if(command==='c'){e.preventDefault();copyKey();}
  else if(command==='v'){if(copiedKey){e.preventDefault();pasteKey();}}
- else if(command==='z'||command==='y'){e.preventDefault();$(command==='y'||e.shiftKey?'redo':'undo').click();}
+ else if(command==='z'||command==='y'){e.preventDefault();(command==='y'||e.shiftKey?redo:undo)();}
 });
 $('export').onclick=()=>{const url=URL.createObjectURL(new Blob([JSON.stringify(projectForCharacter(project,characterId),null,2)],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download=`ordinary-mage-${characterId}-motions.json`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
 $('import').onchange=async()=>{try{const file=$('import').files[0];if(!file)return;if(file.size>10*1024*1024)throw Error('10MB 이하의 동작 파일을 선택하세요.');const targetId=characterId;const incoming=validateProject(JSON.parse(await file.text()));if(targetId!==characterId)throw Error('캐릭터가 바뀌었습니다. 파일을 다시 선택하세요.');assertCharacterImport(incoming,characterId);compactShoulders(incoming);ensureMagicClips(incoming);ensureBasicAttacks(incoming);ensureFirstRingClips(incoming);if(rig&&!incoming.rigVersion){const fitted=fitProjectToRig(incoming,rig.restPose,defaultRest());incoming.actions=fitted.actions;incoming.rigVersion=7;}if(rig)migrateAnklePivot(incoming,rig.ankleLift,rig.ankleBack);incoming.actions=uniqueMotions(incoming.actions);for(const a of incoming.actions)a.updatedAt=Date.now();const merged=mergeMotions(project.actions,incoming.actions);if(merged.length>100)throw Error('동작은 최대 100개까지 보관할 수 있습니다.');checkpoint();if(incoming.movementSettings)project.movementSettings=normalizeMovement(incoming.movementSettings);project.actions=merged;index=Math.max(0,project.actions.indexOf(incoming.actions[0]));frame=0;stop();save();sync();}catch(e){$('status').textContent='불러오지 못했습니다. '+e.message;}};
@@ -146,7 +156,7 @@ async function selectCharacter(id){
  if(loading)return;
  document.activeElement?.blur();if(keyDrag)finishKeyDrag(true);stop();
  if(unsaved&&!save()){$('character').value=characterId;return;}
- const profile=characterProfile(id),nextKey=motionStorageKey(profile.id);setBusy(true);$('modelStatus').textContent='캐릭터를 여는 중입니다…';
+ const profile=characterProfile(id),nextKey=motionStorageKey(profile.id);setBusy(true);$('status').textContent='캐릭터를 여는 중입니다…';
  let nextRig=null;
  try{
   const raw=localStorage.getItem(nextKey);let next=raw?validateProject(JSON.parse(raw)):projectForCharacter(initial(),profile.id);
@@ -160,30 +170,30 @@ async function selectCharacter(id){
   for(const n of Object.keys(feet))feet[n]=new PassiveFoot();
   try{localStorage.setItem('ordinary-mage-editor-character',characterId);}catch{}
   $('character').value=characterId;$('import').value='';
-  $('modelStatus').textContent=rig?'빙결 3D 모델 · 관절을 움직여 동작을 편집하세요.':profile.id==='default'?'기존 동작과 기본 관절 모형입니다.':'3D 모델 준비 전 · 기본 관절 모형으로 편집합니다.';
+  $('status').textContent='';
   $('labLink').href='character-lab.html?character='+characterId;
   const url=new URL(location.href);url.searchParams.set('character',characterId);window.history.replaceState(null,'',url);
   $('status').textContent=`${profile.label} 동작을 열었습니다. 이 캐릭터에만 저장됩니다.`;sync();
- }catch(e){nextRig?.dispose();$('character').value=characterId;$('modelStatus').textContent='캐릭터를 열지 못했습니다. 현재 편집 내용은 유지됩니다.';$('status').textContent=e.message;}
+ }catch(e){nextRig?.dispose();$('character').value=characterId;$('status').textContent=e.message;}
  finally{setBusy(false);}
 }
 $('character').replaceChildren(...CHARACTERS.map(c=>new Option(c.label,c.id)));
 $('character').onchange=()=>void selectCharacter($('character').value);
-$('modelStatus').textContent='기존 동작과 기본 관절 모형입니다.';
 const segments=[['Hips','Spine',.36,'#55b9cd'],['Spine','Neck',.28,'#55b9cd'],['Neck','Head',.16,'#55b9cd'],['Spine','LeftArm',.18,'#55b9cd'],['Spine','RightArm',.18,'#55b9cd'],['LeftArm','LeftForeArm',.19,'#f18d65'],['LeftForeArm','LeftHand',.17,'#f18d65'],['RightArm','RightForeArm',.19,'#bb8bdd'],['RightForeArm','RightHand',.17,'#bb8bdd'],['Hips','LeftUpLeg',.23,'#55b9cd'],['Hips','RightUpLeg',.23,'#55b9cd'],['LeftUpLeg','LeftLeg',.22,'#86ba6d'],['LeftLeg','LeftFoot',.20,'#86ba6d'],['RightUpLeg','RightLeg',.22,'#688ee1'],['RightLeg','RightFoot',.20,'#688ee1']];
 const views=[['앞',[0,0,6]],['옆',[6,0,0]],['위',[0,6,0]],['쿼터뷰',[5,4,6]]].map(([name,dir])=>{
  const box=document.createElement('div');box.className='view';const title=document.createElement('h2');title.textContent=name;const canvas=document.createElement('canvas');canvas.setAttribute('aria-label',name+' 관절 편집');canvas.tabIndex=0;box.append(title,canvas);$('views').append(box);
- const camera=new T.OrthographicCamera(-2,2,2,-2,.1,100);camera.position.set(dir[0],dir[1]+1,dir[2]);if(name==='위')camera.up.set(0,0,-1);camera.lookAt(0,1,0);camera.updateMatrixWorld();const right=new T.Vector3(1,0,0).applyQuaternion(camera.quaternion),up=new T.Vector3(0,1,0).applyQuaternion(camera.quaternion);const v={canvas,camera,right,up,points:{},scale:1};
+ const camera=new T.OrthographicCamera(-2,2,2,-2,.1,100);camera.position.set(dir[0],dir[1]+1,dir[2]);if(name==='위')camera.up.set(0,0,-1);camera.lookAt(0,1,0);camera.updateMatrixWorld();const right=new T.Vector3(1,0,0).applyQuaternion(camera.quaternion),up=new T.Vector3(0,1,0).applyQuaternion(camera.quaternion);const v={canvas,camera,right,up,points:{},scale:1,zoom:1};
  const orbit=name==='쿼터뷰',radius=Math.hypot(...dir),initialYaw=Math.atan2(dir[0],dir[2]),initialPitch=Math.asin(dir[1]/radius);
  let yaw=initialYaw,pitch=initialPitch,drag=null;
  const orient=()=>{camera.position.set(radius*Math.cos(pitch)*Math.sin(yaw),1+radius*Math.sin(pitch),radius*Math.cos(pitch)*Math.cos(yaw));camera.lookAt(0,1,0);camera.updateMatrixWorld();right.set(1,0,0).applyQuaternion(camera.quaternion);up.set(0,1,0).applyQuaternion(camera.quaternion);};
  canvas.style.touchAction='none';
+ canvas.addEventListener('wheel',e=>{e.preventDefault();const delta=e.deltaY*(e.deltaMode===1?16:e.deltaMode===2?canvas.clientHeight:1);v.zoom=T.MathUtils.clamp(v.zoom*Math.exp(-delta*.0015),.4,3);},{passive:false});
  if(orbit){title.textContent='쿼터뷰 · 빈 곳을 끌어 회전';const reset=document.createElement('button');reset.textContent='시점 초기화';reset.className='view-reset';reset.onclick=()=>{yaw=initialYaw;pitch=initialPitch;orient();};box.append(reset);canvas.oncontextmenu=e=>e.preventDefault();}
  canvas.onpointerdown=e=>{if(loading)return;const r=canvas.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;const nearest=Object.entries(v.points).filter(([n])=>n!=='Neck').map(([n,p])=>({n,d:Math.hypot(p.x-x,p.y-y)})).sort((a,b)=>a.d-b.d)[0];if(orbit&&(e.button===2||!$('handles').checked||!nearest||nearest.d>18)){drag={orbit:true,x:e.clientX,y:e.clientY,yaw,pitch};canvas.setPointerCapture(e.pointerId);e.preventDefault();return;}if(!$('handles').checked||!nearest||nearest.d>18)return;stop();frame=Math.floor(frame);selected=nearest.n;canvas.focus();checkpoint();const k=key();drag={x:e.clientX,y:e.clientY,start:[...k.pose[selected]],base:structuredClone(k.pose),k};canvas.setPointerCapture(e.pointerId);sync();};
  canvas.onpointermove=e=>{if(!drag)return;if(drag.orbit){yaw=drag.yaw-(e.clientX-drag.x)*.008;pitch=T.MathUtils.clamp(drag.pitch+(e.clientY-drag.y)*.008,-1.35,1.35);orient();return;}const dx=(e.clientX-drag.x)/v.scale,dy=-(e.clientY-drag.y)/v.scale,p=new T.Vector3(...drag.start).addScaledVector(right,dx).addScaledVector(up,dy);drag.k.pose=moveJoint(drag.base,selected,p.toArray());syncLoop(current(),frame);sync();};
  canvas.onpointerup=()=>{if(drag){const changed=!drag.orbit;drag=null;if(changed)save();}};canvas.onpointercancel=()=>{const changed=drag&&!drag.orbit;drag=null;if(changed)save();};return v;
 });
-function draw(v,p){const {canvas,camera}=v,w=Math.round(canvas.clientWidth),h=Math.round(canvas.clientHeight);if(!w||!h)return;if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}const ctx=canvas.getContext('2d'),scale=h/3.1*Number($('zoom').value)/100;v.scale=scale;const point=a=>{const local=new T.Vector3(...a).applyMatrix4(camera.matrixWorldInverse);return {x:w/2+local.x*scale,y:h/2-local.y*scale,z:local.z};};const controlPose=rig?rig.controlPose(p):p;v.points=Object.fromEntries(JOINTS.map(n=>[n,point(controlPose[n])]));ctx.fillStyle='#2b3c44';ctx.fillRect(0,0,w,h);ctx.strokeStyle='#354a52';ctx.lineWidth=1;const spacing=scale*.25;for(let x=w/2%spacing;x<w;x+=spacing){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke();}for(let y=h/2%spacing;y<h;y+=spacing){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();}
+function draw(v,p){const {canvas,camera}=v,w=Math.round(canvas.clientWidth),h=Math.round(canvas.clientHeight);if(!w||!h)return;if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}const ctx=canvas.getContext('2d'),scale=h/3.1*v.zoom;v.scale=scale;const point=a=>{const local=new T.Vector3(...a).applyMatrix4(camera.matrixWorldInverse);return {x:w/2+local.x*scale,y:h/2-local.y*scale,z:local.z};};const controlPose=rig?rig.controlPose(p):p;v.points=Object.fromEntries(JOINTS.map(n=>[n,point(controlPose[n])]));ctx.fillStyle='#2b3c44';ctx.fillRect(0,0,w,h);ctx.strokeStyle='#354a52';ctx.lineWidth=1;const spacing=scale*.25;for(let x=w/2%spacing;x<w;x+=spacing){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke();}for(let y=h/2%spacing;y<h;y+=spacing){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();}
  // Shared world-space floor: Y=0 in every camera.
  const floor=[[-4,0,-4],[4,0,-4],[4,0,4],[-4,0,4]].map(point);
  ctx.beginPath();floor.forEach((a,i)=>i?ctx.lineTo(a.x,a.y):ctx.moveTo(a.x,a.y));ctx.closePath();ctx.fillStyle='#344b49';ctx.fill();
@@ -199,6 +209,6 @@ function draw(v,p){const {canvas,camera}=v,w=Math.round(canvas.clientWidth),h=Ma
   ctx.lineCap='round';for(const [from,to] of links){const a=v.points[from],b=v.points[to];ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.strokeStyle='#12232dcc';ctx.lineWidth=4;ctx.stroke();ctx.strokeStyle=from===selected||to===selected?'#ffd37c':'#d9eaf0';ctx.lineWidth=1.5;ctx.stroke();}
   for(const [n,a] of Object.entries(v.points).filter(([n])=>n!=='Neck')){ctx.beginPath();ctx.arc(a.x,a.y,n===selected?7:4,0,Math.PI*2);ctx.fillStyle=n===selected?'#fff1bd':'#17282f';ctx.fill();ctx.lineWidth=1.5;ctx.strokeStyle=n===selected?'#e7aa42':'#e7eff0';ctx.stroke();}const a=v.points[selected];ctx.font='12px system-ui';ctx.fillStyle='#fff1bd';ctx.fillText(LABELS[JOINTS.indexOf(selected)],a.x+10,a.y-10);}
 }
-let last=performance.now();function tick(now){requestAnimationFrame(tick);const dt=Math.min(.05,(now-last)/1000);last=now;if(playing){frame=(frame+dt*current().fps)%(current().loop?current().frames-1:current().frames);$('scrub').value=Math.floor(frame);$('frameLabel').textContent=`${Math.floor(frame)+1} / ${current().frames} 프레임`;}const p=pose();if(rig)rig.apply(p,dt);for(const n of Object.keys(feet))footShapes[n]=feet[n].update(p[n],dt);for(const v of views)draw(v,p);}sync();if($('status').textContent==='준비 중')$('status').textContent='관절을 선택해 편집하세요.';requestAnimationFrame(tick);
+let last=performance.now();function tick(now){requestAnimationFrame(tick);const dt=Math.min(.05,(now-last)/1000);last=now;if(playing){frame=(frame+dt*current().fps)%(current().loop?current().frames-1:current().frames);$('scrub').value=Math.floor(frame);$('frameLabel').textContent=`${Math.floor(frame)+1} / ${current().frames} 프레임`;}const p=pose();if(rig)rig.apply(p,dt);for(const n of Object.keys(feet))footShapes[n]=feet[n].update(p[n],dt);for(const v of views)draw(v,p);}sync();requestAnimationFrame(tick);
 
 let wanted=new URLSearchParams(location.search).get('character');try{wanted ||= localStorage.getItem('ordinary-mage-editor-character');}catch{}if(wanted&&wanted!=='default')void selectCharacter(wanted);

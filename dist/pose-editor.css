@@ -9,3 +9,9 @@ input[hidden]{display:none!important}header .button{margin:0}
 .view-reset{position:absolute;right:8px;top:8px;z-index:2;padding:4px 7px;font-size:11px}
 
 .movement-settings{border-bottom:1px solid #43575e;padding:8px 0 14px;margin-bottom:14px}.movement-settings summary{cursor:pointer;color:#eacb80;margin-bottom:12px}.movement-settings output{float:right;color:#a9d5ed}.movement-settings small{display:block;margin-bottom:10px}
+
+.inline-field{display:flex;align-items:center;gap:10px;white-space:nowrap}.inline-field>select{flex:1;width:0;margin:0}
+.foot-buttons{display:flex;gap:6px;margin:12px 0}.foot-buttons label{flex:1;position:relative;margin:0;cursor:pointer}.foot-buttons input{position:absolute;opacity:0;width:100%;height:100%;margin:0;cursor:pointer}.foot-buttons span{display:block;text-align:center;padding:8px 4px;border:1px solid #536973;border-radius:5px;background:#344952}.foot-buttons input:checked+span{background:#82652e;border-color:#e9c784;color:#fff}.foot-buttons input:focus-visible+span{outline:2px solid #a9e3ff;outline-offset:2px}
+.coords input{cursor:ew-resize;touch-action:none}.coords input.scrubbing{user-select:none}.coords input::-webkit-inner-spin-button{appearance:none}.coords input{appearance:textfield}#status:empty{display:none}
+
+footer label input[type=checkbox]{width:auto!important;margin:0}
