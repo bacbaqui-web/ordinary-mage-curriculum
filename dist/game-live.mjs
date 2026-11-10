@@ -1,3 +1,4 @@
+import {mountSettingsWindow} from './settings-window.mjs?v=settings-window-1';
 import {drawMinimapLandmarks} from './minimap-landmarks.mjs';
 import {FacingMotion} from './facing-motion.mjs?v=prepare-turn-1';
 import {wheelZoomSpan} from './camera-zoom.mjs';
@@ -253,7 +254,7 @@ canvas.addEventListener('wheel',e=>{
  else combatSpan=wheelZoomSpan(combatSpan,e,innerHeight);
  updateCamera();point(e);
 },{passive:false});
-window.addEventListener('keydown',e=>{
+window.addEventListener('keydown',e=>{if(document.getElementById('settingsWindow')?.open)return;
  if(e.target.closest?.('input,textarea,select,[contenteditable=true]'))return;
  if(!$('selection').classList.contains('hidden')||!$('intro').classList.contains('hidden'))return;
  if(e.code==='KeyP'&&!e.repeat){pause();return;}
@@ -268,7 +269,7 @@ function sendWalk(){if(!onlineCore||!pvp?.playing)return;const a=onlineCore.acto
 const deniedAttacks={left:0,right:0};let repeatingIce=false;
 function repeatIceCharge(){if(charge.pending||loadout.q!=='i'||(!onlineCore&&!charge.active))return;if(!onlineCore&&progress.ranks.q<2){flash('빙결 숙련 2부터 같은 속성을 두 번 충전할 수 있습니다.');return;}repeatingIce=true;if(onlineCore)pvp.input({action:'repeat'});else charge.retarget(['q','q']);}
 const controls=bindDuelControls(canvas,window,{
- enabled:()=>running&&!paused&&!finished&&!((player.knockdown>0||player.frozen>0))&&$('selection').classList.contains('hidden')&&$('intro').classList.contains('hidden'),
+ enabled:()=>!document.getElementById('settingsWindow')?.open&&running&&!paused&&!finished&&!((player.knockdown>0||player.frozen>0))&&$('selection').classList.contains('hidden')&&$('intro').classList.contains('hidden'),
  walk:d=>{walkDirection=d;sendWalk();},
  begin:(buttons,e,extending)=>{const pressedHand=e.button===2?'right':'left',actor=onlineCore?onlineCore.actors[pvp.index]:player;if((onlineCore?actor.roll.blocking:roll.blocking)||charge.pending||(!extending&&(charge.active||playerCastLocked()))||!attackCooldown(actor,pressedHand,loadout.q==='i').ready){deniedAttacks[pressedHand]=performance.now()+450;return false;}point(e);const recipe=mouseRecipe(buttons,progress.ranks,onlineCore?null:loadout);
   if(extending){if(repeatingIce)return;if(onlineCore)pvp.input({action:'extend',keys:recipe});else if(charge.queue.join('')==='qq'&&loadout.q==='i')charge.retarget(recipe);else charge.extend(recipe);return;}
@@ -508,3 +509,5 @@ const offlineAgain=$('again').onclick,offlineResultChoose=$('resultChoose').oncl
 $('again').onclick=()=>{if(pvp.connected)pvp.showRoom();else offlineAgain();};
 $('resultChoose').onclick=()=>{if(pvp.connected)pvp.showRoom();else offlineResultChoose();};
 
+
+let settingsWasPaused=false;mountSettingsWindow({open(){settingsWasPaused=paused;controls.reset();pause(true);gameAudio.stopAll();},close(){if(!settingsWasPaused)pause(false);window.dispatchEvent(new Event('focus'));}});

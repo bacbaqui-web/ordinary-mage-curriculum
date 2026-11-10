@@ -19,8 +19,8 @@ $('startIce').onclick=()=>{
  const doc=game.contentDocument;if(!gameState())return;
  doc.getElementById('choose').click();
  doc.querySelector('[data-character="ice"]').click();
+ doc.getElementById('modeSolo').click();
  doc.getElementById('confirmSelection').click();
- if(gameState().bot)doc.getElementById('botToggle').click();
  game.contentWindow.focus();
 };
 $('restartGame').onclick=()=>{game.contentDocument?.getElementById('reset')?.click();game.contentWindow.focus();};
