@@ -1,5 +1,5 @@
-import {magicClipName} from './magic-clips.mjs';
-import {savedMotion,savedPose,createMotionReader} from './live-motions.mjs?v=actor-motion-1';
+import {magicClipName} from './magic-clips.mjs?v=foot-lock-1';
+import {savedMotion,savedPose,createMotionReader} from './live-motions.mjs?v=foot-lock-1';
 import * as T from './three.module.js';
 import {MagicMotion} from './magic-motion.mjs';
 import {actionClips} from './action-clips.mjs';

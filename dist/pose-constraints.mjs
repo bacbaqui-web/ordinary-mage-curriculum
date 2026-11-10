@@ -1,4 +1,4 @@
-import {withNeck} from './pose-data.mjs?v=neck-ankle-1';
+import {withNeck} from './pose-data.mjs?v=foot-lock-1';
 import {Vector3} from './three.module.js';
 export const BONES=[['Hips','Spine'],['Spine','Neck'],['Neck','Head'],['Spine','LeftArm'],['Spine','RightArm'],['LeftArm','LeftForeArm'],['LeftForeArm','LeftHand'],['RightArm','RightForeArm'],['RightForeArm','RightHand'],['Hips','LeftUpLeg'],['Hips','RightUpLeg'],['LeftUpLeg','LeftLeg'],['LeftLeg','LeftFoot'],['RightUpLeg','RightLeg'],['RightLeg','RightFoot']];
 const v=a=>new Vector3(...a);
@@ -34,14 +34,28 @@ function solveJoint(base,joint,target,preferredBend=null,footClearance=.10){
 }
 
 // Stop at the floor along the drag path without stretching any bones.
-export function moveJoint(base,joint,target,{footClearance=.10}={}){
+export function moveJoint(base,joint,target,{footClearance=.10,lockedFeet={}}={}){
  base=withNeck(base);
+ if(lockedFeet[joint])return structuredClone(base);
  const clearance=n=>n==='Head'?.215:n.includes('Foot')?footClearance:0;
  const valid=p=>Object.entries(p).every(([n,a])=>a[1]>=Math.min(clearance(n),base[n][1])-1e-9);
  // Slide ankle targets along the floor instead of rejecting the entire diagonal drag.
  if(joint.endsWith('Foot'))target=[target[0],Math.max(target[1],Math.min(footClearance,base[joint][1])),target[2]];
- const result=solveJoint(base,joint,target,null,footClearance);if(valid(result))return result;
+ const solve=target=>applyFootLocks(solveJoint(base,joint,target,null,footClearance),lockedFeet);
+ const result=solve(target);if(result&&valid(result))return result;
  let low=0,high=1,best=structuredClone(base);
- for(let i=0;i<36;i++){const t=(low+high)/2,p=solveJoint(base,joint,base[joint].map((a,k)=>a+(target[k]-a)*t),null,footClearance);if(valid(p)){best=p;low=t;}else high=t;}
+ for(let i=0;i<36;i++){const t=(low+high)/2,p=solve(base[joint].map((a,k)=>a+(target[k]-a)*t));if(p&&valid(p)){best=p;low=t;}else high=t;}
  return best;
+}
+
+// Solve knees around planted ankles; return null when the body cannot reach them.
+export function applyFootLocks(p,anchors,{align=false}={}){
+ p=structuredClone(p);const entries=Object.entries(anchors);
+ if(align&&entries.length){const [foot,target]=entries[0],delta=target.map((x,i)=>x-p[foot][i]);for(const n of Object.keys(p))p[n]=p[n].map((x,i)=>x+delta[i]);}
+ for(const [foot,target] of entries){
+  const next=solveJoint(p,foot,target);
+  if(v(next[foot]).distanceTo(v(target))>1e-6)return null;
+  p=next;p[foot]=[...target];
+ }
+ return p;
 }

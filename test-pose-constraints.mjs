@@ -43,3 +43,21 @@ for(const side of ['Left','Right'])for(const delta of [[0,-.01,.1],[.08,-.3,0],[
  for(const [a,b] of BONES)assert.ok(Math.abs(dist(moved,a,b)-dist(crouch,a,b))<1e-6);
 }
 console.log('PASS: diagonal downward ankle drags slide along floor without stretching legs');
+
+{
+const {applyFootLocks}=await import('./dist/pose-constraints.mjs');
+const lockedFeet={LeftFoot:[...base.LeftFoot]};
+const crouch=moveJoint(base,'Hips',[.05,.8,.08],{lockedFeet});
+assert.deepEqual(crouch.LeftFoot,base.LeftFoot);
+assert.ok(crouch.Hips[1]<base.Hips[1]);
+for(const [a,b] of BONES)assert.ok(Math.abs(dist(crouch,a,b)-dist(base,a,b))<1e-6);
+assert.deepEqual(moveJoint(base,'LeftFoot',[1,1,1],{lockedFeet}),base);
+const lifted=moveJoint(base,'RightFoot',[.25,.4,.3],{lockedFeet});
+assert.deepEqual(lifted.LeftFoot,base.LeftFoot);assert.ok(lifted.RightFoot[1]>.3);
+const far=moveJoint(base,'Hips',[9,9,9],{lockedFeet});
+assert.deepEqual(far.LeftFoot,base.LeftFoot);
+for(const [a,b] of BONES)assert.ok(Math.abs(dist(far,a,b)-dist(base,a,b))<1e-6);
+const aligned=applyFootLocks(lifted,{RightFoot:base.RightFoot},{align:true});assert.deepEqual(aligned.RightFoot,base.RightFoot);
+console.log('PASS: planted foot, free opposite foot, bent knee, unreachable drag limit, clip alignment');
+
+}

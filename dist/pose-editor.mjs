@@ -1,20 +1,21 @@
 import {ensureBasicAttacks,ensureIdle,actionGroups} from './motion-catalog.mjs?v=idle-pose-1';
 import {migrateAnklePivot} from './ankle-pivot.mjs?v=heel-free-1';
 import {CHARACTERS,characterProfile,motionStorageKey,projectForCharacter,assertCharacterImport} from './character-profiles.mjs?v=heel-free-1';
-import {CharacterRig,fitProjectToRig} from './character-rig.mjs?v=bag-swing-1';
-import {ensureMagicClips} from './magic-clips.mjs?v=compound-label';
-import {uniqueMotions,mergeMotions} from './pose-library.mjs?v=idle-pose-1';
+import {CharacterRig,fitProjectToRig} from './character-rig.mjs?v=foot-lock-1';
+import {ensureMagicClips} from './magic-clips.mjs?v=foot-lock-1';
+import {uniqueMotions,mergeMotions} from './pose-library.mjs?v=foot-lock-1';
 import * as T from './three.module.js';
 import {footFaces} from './foot-shape.mjs';
 import {PassiveFoot} from './passive-foot.mjs';
 const feet={LeftFoot:new PassiveFoot(),RightFoot:new PassiveFoot()};
 let footShapes={};
-import {moveJoint as movePoseJoint} from './pose-constraints.mjs?v=ankle-slide-1';
-import {demoMotion} from './motion-puppet.mjs?v=charge-pose-1';
-import {JOINTS,LABELS,samplePose,validateProject} from './pose-data.mjs?v=cuff-pivot-1';
+import {moveJoint as movePoseJoint,applyFootLocks} from './pose-constraints.mjs?v=foot-lock-1';
+import {demoMotion} from './motion-puppet.mjs?v=foot-lock-1';
+import {JOINTS,LABELS,samplePose,validateProject} from './pose-data.mjs?v=foot-lock-1';
 const $=id=>document.getElementById(id);
 const editableJoints=JOINTS.filter(n=>n!=='Neck');
-const moveJoint=(base,joint,target)=>movePoseJoint(base,joint,target,{footClearance:rig?Math.max(rig.restPose.LeftFoot[1],rig.restPose.RightFoot[1]):.10});
+const footAnchors=()=>Object.fromEntries(Object.keys(current().footLocks||{}).filter(n=>current().footLocks[n]).map(n=>[n,current().keys[0].pose[n]]));
+const moveJoint=(base,joint,target)=>movePoseJoint(base,joint,target,{lockedFeet:footAnchors(),footClearance:rig?Math.max(rig.restPose.LeftFoot[1],rig.restPose.RightFoot[1]):.10});
 let characterId='default',storage=motionStorageKey(characterId),rig=null,loading=false,unsaved=false;
 const modelScene=new T.Scene();modelScene.add(new T.HemisphereLight(0xffffff,0x84919d,2.4));
 const light=new T.DirectionalLight(0xffffff,2);light.position.set(-3,6,5);modelScene.add(light);
@@ -77,6 +78,7 @@ function bindKeyDrag(button,source){
 document.addEventListener('keydown',e=>{if(!keyDrag)return;if(e.key==='Escape'){e.preventDefault();finishKeyDrag(false);}else if(e.ctrlKey||e.metaKey||e.key==='Delete'||e.key==='Backspace'){e.preventDefault();e.stopImmediatePropagation();}},true);
 window.addEventListener('blur',()=>finishKeyDrag(false));
 function sync(){
+ for(const side of ['Left','Right'])$('lock'+side+'Foot').checked=!!current().footLocks?.[side+'Foot'];
  const visible=actionGroups(project.actions).flatMap(g=>g.entries);if(visible.length&&!visible.some(e=>e.index===index)){index=visible[0].index;frame=0;stop();}
  $('action').replaceChildren(...actionGroups(project.actions).map(group=>{const el=document.createElement('optgroup');el.label=group.label;el.append(...group.entries.map(({action,index})=>new Option(action.name,index)));return el;}));$('action').value=index;$('name').value=current().name;$('frames').value=current().frames;$('fps').value=current().fps;$('joint').value=selected;
  $('scrub').max=current().frames-1;$('scrub').value=frame;$('frameLabel').textContent=`${Math.floor(frame)+1} / ${current().frames} 프레임`;
@@ -84,6 +86,14 @@ function sync(){
  $('undo').disabled=!history.length;$('redo').disabled=!future.length;$('play').textContent=playing?'일시정지':'재생';
  $('timeline').replaceChildren(...Array.from({length:current().frames},(_,i)=>{const b=document.createElement('button');const has=current().keys.some(k=>k.frame===i);b.textContent=(has?'◆ ':'')+(i+1);b.className=(has?'key ':'')+(i===frame?'selected':'');b.setAttribute('aria-label',`${i+1}프레임${has?' 키프레임':''}`);b.dataset.frame=i;b.onclick=()=>{if(loading)return;stop();frame=i;sync();};if(has)bindKeyDrag(b,i);return b;}));
 }
+for(const side of ['Left','Right'])$('lock'+side+'Foot').onchange=()=>{
+ stop();const foot=side+'Foot',enabled=$('lock'+foot).checked,locks={...current().footLocks};
+ if(enabled)locks[foot]=true;else delete locks[foot];
+ const anchors=footAnchors();if(enabled)anchors[foot]=[...pose()[foot]];else delete anchors[foot];
+ const poses=current().keys.map(k=>applyFootLocks(k.pose,anchors,{align:enabled}));
+ if(poses.some(p=>!p)){$('status').textContent='두 발에 닿을 수 없는 자세가 있습니다. 한쪽 발만 고정하거나 자세를 조정하세요.';sync();return;}
+ checkpoint();current().footLocks=locks;current().keys.forEach((k,i)=>k.pose=poses[i]);save((side==='Left'?'왼발':'오른발')+(enabled?' 고정됨 · 동작 전체에 적용':' 고정 해제됨'));sync();
+};
 $('joint').replaceChildren(...editableJoints.map(n=>new Option(LABELS[JOINTS.indexOf(n)],n)));$('joint').onchange=()=>{selected=$('joint').value;sync();};
 $('action').onchange=()=>{stop();index=Number($('action').value);frame=0;sync();};
 $('name').oninput=()=>{const n=$('name').value.trim();if(!n||n===current().name)return;checkpoint();current().name=n;save();$('action').selectedOptions[0].textContent=n;};
@@ -101,7 +111,7 @@ $('undo').onclick=()=>{if(!history.length)return;future.push(JSON.stringify({pro
 let copiedKey=null;
 const editingText=e=>e.target.matches('input,textarea,[contenteditable=true]');
 function copyKey(){if(loading)return false;const source=current().keys.find(k=>k.frame===Math.floor(frame));if(!source){$('status').textContent='복사할 키프레임을 먼저 선택하세요.';return false;}copiedKey=structuredClone(source);$('status').textContent=`${source.frame+1}프레임 자세를 복사했습니다.`;return true;}
-function pasteKey(){if(loading||!copiedKey)return;stop();frame=Math.floor(frame);checkpoint();const pasted=structuredClone(copiedKey);pasted.frame=frame;const existing=current().keys.findIndex(k=>k.frame===frame);if(existing>=0)current().keys[existing]=pasted;else current().keys.push(pasted);current().keys.sort((a,b)=>a.frame-b.frame);save();sync();$('status').textContent=`${frame+1}프레임에 붙여넣었습니다.`;}
+function pasteKey(){if(loading||!copiedKey)return;stop();frame=Math.floor(frame);checkpoint();const pasted=structuredClone(copiedKey);pasted.frame=frame;const pinned=applyFootLocks(pasted.pose,footAnchors(),{align:true});if(!pinned){$('status').textContent='고정한 발에 닿지 않는 자세입니다. 발 고정을 풀고 붙여넣으세요.';return;}pasted.pose=pinned;const existing=current().keys.findIndex(k=>k.frame===frame);if(existing>=0)current().keys[existing]=pasted;else current().keys.push(pasted);current().keys.sort((a,b)=>a.frame-b.frame);save();sync();$('status').textContent=`${frame+1}프레임에 붙여넣었습니다.`;}
 document.addEventListener('copy',e=>{if(editingText(e)||!copyKey())return;e.preventDefault();e.clipboardData?.setData('text/plain',JSON.stringify({type:'ordinary-mage-keyframe',key:copiedKey}));});
 document.addEventListener('paste',e=>{if(editingText(e))return;if(copiedKey){e.preventDefault();pasteKey();}});
 $('saveMotion').onclick=()=>{
