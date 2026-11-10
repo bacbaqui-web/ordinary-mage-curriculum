@@ -1,11 +1,11 @@
 import {roundDamage} from './damage-number.mjs?v=integer-damage-1';
 import {areaTouches} from './combat-hit.mjs?v=no-floor-rings-1';
-import {RedLightningSpells} from './red-lightning-spells.mjs?v=no-floor-rings-1';
+import {RedLightningSpells} from './red-lightning-spells.mjs?v=iceberg-rise-1';
 import {isRedLightning} from './red-lightning-spec.mjs?v=bolt17';
-import {SteamSpells} from './steam-spells.mjs?v=integer-damage-1';
+import {SteamSpells} from './steam-spells.mjs?v=iceberg-rise-1';
 import {isSteam} from './steam-spec.mjs?v=bolt17';
 import * as T from './three.module.js';
-import {crossesWard} from './forces.mjs';
+import {crossesWard} from './forces.mjs?v=iceberg-rise-1';
 import {fireSpec} from './fire-spec.mjs?v=bolt17';
 // Every visible part is 3D geometry. Soft edge shading makes overlapping volumes read as mist.
 export class FireSpells{

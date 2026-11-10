@@ -1,5 +1,5 @@
 import {groundDescription} from './ground.mjs?v=integer-damage-1';
-import {forceDescription} from './forces.mjs?v=zones1';
+import {forceDescription} from './forces.mjs?v=iceberg-rise-1';
 import {elementalDescription} from './elements.mjs?v=integer-damage-1';
 import {composition} from './loadout.mjs?v=integer-damage-1';
 export function describeSpell(seq){

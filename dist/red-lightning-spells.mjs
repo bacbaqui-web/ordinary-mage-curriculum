@@ -2,7 +2,7 @@ import {roundDamage} from './damage-number.mjs?v=integer-damage-1';
 import {wardTouches} from './combat-hit.mjs?v=no-floor-rings-1';
 import * as T from './three.module.js';
 import {redLightningSpec,redLightningPlacement} from './red-lightning-spec.mjs?v=bolt17';
-import {crossesWard,distanceToWard} from './forces.mjs';
+import {crossesWard,distanceToWard} from './forces.mjs?v=iceberg-rise-1';
 export class RedLightningSpells{
  constructor(fire){this.f=fire;this.a=fire.a;}
  add(type,s,owner,p,dir,life,extra={}){const mesh=new T.Group();this.a.scene.add(mesh);return this.f.add(type,mesh,s,owner,p,dir,life,{redLightning:true,radius:s.radius,...extra});}

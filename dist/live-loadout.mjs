@@ -1,4 +1,4 @@
-import {RUNES as DEFINITIONS,describe} from './combo-design.mjs?v=shift-trajectory-1';
+import {RUNES as DEFINITIONS,describe} from './combo-design.mjs?v=iceberg-rise-1';
 export const RUNES=Object.fromEntries(Object.entries(DEFINITIONS).map(([k,r])=>[k,{...r,role:'1륜',hint:r.body+' · '+r.action,desc:'대상: '+r.body+' / 동작: '+r.action}]));
 export const KEYS=['q','w','e'],DEFAULT_LOADOUT={q:'q',w:'w',e:'e'};
 export function validLoadout(v){return !!v&&KEYS.every(k=>Object.hasOwn(RUNES,v[k]))&&new Set(KEYS.map(k=>v[k])).size===3;}

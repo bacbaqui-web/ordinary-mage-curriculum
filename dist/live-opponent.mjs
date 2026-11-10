@@ -1,6 +1,6 @@
-import {Charge,RING_SECONDS,resolveSpell} from './live-charge-spells.mjs?v=integer-damage-1';
+import {Charge,RING_SECONDS,resolveSpell} from './live-charge-spells.mjs?v=iceberg-rise-1';
 import {learn,MAX_RANK} from './progression.mjs?v=zones1';
-import {KEYS,RUNES} from './live-loadout.mjs?v=integer-damage-1';
+import {KEYS,RUNES} from './live-loadout.mjs?v=iceberg-rise-1';
 export function chooseLoadout(random=Math.random){const pool=Object.keys(RUNES);for(let i=pool.length-1;i>0;i--){const j=Math.floor(random()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]];}return Object.fromEntries(KEYS.map((k,i)=>[k,pool[i]]));}
 export function choosePlan(loadout,attack,hp,distance,random=Math.random){const attacks=KEYS.filter(k=>loadout[k]!=='e'),ward=KEYS.find(k=>loadout[k]==='e');const length=[3,2,1][attack%3];let first=attacks[Math.floor(random()*attacks.length)];if(ward&&hp<65&&attack%4===3)first=ward;const plan=[first];for(let i=1;i<length;i++)plan.push(KEYS[Math.floor(random()*KEYS.length)]);return plan;}
 // Feed planned key presses to the exact same charging engine as the player.

@@ -1,6 +1,6 @@
 import {Plane,Vector3,Raycaster} from './three.module.js';
 import {hasFireRecipe,fireSpec} from './fire-spec.mjs?v=bolt17';
-import {hasIceRecipe} from './ice-spec.mjs?v=shift-trajectory-1';
+import {hasIceRecipe} from './ice-spec.mjs?v=iceberg-rise-1';
 export function spellAimHeight(sequence){
  if(sequence==='i'||hasIceRecipe(sequence)&&['i','w'].includes(sequence.at(-1)))return 1.42;
  if(hasIceRecipe(sequence))return ['q','p','s','h'].includes(sequence.at(-1))?1:0;

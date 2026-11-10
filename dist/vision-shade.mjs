@@ -1,6 +1,6 @@
 import * as T from './three.module.js';
 import {TOWN_HALF} from './town-layout.mjs';
-import {canSee} from './vision.mjs';
+import {canSee} from './vision.mjs?v=iceberg-rise-1';
 export class VisionShade{
  constructor(scene,{width=100,height=92}={}){
   this.width=width;this.height=height;this.data=new Uint8Array(width*height*4);this.current=new Float32Array(width*height);this.target=new Float32Array(width*height);this.timer=0;this.ready=false;

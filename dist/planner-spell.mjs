@@ -1,6 +1,6 @@
-import {resolveSpell} from './live-charge-spells.mjs?v=integer-damage-1';
+import {resolveSpell} from './live-charge-spells.mjs?v=iceberg-rise-1';
 import {ICE_BASIC} from './ice-basic.mjs?v=forward-glow-1';
-import {describe} from './combo-design.mjs?v=shift-trajectory-1';
+import {describe} from './combo-design.mjs?v=iceberg-rise-1';
 export const basicKey=(seq,hand='left',charged=false)=>`${seq}:${hand}:${charged?'charged':'tap'}`;
 export function plannerSpell(sequence,{hand='left',charged=false}={}){
  if(sequence==='ii'&&hand==='right')return {sequence,power:1.76,name:'집중 얼음안개',color:describe(sequence).color,iceVariant:'beam'};

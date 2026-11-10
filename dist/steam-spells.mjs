@@ -1,6 +1,6 @@
 import * as T from './three.module.js';
 import {steamSpec,steamPlacement} from './steam-spec.mjs?v=bolt17';
-import {crossesWard} from './forces.mjs';
+import {crossesWard} from './forces.mjs?v=iceberg-rise-1';
 export class SteamSpells{
  constructor(fire){this.f=fire;this.a=fire.a;}
  add(type,s,owner,p,dir,life,extra={}){const mesh=new T.Group();this.a.scene.add(mesh);return this.f.add(type,mesh,s,owner,p,dir,life,{steam:true,...extra});}
