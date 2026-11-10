@@ -1,9 +1,9 @@
-import {IceSpells} from './ice-spells.mjs?v=ring-origin-1';
+import {IceSpells} from './ice-spells.mjs?v=ring-origin-2';
 import {hasIceRecipe} from './ice-spec.mjs?v=ice-charge-2';
 import {areaTouches,shotTouches,shotContact} from './combat-hit.mjs?v=turn-rates-1';
-import {IceBasic} from './ice-basic.mjs?v=ring-origin-1';
+import {IceBasic} from './ice-basic.mjs?v=ring-origin-2';
 import {hasFireRecipe} from './fire-spec.mjs?v=bolt17';
-import {FireSpells} from './fire-spells.mjs?v=ring-origin-1';
+import {FireSpells} from './fire-spells.mjs?v=ring-origin-2';
 import * as T from './three.module.js';
 import {compileSpell,spellReach,spellPayload} from './live-spells.mjs?v=ice-charge-2';
 import {RUNES} from './combo-design.mjs?v=ice-charge-2';

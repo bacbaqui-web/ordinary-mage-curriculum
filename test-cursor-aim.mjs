@@ -31,3 +31,10 @@ for(const sequence of ['i','ii','iw','qw','ww']){
  const a=origin.clone().project(camera),b=effect.mesh.position.clone().project(camera);assert.ok(Math.abs((cursor.x-a.x)*(b.y-a.y)-(cursor.y-a.y)*(b.x-a.x))<1e-8,sequence+' custom origin still aims through cursor');d.dispose();
 }
 console.log('PASS: projectiles start at custom ring centers, retain height and cursor trajectory; released ice ring stays anchored');
+for(const loadout of [{q:'i',w:'w',e:'e'},{q:'q',w:'w',e:'e'},{q:'w',w:'i',e:'e'}]){
+ let cast;const d=new Duel([loadout,{q:'q',w:'w',e:'e'}],{onCast:s=>cast=s}),a=d.actors[0];
+ d.castResult(a,{parts:['q','w'],complete:true,progress:1,timed:true});
+ const shot=[...d.magic.iceCombos.effects,...d.magic.fire.effects,...d.magic.effects].find(e=>['shot','projectile'].includes(e.type));
+ assert.ok(shot);assert.equal(shot.mesh.position.y,spellAimHeight(cast.sequence));assert.ok(shot.mesh.position.distanceTo(cast.emission)<1e-9,'network casting ring matches authoritative projectile origin');d.dispose();
+}
+console.log('PASS: authoritative casts retain the cursor aim height and expose the exact ring origin');

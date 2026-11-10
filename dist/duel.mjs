@@ -1,7 +1,8 @@
 import {wardTouches} from './combat-hit.mjs?v=turn-rates-1';
-import {ICE_BASIC} from './ice-basic.mjs?v=ring-origin-1';
+import {ICE_BASIC} from './ice-basic.mjs?v=ring-origin-2';
 import * as T from './three.module.js';
-import {LiveMagic} from './live-magic.mjs?v=ring-origin-1';
+import {spellAimHeight} from './cursor-aim.mjs?v=cursor-aim-1';
+import {LiveMagic} from './live-magic.mjs?v=ring-origin-2';
 import {QueuedCharge} from './queued-charge.mjs?v=ice-charge-2';
 import {SpaceSkill,interceptSpaceShots} from './space-skills.mjs?v=turn-rates-1';
 import {ForcedMotion} from './motion.mjs';
@@ -55,7 +56,7 @@ export class Duel {
  castResult(a,result){if(!result||a.cool>0||a.knockdown>0)return;if(a.loadout.q==='i'&&result.parts.length===1){const hand=a.iceHand||'left',key=hand==='left'?'iceLeftCool':'iceRightCool',spec=ICE_BASIC[hand];if(a.roll.active||(a[key]||0)>0||a.mana<spec.cost)return;a.mana-=spec.cost;a[key]=spec.cooldown;const spell={...resolveSpell(result,a.loadout),timed:result.timed,name:spec.name,iceHand:hand,cost:spec.cost};this.magic.cast(spell,a,a.dir.clone(),a.aim.clone());this.onCast(spell,a);return;}const s={...resolveSpell(result,a.loadout),timed:result.timed};if(a.mana<s.cost)return;a.mana-=s.cost;a.cool=s.tap?.16:.38;a.target=null;a.recoil.start(a.dir,s.sequence.length,hasFireRecipe(s.sequence)&&fireSpec(s.sequence).op==='h'?fireSpec(s.sequence).dashDuration:0);
     // A stable emission point prevents skeleton animation from changing hit range.
     const emission=V(a.x,a.z).addScaledVector(a.dir,.5);if(!this.clearPath(a,emission))emission.set(a.x,0,a.z);
-    this.magic.cast(s,a,a.dir.clone(),a.aim.clone(),emission);this.onCast(s,a);return;}
+    emission.y=spellAimHeight(s.sequence)||1;s.emission=emission.clone();this.magic.cast(s,a,a.dir.clone(),a.aim.clone(),emission);this.onCast(s,a);return;}
 
  hit(a,damage,dir,force=0,source=null){if(this.finished||a.roll.invulnerable)return false;const guarded=a.roll.guard(damage,force,dir,source,a);if(guarded.blocked)return false;damage=guarded.damage;force=guarded.force;const blocked=Math.min(a.shield,damage);a.shield-=blocked;damage-=blocked;a.hp=Math.max(0,a.hp-damage);a.charge.disrupt(chargeSetback(damage));if(force)a.motion.start(dir.x,dir.z,force);this.onHit(a,damage,dir);if(a.hp<=0){this.finished=true;this.winner=source?.id??1-a.id;for(const actor of this.actors){actor.charge.clear();actor.target=null;}}return true;}
  payload(a,p,source){if(!p||this.finished)return;if(p.slow)a.slow=Math.max(a.slow||0,p.slow);if(p.frostSlow)a.frostSlow=Math.max(a.frostSlow||0,p.frostSlow);if(p.burn){if(!(a.burn>0))a.burnTick=.5;a.burn=Math.max(a.burn||0,p.burn);a.burnOwner=source;a.burnDamage=p.burnDamage||2;}if(p.ash)a.ashTime=Math.max(a.ashTime||0,p.ash);if(p.greenFire)a.greenFireTime=Math.max(a.greenFireTime||0,p.greenFire);if(p.dust)a.dustTime=Math.max(a.dustTime||0,p.dust);if(p.echo&&!a.echo)a.echo={time:.25,damage:p.echo,owner:source};}

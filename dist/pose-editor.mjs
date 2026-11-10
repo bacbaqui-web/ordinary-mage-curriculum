@@ -181,7 +181,7 @@ async function selectCharacter(id){
   try{localStorage.setItem('ordinary-mage-editor-character',characterId);}catch{}
   $('character').value=characterId;$('import').value='';
   $('status').textContent='';
-  $('labLink').href='character-lab.html?v=ring-origin-1'+characterId;
+  $('labLink').href='character-lab.html?v=ring-origin-2'+characterId;
   const url=new URL(location.href);url.searchParams.set('character',characterId);window.history.replaceState(null,'',url);
   $('status').textContent=`${profile.label} 동작을 열었습니다. 이 캐릭터에만 저장됩니다.`;sync();
  }catch(e){nextRig?.dispose();$('character').value=characterId;$('status').textContent=e.message;}

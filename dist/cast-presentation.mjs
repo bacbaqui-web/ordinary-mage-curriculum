@@ -1,8 +1,9 @@
 import * as T from './three.module.js';
+import {spellAimHeight} from './cursor-aim.mjs?v=cursor-aim-1';
 import {spellReach} from './live-spells.mjs?v=ice-charge-2';
 import {RUNES} from './combo-design.mjs?v=ice-charge-2';
 export function castWithPresentation({magic,wards,clearPath,collides,wallBlocks},s,caster,dir,aimPoint){
- const hand=s.emission?.clone()||new T.Vector3(caster.x,1,caster.z).addScaledVector(dir,.5);
+ const hand=s.emission?.clone()||new T.Vector3(caster.x,spellAimHeight(s.sequence)||1,caster.z).addScaledVector(dir,.5);
  const origin=clearPath(caster,{x:hand.x,z:hand.z})?hand:null;
  const before=new Set([...magic.effects,...magic.fire.effects,...magic.iceCombos.effects,...wards]);caster.castContacts=[];
  magic.cast(s,caster,dir,aimPoint,origin);
