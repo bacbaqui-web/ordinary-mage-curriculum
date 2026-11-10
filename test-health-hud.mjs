@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {HealthTrail} from './dist/health-hud.mjs';
+const h=new HealthTrail(100);
+assert.equal(h.update(70,0),30);assert.equal(h.hp,70);assert.equal(h.tick(.999),100);assert.equal(h.tick(1),100);
+assert.ok(h.tick(1.225)<100&&h.trail>70);assert.equal(h.tick(1.5),70);
+assert.equal(h.update(40,2),30);assert.equal(h.update(30,2.4),10);assert.equal(h.tick(3.39),70);assert.equal(h.tick(4),30);
+h.update(60,4.1);assert.equal(h.trail,60);assert.equal(h.hp,60);
+h.update(-20,5);assert.equal(h.hp,0);assert.equal(h.tick(5.9),60);assert.equal(h.tick(6.5),0);
+h.reset(100);assert.equal(h.hp,100);assert.equal(h.trail,100);assert.equal(h.update(100,20),0);
+console.log('PASS: immediate damage, 1-second red hold, smooth drain, repeated hits, healing, lethal damage, reset');

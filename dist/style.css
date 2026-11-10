@@ -53,3 +53,10 @@
 header{justify-content:flex-end}.key{font:inherit;text-align:center;pointer-events:auto;min-width:0}.key:disabled{cursor:default}.key:disabled:hover{background:#232d32}.key .skill-upgrade{display:none;position:absolute;right:4px;bottom:4px;width:23px;height:23px;align-items:center;justify-content:center;border-radius:4px;background:#e8c36d;border:1px solid #ffdf92;color:#292313;font-size:20px;font-weight:700;line-height:1;box-shadow:0 1px 6px #0007}.key.upgrade-ready{border-color:#edc96f;box-shadow:inset 0 0 0 1px #edc96f,0 0 12px #e4bc5333;cursor:pointer}.key.upgrade-ready.unlearned{filter:none;opacity:1}.key.upgrade-ready:hover{background:#41402c}.key.upgrade-ready small{padding-right:22px}.key.upgrade-ready .skill-upgrade{display:flex}
 
 .key:disabled:not(.unlearned){opacity:1}
+
+/* Centered controls and projected combat feedback. */
+header{justify-content:center}.actions{position:static;flex-wrap:wrap;justify-content:center;max-width:100%}.minimap-panel{top:85px;bottom:auto;left:24px}.spell-status{padding:8px 16px}.spell-status h2{margin:0;font-size:16px;min-height:24px}
+.bar{position:relative;overflow:hidden}.bar i{position:absolute;left:0;top:0;height:100%}.bar .hp-trail{background:#f34f59;z-index:0}.bar .hp-current{z-index:1}.monster-health{position:absolute;transform:translate(-50%,-100%);pointer-events:none}.monster-health .bar{width:54px;height:6px;margin:0}.monster-health .hp-current{background:#a3d86c}#healthEffects{position:fixed;inset:0;pointer-events:none;z-index:2;overflow:hidden}.damage-number{position:absolute;transform:translate(-50%,-100%);color:#ffe8a0;font-size:22px;font-weight:700;line-height:1;text-shadow:0 2px 2px #111,1px 0 2px #111,-1px 0 2px #111;white-space:nowrap}.enemy .bar .hp-trail{background:#f34f59}
+@media(max-width:850px){.minimap-panel{left:12px;top:110px;bottom:auto}.actions{position:static;top:auto;right:auto}.actions button,.actions a{padding:7px 9px}}@media(max-width:560px){.minimap-panel{top:145px}}
+
+header{z-index:5}.minimap-panel,.hud{z-index:4}
