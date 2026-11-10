@@ -415,8 +415,8 @@ function updateCamera(){const zoomText='확대 '+Math.round(24/(mapOverview?over
 const mapButton=document.createElement('button');mapButton.textContent='전체 지도';mapButton.setAttribute('aria-pressed','false');document.querySelector('header .actions').prepend(mapButton);mapButton.onclick=()=>{mapOverview=!mapOverview;mapButton.textContent=mapOverview?'전투 시점':'전체 지도';mapButton.setAttribute('aria-pressed',String(mapOverview));updateCamera();};
 
 function renderHunt(){
- const canvas=$('minimap'),c=canvas.getContext('2d'),scale=(canvas.width-12)/(TOWN_HALF*4),sy=scale/Math.sqrt(3),cx=canvas.width/2,cy=canvas.height/2;
- // Same ground-plane projection as the +X,+Y,+Z orthographic camera.
+ const canvas=$('minimap'),c=canvas.getContext('2d'),scale=(canvas.width-24)/(TOWN_HALF*4),sy=scale,cx=canvas.width/2,cy=canvas.height/2;
+ // Top-down view, keeping the battlefield heading (45 degrees).
  const p=a=>({x:cx+(a.x-a.z)*scale,y:cy+(a.x+a.z)*sy});
  c.clearRect(0,0,canvas.width,canvas.height);
  c.save();c.setTransform(scale,sy,-scale,sy,cx,cy);
@@ -426,7 +426,7 @@ function renderHunt(){
  c.restore();
  const corners=[{x:-TOWN_HALF,z:-TOWN_HALF},{x:TOWN_HALF,z:-TOWN_HALF},{x:TOWN_HALF,z:TOWN_HALF},{x:-TOWN_HALF,z:TOWN_HALF}].map(p);
  c.beginPath();corners.forEach((q,i)=>i?c.lineTo(q.x,q.y):c.moveTo(q.x,q.y));c.closePath();c.strokeStyle='#b4c3b9';c.lineWidth=1.5;c.stroke();
- for(const a of [...monsters,enemy,player]){if(a.dead||a!==player&&!visibleTo(player,a))continue;const q=p(a);c.fillStyle=a===player?'#ffe3a0':a===enemy?'#ff837b':'#a7d878';c.beginPath();c.arc(q.x,q.y,a.monster?2.5:3.5,0,Math.PI*2);c.fill();c.strokeStyle='#23332c';c.lineWidth=1;c.stroke();}
+ for(const a of [...monsters,enemy,player]){if(a.dead||a!==player&&!visibleTo(player,a))continue;const q=p(a);c.fillStyle=a===player?'#55e477':a===enemy?'#549cff':'#ff5757';c.beginPath();c.arc(q.x,q.y,a.monster?5:7,0,Math.PI*2);c.fill();c.strokeStyle='#23332c';c.lineWidth=1;c.stroke();}
 }
 
 for(const k of KEYS){$('key-'+k).onclick=()=>{if(!running||paused||finished||onlineCore)return;if(learn(progress,k)){charge.clear();renderProgress();flash(RUNES[loadout[k]].name+(progress.ranks[k]===1?' 습득 · 마우스 조합에 추가':' 숙련도 상승')+(k==='q'&&loadout.q==='i'&&progress.ranks.q===2?' · 충전 중 Shift: 같은 속성 2륜':''));}};}
