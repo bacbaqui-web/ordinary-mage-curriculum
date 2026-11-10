@@ -12,7 +12,7 @@ const profile=characterProfile(new URLSearchParams(location.search).get('charact
 const grid=new T.GridHelper(10,20,0x78939a,0x40535c);const puppet=new MotionPuppet(scene);puppet.blendTransitions=true;let playing=true,pending=null,actionMode=false,magicMode=false,magicHeld=false,magicElapsed=0;const playback=new ActionPlayback(puppet);
 const magicRings=[0,1].map(()=>{const m=new T.Mesh(new T.RingGeometry(.15,.20,16),new T.MeshBasicMaterial({color:0xffd46a,side:T.DoubleSide}));scene.add(m);return m;});const magicBall=new T.Mesh(new T.CircleGeometry(.15,12),new T.MeshBasicMaterial({color:0xffaa44,side:T.DoubleSide}));scene.add(magicBall);
 if(profile.model)CharacterRig.load(profile.model,profile.accessories,profile.garment,profile.ankleLift,profile.ankleBack).then(r=>{characterRig=r;characterRoot.add(r.group);puppet.visual.visible=false;$('status').textContent=profile.label+' · 저장한 동작 확인';}).catch(()=>{$('status').textContent='캐릭터 모델을 불러오지 못했습니다. 새로고침해 주세요.';});
-const editorLink=document.querySelector('a[href^="pose-editor.html"]');if(editorLink)editorLink.href='pose-editor.html?v=no-floor-rings-1&character='+profile.id;
+const editorLink=document.querySelector('a[href^="pose-editor.html"]');if(editorLink)editorLink.href='pose-editor.html?v=game-selection-1&character='+profile.id;
 function clips(){ $('clip').replaceChildren(...puppet.clips.map((c,i)=>new Option(c.name||'동작 '+(i+1),i))); }clips();
 function selectClip(i){
  magicMode=false;magicHeld=false;puppet.group.position.set(0,0,0);puppet.magic.reset();

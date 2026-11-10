@@ -20,7 +20,7 @@ import {CHARACTERS,characterFor,chooseCharacter,chooseSupport} from './character
 import {GameAudio} from './game-audio.mjs?v=game-impact-1';
 import {damageSummary} from './damage-display.mjs?v=integer-damage-1';
 import {Duel,STEP} from './duel.mjs?v=no-floor-rings-1';
-import {mountPvpUI} from './pvp-ui.mjs?v=no-floor-rings-1';
+import {mountPvpUI} from './pvp-ui.mjs?v=game-selection-1';
 import {OBSTACLES} from './arena-rules.mjs';
 let onlineCore=null,pvp=null,onlineResultShown=false,lastOnlineAim=0,onlineRenderAt=0,onlinePrevious=null;
 import {redLightningPlacement} from './red-lightning-spec.mjs?v=bolt17';
@@ -274,7 +274,7 @@ const controls=bindDuelControls(canvas,window,{
  release:e=>{point(e);castPointer.copy(pointer);if(onlineCore){pvp.input({action:'release',point:{x:aim.x,z:aim.z}});return;}if(roll.blocking){roll.pendingRelease=true;return;}const result=charge.requestRelease();if(result)cast(result);},
  cancel:()=>{if(onlineCore)pvp.input({action:'cancel'});else charge.clear();}
 });
-$('start').onclick=()=>{$('intro').classList.add('hidden');pause(false)};$('help').onclick=()=>{if(!running)return;pause(true);$('helpLoadout').textContent=loadout.q==='i'?'좌클릭: 왼손 얼음탄 · 우클릭: 오른손 얼음안개 · 빙결 숙련 2: 충전 중 Shift: 빙결 두 륜 · 좌클릭 고드름 / 우클릭 집중 얼음안개 · 얼음안개 사용 중 이동 불가':KEYS.map(k=>slotLabel(k)+' '+RUNES[loadout[k]].name).join(' · ');$('helpCombo').textContent=spellName(mapSequence(['q','w'],loadout),NAMES);$('intro').classList.remove('hidden');$('start').innerHTML='계속하기 <span>↗</span>'};$('pause').onclick=()=>pause();$('reset').onclick=()=>{if(!running)return;reset();running=true;$('intro').classList.add('hidden')};$('again').onclick=()=>{reset();running=true};$('botToggle').onclick=()=>{bot=!bot;reset();if(!bot){for(const k of KEYS)progress.ranks[k]=Math.max(1,progress.ranks[k]);renderProgress();}$('botToggle').textContent=bot?'대결 모드':'연습 모드';$('botToggle').title=bot?'연습 모드로 전환':'대결 모드로 전환';$('botToggle').classList.toggle('practice',!bot);flash(bot?'대결 모드 · 새 대결 시작':'연습 모드 · 승패 없이 조합을 연습하세요');};
+$('start').onclick=()=>{$('intro').classList.add('hidden');pause(false)};$('help').onclick=()=>{if(!running)return;pause(true);$('helpLoadout').textContent=loadout.q==='i'?'좌클릭: 왼손 얼음탄 · 우클릭: 오른손 얼음안개 · 빙결 숙련 2: 충전 중 Shift: 빙결 두 륜 · 좌클릭 고드름 / 우클릭 집중 얼음안개 · 얼음안개 사용 중 이동 불가':KEYS.map(k=>slotLabel(k)+' '+RUNES[loadout[k]].name).join(' · ');$('helpCombo').textContent=spellName(mapSequence(['q','w'],loadout),NAMES);$('intro').classList.remove('hidden');$('start').innerHTML='계속하기 <span>↗</span>'};$('pause').onclick=()=>pause();$('reset').onclick=()=>{if(!running)return;reset();running=true;$('intro').classList.add('hidden')};$('again').onclick=()=>{reset();running=true};
 function ai(dt){
  if(!bot||(enemy.knockdown>0||enemy.frozen>0))return;enemy.retaliate=Math.max(0,(enemy.retaliate||0)-dt);enemy.cool=Math.max(0,enemy.cool-dt);enemy.mana=Math.min(100,enemy.mana+dt*(enemyCharge.active?3:10));enemy.lastSpellTime=Math.max(0,(enemy.lastSpellTime||0)-dt);
  if(!enemyCharge.active){const pd=Math.hypot(player.x-enemy.x,player.z-enemy.z);const prey=monsters.filter(m=>!m.dead&&visibleTo(enemy,m)).sort((a,b)=>Math.hypot(a.x-enemy.x,a.z-enemy.z)-Math.hypot(b.x-enemy.x,b.z-enemy.z));enemyTarget=(pd<3.5||enemy.retaliate>0&&pd<12)&&visibleTo(enemy,player)?player:prey[0]||(visibleTo(enemy,player)?player:null);}
@@ -377,14 +377,14 @@ function renderSelection(){
  $('runePicker').innerHTML=Object.entries(RUNES).map(([id,r])=>{const assigned=KEYS.find(k=>draft[k]===id);return `<button type="button" class="rune-btn" data-rune="${id}" ${id===draft.q?'data-fixed="true" disabled':''} aria-label="${r.name}${assigned?' · '+slotLabel(assigned):''}" aria-pressed="${!!assigned}" title="${id===draft.q?'전문 마법':'좌클릭: 왼쪽에 배정 · 우클릭: 오른쪽에 배정'}" style="--rune:${r.color}"><span class="rune-symbol">${r.icon}</span><strong>${r.name}</strong>${assigned?`<span class="assigned">${slotLabel(assigned)}</span>`:''}</button>`;}).join('');
 }
 $('characterPicker').onclick=e=>{const b=e.target.closest('[data-character]');if(!b||pvp?.locked)return;draft=chooseCharacter(draft,b.dataset.character);renderSelection();pvp?.refresh();};
-function openSelection(){if(onlineCore){pvp.showRoom();return;}selectionReturn=running&&!finished;pause(true);charge.clear();draft={...loadout};$('intro').classList.add('hidden');$('result').classList.add('hidden');$('cancelSelection').classList.toggle('hidden',!selectionReturn);$('confirmSelection').textContent='시작';$('selection').classList.remove('hidden');renderSelection();}
-function cancelSelection(){$('selection').classList.add('hidden');if(selectionReturn)pause(false)}
+function openSelection(){if(onlineCore){pvp.showRoom();return;}selectionReturn=running&&!finished;pause(true);charge.clear();draft={...loadout};$('intro').classList.add('hidden');$('result').classList.add('hidden');$('confirmSelection').textContent='시작';$('selection').classList.remove('hidden');renderSelection();}
+function cancelSelection(){$('selection').classList.add('hidden');if(selectionReturn&&!onlineCore)pause(false);$('choose').focus();}
 function assignSupportFromEvent(e,slot){const b=e.target.closest('[data-rune]');if(!b||b.disabled||pvp?.locked)return;draft=chooseSupport(draft,slot,b.dataset.rune);renderSelection();pvp?.refresh();$('runePicker').querySelector(`[data-rune="${b.dataset.rune}"]`)?.focus();}
  $('runePicker').onclick=e=>assignSupportFromEvent(e,'w');
  $('runePicker').oncontextmenu=e=>{e.preventDefault();assignSupportFromEvent(e,'e');};
  $('runePicker').onkeydown=e=>{if(e.shiftKey&&e.key==='Enter'){e.preventDefault();assignSupportFromEvent(e,'e');}};
- $('confirmSelection').onclick=()=>{if(!validLoadout(draft))return;loadout={...draft};try{localStorage.setItem('mage-loadout-v1',JSON.stringify(loadout))}catch{}syncLoadout();reset();running=true;$('selection').classList.add('hidden');const first=KEYS.find(k=>progress.ranks[k]);flash('기본 공격 · '+RUNES[loadout[first]].name+' 습득 · 몬스터를 처치해 나머지 마법을 배우세요.');};
- $('cancelSelection').onclick=cancelSelection;$('choose').onclick=openSelection;$('resultChoose').onclick=openSelection;
+ $('confirmSelection').onclick=()=>{if(!validLoadout(draft))return;bot=pvp?.mode!=='solo';loadout={...draft};try{localStorage.setItem('mage-loadout-v1',JSON.stringify(loadout))}catch{}syncLoadout();reset();if(!bot){for(const k of KEYS)progress.ranks[k]=Math.max(1,progress.ranks[k]);renderProgress();}running=true;$('selection').classList.add('hidden');const first=KEYS.find(k=>progress.ranks[k]);flash('기본 공격 · '+RUNES[loadout[first]].name+' 습득 · 몬스터를 처치해 나머지 마법을 배우세요.');};
+ $('cancelSelection').onclick=cancelSelection;document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!$('selection').classList.contains('hidden')){event.preventDefault();cancelSelection();}});$('choose').onclick=openSelection;$('resultChoose').onclick=openSelection;
 
 function spawnMonster(near=null){if(onlineCore)return;if(monsters.filter(m=>!m.dead).length>=12)return;
  let x,z,valid=false;for(let n=0;n<80;n++){x=near?near.x+(Math.random()-.5)*4:(Math.random()-.5)*44;z=near?near.z+(Math.random()-.5)*4:(Math.random()-.5)*40;
@@ -452,19 +452,19 @@ function syncOnlineActors(){
 function stopOnline(){
  if(onlineCore){onlineCore.dispose();onlineCore=null;wards=[];}
  running=false;bot=true;reset();running=false;paused=false;onlineResultShown=false;
- for(const id of ['botToggle','pause','reset','choose','help'])$(id).disabled=false;
+ for(const id of ['pause','reset','help'])$(id).disabled=false;
  $('again').textContent='같은 마법으로 재대결';$('resultChoose').textContent='마법 바꾸기';$('result').classList.add('hidden');
  draft={...loadout};renderSelection();$('confirmSelection').textContent='시작';
 }
 pvp=mountPvpUI({
- loadout:()=>({...draft}),open:openSelection,mode:mode=>{$('cancelSelection').classList.toggle('hidden',mode==='pvp'||!selectionReturn);},stop:stopOnline,
+ loadout:()=>({...draft}),open:openSelection,mode:()=>{},stop:stopOnline,
  start(message,index){
   if(onlineCore){onlineCore.dispose();onlineCore=null;wards=[];}
   bot=true;loadout={...message.loadouts[index]};draft={...loadout};reset();syncLoadout();
   enemyLoadout={...message.loadouts[1-index]};progress=createProgress(loadout);enemyProgress=createProgress(enemyLoadout);for(const k of KEYS){progress.ranks[k]=1;enemyProgress.ranks[k]=1;}renderProgress();
   onlineCore=new Duel(message.loadouts,{scene,vfx:spellVfx,onCast:(spell,actor)=>{const a=actor.id===index?player:enemy;a.coolMax=spell.tap?.16:.38;if(!spell.timed&&(spell.iceHand||spell.tap))a.g.userData.puppet.playBasicAttack(spell.iceHand||actor.iceHand||'left');if(!spell.iceHand){const point=actor.aim.clone();point.y=1;a.pendingCastLight={colors:[...spell.sequence].map(k=>RUNES[k].color),tier:spell.sequence.length,origin:spell.emission?.clone(),dir:actor.dir.clone(),beamTarget:projectileGuideSpec(spell.sequence,spell.iceHand||actor.iceHand||'left')?null:()=>({point,active:false})};}gameAudio.cast(spell.sequence,a,player);a.castFlash=.3;if(!spell.timed){a.g.userData.puppet.magic.release(spell.sequence.length);a.g.userData.puppet.magic.elapsed=2/12;}if(actor.id===index){chargeCamera.fire(spell.sequence.length);castOverlay.style.setProperty('--cast-color',RUNES[spell.sequence[0]].color);$('spellName').textContent=spell.name;history.unshift({name:spell.name,seq:spell.keys.toUpperCase()});history=history.slice(0,4);}},onHit:(actor,damage)=>{const a=actor.id===index?player:enemy;if(damage>0)gameAudio.hit(a,player);a.hitFlash=.1;if(actor.id===index)hitScreen.hit(damage);}});
   onlinePrevious=null;onlineRenderAt=performance.now();onlineCore.correct(message.state);wards=onlineCore.wards;syncOnlineActors();running=false;paused=false;finished=false;onlineResultShown=false;
-  for(const id of ['botToggle','pause','reset','choose','help'])$(id).disabled=true;
+  for(const id of ['pause','reset','help'])$(id).disabled=true;
   $('again').textContent='재대결 준비';$('resultChoose').textContent='마법 바꾸기';$('intro').classList.add('hidden');$('result').classList.add('hidden');
  },
  go(){running=true;},
