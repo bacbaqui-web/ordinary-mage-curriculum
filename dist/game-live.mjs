@@ -1,3 +1,4 @@
+import {FacingMotion} from './facing-motion.mjs';
 import {wheelZoomSpan} from './camera-zoom.mjs';
 import {MONSTERS,createMonster,animateMonster,tickMonster,cancelMonsterAttack} from './monsters.mjs?v=half-size-1';
 import {toolbarIcon} from './toolbar-icons.mjs?v=toolbar-icons-1';
@@ -455,9 +456,12 @@ let prev=performance.now();function frame(now){requestAnimationFrame(frame);if(o
   u.moveFacing??=aimYaw;
   if(casting)u.moveFacing=aimYaw;
   else if(active){const direction=a===player?walkDirection:{x:a.x-previous.x,z:a.z-previous.z};if(Math.hypot(direction.x,direction.z)>1e-5)u.moveFacing=Math.atan2(direction.x,direction.z);}
-  a.g.rotation.y=u.moveFacing;
+  u.facingMotion??=new FacingMotion();
+  const preparation=onlineCore?null:impact.pending.get(a),progress=preparation?Math.min(1,(impact.time-preparation.born)/Math.max(1e-8,preparation.due-preparation.born)):null;
+  const facing=u.facingMotion.update(step,{target:u.moveFacing,casting,prepareSeconds:onlineCore?0:preparation?preparation.due-preparation.born:impact.settings.anticipation/1000,preparation,progress});
+  a.g.rotation.y=facing;
   u.puppet.bodyFollow??=new BodyFollow(movementSettings);u.puppet.bodyFollow.settings=movementSettings;
-  u.puppet.bodyFollow.updateLocomotion(step,{aim:aimYaw,facing:u.moveFacing,casting});
+  u.puppet.bodyFollow.updateLocomotion(step,{aim:casting?facing:aimYaw,facing,casting});
   if(casting&&!u.wasCasting)u.puppet.poseTransition=null;u.wasCasting=casting;
  }else if(movementSettings.headSpeed||movementSettings.chestSpeed||movementSettings.pelvisSpeed){u.puppet.bodyFollow??=new BodyFollow(movementSettings);const turnScale=chargeTurnScale(actorCharge);u.puppet.bodyFollow.settings={...movementSettings,headSpeed:movementSettings.headSpeed*turnScale,chestSpeed:movementSettings.chestSpeed*turnScale,pelvisSpeed:movementSettings.pelvisSpeed*turnScale};u.puppet.bodyFollow.update(step,{aim:Math.atan2(displayDir.x,displayDir.z)});}else u.puppet.bodyFollow=null;
  u.animationPosition={x:a.x,z:a.z};projectWizard(a.g,camera);iceEngine.syncHands(iceOwner,u.puppet);
