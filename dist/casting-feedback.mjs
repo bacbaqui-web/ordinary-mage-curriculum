@@ -27,7 +27,7 @@ for(let y=0;y<glowSize;y++)for(let x=0;x<glowSize;x++){
 const rimGlow=new T.DataTexture(glowPixels,glowSize,glowSize);rimGlow.magFilter=T.LinearFilter;rimGlow.minFilter=T.LinearFilter;rimGlow.needsUpdate=true;
 export function runeRing(){const g=new T.Group();for(const [geo,alpha] of [[glowGeometry,.85],[glowGeometry,1],[ringGeometry,1]]){const mat=material('#ffffff',alpha);if(geo===glowGeometry)mat.map=rimGlow;g.add(new T.Mesh(geo.clone(),mat));}return g;}
 export function castFlash(color='#8fe2ff',tier=1){
- const group=new T.Group(),size=.28+tier*.12;
+ const group=new T.Group(),size=.48+tier*.20;
  for(const [radius,opacity,tint] of [[size*.5,1,'#ffffff'],[size,.65,color],[size*1.55,.16,color]]){const mat=new T.ShaderMaterial({uniforms:{tint:{value:new T.Color(tint)},alpha:{value:opacity}},vertexShader:'varying vec3 n; varying vec3 p; void main(){vec4 v=modelViewMatrix*vec4(position,1.0);p=v.xyz;n=normalMatrix*normal;gl_Position=projectionMatrix*v;}',fragmentShader:'uniform vec3 tint; uniform float alpha; varying vec3 n; varying vec3 p; void main(){float rim=pow(max(0.0,dot(normalize(n),normalize(-p))),2.0);gl_FragColor=vec4(tint,alpha*rim);}',transparent:true,blending:T.AdditiveBlending,depthWrite:false});mat.opacity=opacity;mat.userData.opacity=opacity;const m=new T.Mesh(new T.SphereGeometry(radius,24,16),mat);m.onBeforeRender=()=>{mat.uniforms.alpha.value=mat.opacity;};m.scale.z=.55;group.add(m);}
  const light=new T.PointLight(color,8+tier*3,4+tier,2);light.userData.intensity=light.intensity;group.add(light);return group;
 }
@@ -36,6 +36,7 @@ export function runeLayout(stage,colors){
  const rings=[{x:0,y:0,r:.34,color:main,white:level===1}];
  if(level>=2){rings.push({x:0,y:0,r:.18,color:main});rings.push({x:level===2?.30:.62,y:level===2?.20:.12,r:.15,color:c[1]||main});}
  if(level===3)rings.push({x:.82,y:.56,r:.12,color:c[2]||main});
+ for(const ring of rings){ring.x*=.5;ring.y*=.5;ring.r*=.5;}
  return {rings,links:level===3?[[0,2],[2,3]]:[]};
 }
 function dispose(group){group.traverse(o=>{if(o.geometry&&![ringGeometry,glowGeometry,lineGeometry].includes(o.geometry))o.geometry.dispose();o.material?.dispose();});group.removeFromParent();}
@@ -43,15 +44,19 @@ function diagram(){const group=new T.Group(),rings=Array.from({length:4},()=>{co
 function arrange(s,stage,colors,time=0){const layout=runeLayout(stage,colors),pulse=1+Math.sin(time*5)*.025;
  s.rings.forEach((r,i)=>{const spec=layout.rings[i];r.visible=!!spec;if(!spec)return;r.position.set(spec.x,spec.y,.01);r.scale.setScalar(spec.r*pulse);r.children.forEach((m,j)=>m.material.color.set(j===2&&spec.white?'#ffffff':spec.color));});
  s.links.forEach((line,i)=>{const pair=layout.links[i];line.visible=!!pair;if(!pair)return;const a=layout.rings[pair[0]],b=layout.rings[pair[1]],dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy),ux=dx/d,uy=dy/d,length=d-a.r-b.r;
- line.position.set((a.x+ux*a.r+b.x-ux*b.r)/2,(a.y+uy*a.r+b.y-uy*b.r)/2,0);line.rotation.z=Math.atan2(dy,dx);line.children.forEach((m,j)=>{m.scale.set(length,j===0?.10:RUNE_STROKE,1);m.material.color.set(b.color);});});return layout;
+ line.position.set((a.x+ux*a.r+b.x-ux*b.r)/2,(a.y+uy*a.r+b.y-uy*b.r)/2,0);line.rotation.z=Math.atan2(dy,dx);line.children.forEach((m,j)=>{m.scale.set(length,j===0?.05:RUNE_STROKE*.5,1);m.material.color.set(b.color);});});return layout;
 }
 const noise=n=>{const x=Math.sin(n*127.1+311.7)*43758.5453;return x-Math.floor(x);};
 export class CastingFeedback{
  constructor(scene){this.scene=scene;this.actors=new Map();this.bursts=[];this.beams=[];this.time=0;}
- actor(key){if(this.actors.has(key))return this.actors.get(key);const state=diagram();this.scene.add(state.group);state.dots=[];for(let i=0;i<48;i++){const dot=new T.Mesh(new T.CircleGeometry(.014,6),material('#ffffff',.8));state.group.add(dot);state.dots.push(dot);}this.actors.set(key,state);return state;}
+ actor(key){if(this.actors.has(key))return this.actors.get(key);const state=diagram();this.scene.add(state.group);state.aura=castFlash('#ffffff',1);state.aura.children[0].visible=false;state.aura.children[1].visible=false;state.group.add(state.aura);state.dots=[];for(let i=0;i<48;i++){const dot=new T.Mesh(new T.CircleGeometry(.014,6),material('#ffffff',.8));state.group.add(dot);state.dots.push(dot);}this.actors.set(key,state);return state;}
  charge(key,active,stage,colors,positions,camera){const s=this.actor(key);s.group.visible=active&&!!positions&&key.g.visible;if(!s.group.visible)return;
  const pose=key.g.userData.puppet?.icePose?.[0];if(pose){s.group.position.copy(positions[pose.hand==='left'?'LeftHand':'RightHand']).addScaledVector(pose.dir,.12);s.group.quaternion.setFromUnitVectors(new T.Vector3(0,0,1),pose.dir);}else{s.group.position.copy(positions.LeftHand).add(positions.RightHand).multiplyScalar(.5);s.group.quaternion.copy(camera.quaternion);}
  const layout=arrange(s,stage,colors,this.time);
+ const tint=Array.isArray(colors)?colors[0]:colors,pulse=.85+Math.sin(this.time*7)*.10+Math.min(3,stage)*.12;
+ s.aura.scale.setScalar(pulse);s.aura.children[2].material.uniforms.tint.value.set(tint);s.aura.children[2].material.opacity=.24+Math.sin(this.time*7)*.04;
+ const light=s.aura.children[3];light.color.set(tint);light.intensity=3+stage*1.5+Math.sin(this.time*7)*.6;
+
  s.dots.forEach((dot,i)=>{const life=.45+noise(i)*.55,age=this.time/life+i*.618,cycle=Math.floor(age),t=age-cycle,spec=layout.rings[i%layout.rings.length],angle=noise(i+cycle*49)*Math.PI*2,travel=t*(.25+noise(i+cycle+80)*.45),r=spec.r+travel;
  dot.position.set(spec.x+Math.cos(angle)*r,spec.y+Math.sin(angle)*r-t*t*.10,.04);dot.material.color.set(i%4===0?'#ffffff':spec.color);dot.material.opacity=(1-t)*(.65+.3*Math.sin(t*30+i)**2);dot.scale.setScalar(.5+noise(i+cycle*13));});
  }

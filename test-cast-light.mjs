@@ -22,3 +22,8 @@ test('flash and beam originate ahead of the casting hand and follow the release 
  const {castHandPoint}=await import('./dist/cast-presentation.mjs');const scene=new T.Scene(),feedback=new CastingFeedback(scene),hands={LeftHand:new T.Vector3(1,2,3),RightHand:new T.Vector3(4,2,3)},actor={x:0,z:0,g:{visible:true,userData:{puppet:{lastPositions:hands}}}},event={dir:new T.Vector3(1,0,0),origin:new T.Vector3(0,1,0),colors:['#ffffff'],tier:1,beamTarget:()=>({point:new T.Vector3(8,0,0),active:false})};
  assert.deepEqual(castHandPoint(actor,{...event,hand:'left'}).toArray(),[1.12,2,3]);actor.pendingCastLight=event;renderCastPresentation(actor,feedback);assert.deepEqual(feedback.bursts[0].group.position.toArray(),[4.12,2,3]);hands.RightHand.x=5;feedback.update(.02);assert.deepEqual(feedback.bursts[0].group.position.toArray(),[5.12,2,3]);assert.deepEqual(feedback.beams[0].start.toArray(),[5.12,2,3]);feedback.clear();
 });
+test('rune radius is halved while charge and release light extend beyond it',async()=>{
+ const {runeLayout,castFlash}=await import('./dist/casting-feedback.mjs');assert.equal(runeLayout(1,['#ffffff']).rings[0].r,.17);
+ const light=castFlash('#ffffff',1);assert.ok(light.children[2].geometry.parameters.radius>1);
+ const feedback=new CastingFeedback(new T.Scene()),actor={g:{visible:true,userData:{}}};feedback.charge(actor,true,1,['#ffffff'],{LeftHand:new T.Vector3(),RightHand:new T.Vector3()},new T.PerspectiveCamera());const a=feedback.actors.get(actor);assert.ok(a.aura.children[2].material.opacity>0);assert.ok(a.aura.children[3].intensity>3);feedback.clear();
+});
