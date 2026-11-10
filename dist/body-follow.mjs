@@ -19,6 +19,6 @@ export class BodyFollow{
  apply(p){
   if(!this.ready)return;
   const hips=p.Hips.clone();turn(p,Object.keys(p).filter(n=>n!=='Hips'),hips,angleDelta(this.pelvis,this.aim));
-  const spine=p.Spine.clone();turn(p,['Head','LeftArm','LeftForeArm','LeftHand','RightArm','RightForeArm','RightHand'],spine,angleDelta(this.chest,this.pelvis));
+  const spine=p.Spine.clone();turn(p,['Neck','Head','LeftArm','LeftForeArm','LeftHand','RightArm','RightForeArm','RightHand'],spine,angleDelta(this.chest,this.pelvis));
  }
 }

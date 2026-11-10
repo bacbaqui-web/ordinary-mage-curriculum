@@ -111,3 +111,16 @@ for(const hand of ['left','right']){
  assert.deepEqual(blendPuppet.lastPositions.Head.toArray(),samplePose(releaseClip,0).Head,'release starts the separate hand-specific cast');
 }
 console.log('PASS: four independent first-ring clips, charge final hold, hand-specific release');
+
+// The game must sample the same authored joints as the editor, even with a spell arm overlay.
+for(const stage of [1,2,3])for(const mode of ['hold','release']){
+ const name=stage===1?firstRingClip('left',mode):`${stage}륜 ${mode==='hold'?'충전':'발사'}`;
+ const clip={...makeWalk(2,400),name,binding:name};
+ stores.set(motionStorageKey('ice'),JSON.stringify({version:1,rigVersion:7,actions:[clip]}));
+ blendPuppet.magic.reset();blendPuppet.magic.mode=mode;blendPuppet.magic.stage=stage;blendPuppet.magic.phaseElapsed=.2;blendPuppet.magic.elapsed=.2;blendPuppet.basicAttack=null;blendPuppet.chargeHand='left';blendPuppet.bodyFollow=null;
+ blendPuppet.icePose=[{hand:'right',dir:new T.Vector3(1,0,0),weight:1,reach:.6,height:1.42}];
+ projectWizard(iceWizard,camera);
+ const expected=samplePose(clip,.2*clip.fps);
+ for(const n of JOINTS)assert.ok(blendPuppet.lastPositions[n].distanceTo(new T.Vector3(...expected[n]))<1e-8,`${name}: editor and game agree at ${n}`);
+}
+console.log('PASS: identical editor/game authored joints for all charge and release stages');

@@ -15,3 +15,7 @@ for(const time of [0,.15,.35,.7]){
  for(const [n,p] of Object.entries(puppet.lastPositions))assert.ok(Math.abs(p.y-original[n].y)<1e-9,'turning does not change pelvis or foot height');
 }
 console.log('PASS: staggered turning, angle limits, original animation preserved, no foot planting or pelvis height correction');
+
+const neckPose={Hips:new T.Vector3(0,1,0),Spine:new T.Vector3(0,1.4,0),Neck:new T.Vector3(.08,1.7,.06),Head:new T.Vector3(.12,1.9,.15)};
+const neckLength=neckPose.Neck.distanceTo(neckPose.Head);turn.apply(neckPose);
+assert.ok(Math.abs(neckPose.Neck.distanceTo(neckPose.Head)-neckLength)<1e-9,'neck and head rotate together');

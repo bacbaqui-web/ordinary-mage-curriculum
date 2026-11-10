@@ -68,11 +68,11 @@ export class MotionPuppet{
    if(this.basicAttack.time>=duration)this.basicAttack=null;
    else if(clip){const basic=readPose(this.basicAttack.name,this.basicAttack.time);for(const [n,a] of Object.entries(basic))positions[n]=new T.Vector3(...a);positions.LeftToe=positions.LeftFoot.clone().add(new T.Vector3(0,0,.22));positions.RightToe=positions.RightFoot.clone().add(new T.Vector3(0,0,.22));basicEdited=true;}
   }
-  const magicClip=readMotion(magicClipName(this.magic.stage,'release'))||readMotion('마법 시전');this.magic.splitRelease=!!readMotion(magicClipName(this.magic.stage,'release'));this.magic.releaseDuration=magicClip?Math.max(10/12,magicClip.frames/magicClip.fps):10/12;
+  const releaseName=this.chargeHand&&this.magic.stage===1?firstRingClip(this.chargeHand,'release'):magicClipName(this.magic.stage,'release');const magicClip=readMotion(releaseName)||readMotion('마법 시전');this.magic.splitRelease=!!readMotion(releaseName);this.magic.releaseDuration=magicClip?Math.max(10/12,magicClip.frames/magicClip.fps):10/12;
   this.bodyFollow?.apply(positions,this.group);
   for(const n of Object.keys(positions))this.group.localToWorld(positions[n]);
   // Basic ice casts own the arm pose, after saved clips and body turning.
-  if(this.icePose?.length&&!basicEdited){for(const side of ['Left','Right']){const shoulder=positions[side+'Arm'],elbow=positions[side+'ForeArm'],hand=positions[side+'Hand'];elbow.copy(shoulder).add(new T.Vector3(0,-.32,0));hand.copy(shoulder).add(new T.Vector3(0,-.64,0));const pose=this.icePose.find(p=>p.hand===side.toLowerCase());if(pose){const w=Math.max(0,Math.min(1,pose.weight));elbow.lerp(shoulder.clone().addScaledVector(pose.dir,.29).add(new T.Vector3(0,-.08,0)),w);const end=new T.Vector3().setFromMatrixPosition(this.group.matrixWorld).setY(pose.height??1.42).addScaledVector(pose.dir,pose.reach??.60);hand.lerp(end,w);}}}
+  if(this.icePose?.length&&!edited&&!basicEdited){for(const side of ['Left','Right']){const shoulder=positions[side+'Arm'],elbow=positions[side+'ForeArm'],hand=positions[side+'Hand'];elbow.copy(shoulder).add(new T.Vector3(0,-.32,0));hand.copy(shoulder).add(new T.Vector3(0,-.64,0));const pose=this.icePose.find(p=>p.hand===side.toLowerCase());if(pose){const w=Math.max(0,Math.min(1,pose.weight));elbow.lerp(shoulder.clone().addScaledVector(pose.dir,.29).add(new T.Vector3(0,-.08,0)),w);const end=new T.Vector3().setFromMatrixPosition(this.group.matrixWorld).setY(pose.height??1.42).addScaledVector(pose.dir,pose.reach??.60);hand.lerp(end,w);}}}
   if(this.blendTransitions){
    const clip=readMotion(motionName),time=this.editorActionTime??(motionName==='대기'?this.idleTime||0:this.time);
    const cycle=this.magic.mode==='idle'&&clip?Math.floor(time/(clip.frames/clip.fps)):0;

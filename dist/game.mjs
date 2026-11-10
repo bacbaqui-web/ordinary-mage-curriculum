@@ -1,5 +1,5 @@
 import {chargeMoveScale} from './magic-motion.mjs';
-import {createWizard,animateWizard,projectWizard} from './wizard.mjs?v=click-timing-1';
+import {createWizard,animateWizard,projectWizard} from './wizard.mjs?v=pose-speed-1';
 import {groundSpec,groundPoint,inGround,advanceGround} from './ground.mjs?v=zones1';
 import {projectileAsset,groundAsset} from './effect-map.mjs?v=zones1';
 import {PixelVFX} from './pixel-vfx.mjs?v=zones1';

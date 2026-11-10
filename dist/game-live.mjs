@@ -1,21 +1,21 @@
 import {attackCooldown} from './attack-cooldown.mjs';
-import {wardTouches,setCombatCamera} from './combat-hit.mjs?v=click-timing-1';
-import {HitboxView} from './hitbox-view.mjs?v=click-timing-1';
+import {wardTouches,setCombatCamera} from './combat-hit.mjs?v=pose-speed-1';
+import {HitboxView} from './hitbox-view.mjs?v=pose-speed-1';
 import {LevelUpVfx} from './level-up-vfx.mjs?v=screenhit10';
 import {FrostVisuals} from './frost-visuals.mjs?v=screenhit10';
 import {ICE_BASIC} from './ice-basic.mjs?v=click-timing-1';
-import {SpaceSkill,SPACE_SKILLS,interceptSpaceShots} from './space-skills.mjs?v=click-timing-1';
-import {SpaceVisuals} from './space-visuals.mjs?v=click-timing-1';
+import {SpaceSkill,SPACE_SKILLS,interceptSpaceShots} from './space-skills.mjs?v=pose-speed-1';
+import {SpaceVisuals} from './space-visuals.mjs?v=pose-speed-1';
 import {CHARACTERS,characterFor,chooseCharacter,chooseSupport} from './character-loadout.mjs';
 import {GameAudio} from './game-audio.mjs?v=sync5';
 import {damageSummary} from './damage-display.mjs?v=damage18';
-import {Duel,STEP} from './duel.mjs?v=click-timing-1';
-import {mountPvpUI} from './pvp-ui.mjs?v=click-timing-1';
+import {Duel,STEP} from './duel.mjs?v=pose-speed-1';
+import {mountPvpUI} from './pvp-ui.mjs?v=pose-speed-1';
 import {OBSTACLES} from './arena-rules.mjs';
 let onlineCore=null,pvp=null,onlineResultShown=false,lastOnlineAim=0,onlineRenderAt=0,onlinePrevious=null;
 import {redLightningPlacement} from './red-lightning-spec.mjs?v=bolt17';
 import {steamPlacement} from './steam-spec.mjs?v=bolt17';
-import {BurnVisuals,applyBurnVisual} from './burn-visuals.mjs?v=click-timing-1';
+import {BurnVisuals,applyBurnVisual} from './burn-visuals.mjs?v=pose-speed-1';
 import {castWithPresentation,renderCastPresentation} from './cast-presentation.mjs?v=charge-step-1';
 import {CastRecoil,HitScreen,chargeSetback} from './combat-response.mjs?v=rim9';
 import {VisionShade} from './vision-shade.mjs';
@@ -23,13 +23,19 @@ import {CastingFeedback,ChargeCamera,impactFeedback} from './casting-feedback.mj
 import {chargeMoveScale} from './magic-motion.mjs';
 import {canSee} from './vision.mjs';
 import {fireSpec,hasFireRecipe} from './fire-spec.mjs?v=bolt17';
-import {BodyFollow} from './body-follow.mjs?v=chest-follow-4';
+import {BodyFollow} from './body-follow.mjs?v=pose-speed-1';
 import {bindDuelControls,mouseRecipe} from './duel-controls.mjs?v=continue3';
-let walkDirection={x:0,z:0},icePressHand='left';
+let walkDirection={x:0,z:0},icePressHand='left',moveSpeedScale=1;
+try{const value=Number(localStorage.getItem('mage-move-speed-v1'));if(value>=.5&&value<=2)moveSpeedScale=value;}catch{}
+const moveSpeedControl=document.getElementById('moveSpeed'),moveSpeedValue=document.getElementById('moveSpeedValue');
+moveSpeedControl.value=moveSpeedScale;moveSpeedValue.textContent=moveSpeedScale.toFixed(1)+'배';
+moveSpeedControl.onpointerup=()=>moveSpeedControl.blur();
+moveSpeedControl.oninput=()=>{const value=Number(moveSpeedControl.value);if(!Number.isFinite(value))return;moveSpeedScale=Math.max(.5,Math.min(2,value));moveSpeedValue.textContent=moveSpeedScale.toFixed(1)+'배';try{localStorage.setItem('mage-move-speed-v1',String(moveSpeedScale));}catch{}};
+
 const slotLabel=k=>({q:'기본',w:'좌클릭',e:'우클릭'}[k]);
-import {createWizard,animateWizard,projectWizard,setWizardCharacter} from './wizard.mjs?v=click-timing-1';
+import {createWizard,animateWizard,projectWizard,setWizardCharacter} from './wizard.mjs?v=pose-speed-1';
 import {QueuedCharge} from './queued-charge.mjs?v=click-timing-1';
-import {LiveMagic} from './live-magic.mjs?v=click-timing-1';
+import {LiveMagic} from './live-magic.mjs?v=pose-speed-1';
 import {spellReach} from './live-spells.mjs?v=bolt17';
 import {describe as describeDesign} from './combo-design.mjs?v=bolt17';
 import {MeshFeedback} from './mesh-feedback.mjs';
@@ -267,7 +273,7 @@ function update(dt){clock+=dt;updateHunt(dt);
  for(const a of[player,enemy,...monsters.filter(m=>!m.dead)]){if(a.motion.active){const step=a.motion.tick(dt),count=Math.max(1,Math.ceil(Math.hypot(step.x,step.z)/.08));for(let i=0;i<count;i++){const dx=step.x/count,dz=step.z/count;if(collides(a.x+dx,a.z+dz)||wallBlocks(a,{x:a.x+dx,z:a.z+dz})){a.motion.clear();break;}a.x+=dx;a.z+=dz;}}}
 const spaceStep=roll.tick(dt,player,{targets:()=>[enemy,...monsters.filter(m=>!m.dead)],clearPath:(a,b)=>clearPath(a,b),hit:(a,d,v,f,o)=>hit(a,d,new T.Vector3(v.x,0,v.z),f,o)});charge.tick(spaceStep.chargeDt);const queuedBasic=charge.takeRelease();if(queuedBasic)cast(queuedBasic);const chargeSpeed=chargeMoveScale(charge.active,charge.parts.length);const rolling=spaceStep.chargeDt<dt;const beforeX=player.x,beforeZ=player.z;if(rolling){for(let i=0;i<8;i++)move(player,spaceStep.x/8,spaceStep.z/8);}if(!roll.active&&roll.pendingRelease){roll.pendingRelease=false;const result=charge.requestRelease();if(result)cast(result);}
 player.cool=Math.max(0,player.cool-dt);player.iceCastLock=Math.max(0,(player.iceCastLock||0)-dt);player.iceLeftCool=Math.max(0,(player.iceLeftCool||0)-dt);player.iceRightCool=Math.max(0,(player.iceRightCool||0)-dt);player.mana=bot?Math.min(100,player.mana+dt*(charge.active?3:10)):100;
- if(!(player.iceCastLock>0)&&!rolling&&!player.motion.active&&!player.recoil?.active&&chargeSpeed>0){const speed=4.4*(roll.speedBoost?1.35:1)*chargeSpeed*(player.frostSlow>0?.35:player.slow>0?.55:1);move(player,walkDirection.x*dt*speed,walkDirection.z*dt*speed);}
+ if(!(player.iceCastLock>0)&&!rolling&&!player.motion.active&&!player.recoil?.active&&chargeSpeed>0){const speed=4.4*moveSpeedScale*(roll.speedBoost?1.35:1)*chargeSpeed*(player.frostSlow>0?.35:player.slow>0?.55:1);move(player,walkDirection.x*dt*speed,walkDirection.z*dt*speed);}
 
  player.velocity=new T.Vector3((player.x-beforeX)/dt,0,(player.z-beforeZ)/dt);
  const facing=aim.clone().sub(new T.Vector3(player.x,0,player.z));if(facing.length()>.1)player.dir.copy(facing.normalize());
