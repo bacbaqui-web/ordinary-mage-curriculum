@@ -23,7 +23,6 @@ import {CastingFeedback,ChargeCamera,impactFeedback} from './casting-feedback.mj
 import {chargeMoveScale} from './magic-motion.mjs';
 import {canSee} from './vision.mjs';
 import {fireSpec,hasFireRecipe} from './fire-spec.mjs?v=bolt17';
-import {BodyFollow} from './body-follow.mjs?v=pose-speed-1';
 import {bindDuelControls,mouseRecipe} from './duel-controls.mjs?v=continue3';
 let walkDirection={x:0,z:0},icePressHand='left',moveSpeedScale=1;
 try{const value=Number(localStorage.getItem('mage-move-speed-v1'));if(value>=.5&&value<=2)moveSpeedScale=value;}catch{}
@@ -388,9 +387,8 @@ let prev=performance.now();function frame(now){requestAnimationFrame(frame);if(o
  u.puppet.icePose=(onlineCore?onlineCore.magic:liveMagic).pose(iceOwner);
  if(!u.puppet.icePose.length&&charging)u.puppet.icePose=[{hand:stage===1?u.puppet.chargeHand:'right',dir:a.dir.clone(),weight:1,reach:stage===1&&u.puppet.chargeUsesIce?.6:.38,height:stage===1&&u.puppet.chargeUsesIce?1.42:1}];
  const iceFacing=u.puppet.icePose[0]?.dir,displayDir=iceFacing||a.dir;
- u.puppet.bodyFollow??=new BodyFollow();
- if(iceFacing){a.g.rotation.y=Math.atan2(displayDir.x,displayDir.z);u.body.rotation.set(0,0,0);u.puppet.bodyFollow.ready=false;}
- u.puppet.bodyFollow.update(step,{aim:Math.atan2(displayDir.x,displayDir.z)});
+ if(iceFacing){a.g.rotation.y=Math.atan2(displayDir.x,displayDir.z);u.body.rotation.set(0,0,0);}
+ u.puppet.bodyFollow=null;
  u.animationPosition={x:a.x,z:a.z};projectWizard(a.g,camera);iceEngine.syncHands(iceOwner,u.puppet);
  const runes=a===player?loadout:enemyLoadout,parts=a===player?charge.parts:enemyCharge.charge.parts,colors=parts.map(k=>RUNES[runes[k]]?.color||'#ffffff');
  castingFeedback.charge(a,charging,stage||1,colors,u.puppet.lastPositions,camera);
