@@ -8,12 +8,7 @@ export class QueuedCharge {
  begin(){if(this.active||!this.queue.length)return false;this.active=true;this.parts=[this.queue[0]];this.held=['mouse'];this.elapsed=0;this.progress=0;return true;}
  tick(dt){if(!this.active)return;if(this.pending){this.pending.time+=Math.max(0,dt);return;}this.elapsed=Math.min(this.queue.length*RING_SECONDS,this.elapsed+Math.max(0,dt));const index=Math.min(this.queue.length-1,Math.floor(this.elapsed/RING_SECONDS));this.parts=this.queue.slice(0,index+1);this.progress=Math.min(1,(this.elapsed-index*RING_SECONDS)/RING_SECONDS);}
  disrupt(seconds){if(this.pending)return 0;if(!this.active||seconds<=0)return 0;const before=this.elapsed;this.elapsed=Math.max(0,this.elapsed-seconds);this.tick(0);return before-this.elapsed;}
- requestRelease(){
-  if(this.pending)return null;
-  const elapsed=this.elapsed,result=this.release();if(!result||result.parts.length>1)return result;
-  this.active=true;this.queue=[...result.parts];this.parts=[...result.parts];this.elapsed=elapsed;
-  this.pending={result:{...result,timed:true},time:0,chargeRemaining:Math.max(0,2/12-elapsed)};return null;
- }
+ requestRelease(){return this.release();}
  get releasePose(){return !!this.pending&&this.pending.time+1e-8>=this.pending.chargeRemaining;}
  takeRelease(){if(!this.pending||this.pending.time+1e-8<this.pending.chargeRemaining+2/12)return null;const result=this.pending.result;this.clear();return result;}
  next(){return this.queue[Math.min(this.parts.length,this.queue.length-1)];}
