@@ -14,7 +14,7 @@ import {CHARACTERS,characterFor,chooseCharacter,chooseSupport} from './character
 import {GameAudio} from './game-audio.mjs?v=sync5';
 import {damageSummary} from './damage-display.mjs?v=damage18';
 import {Duel,STEP} from './duel.mjs?v=movement-settings-1';
-import {mountPvpUI} from './pvp-ui.mjs?v=movement-settings-1';
+import {mountPvpUI} from './pvp-ui.mjs?v=compact-selection-1';
 import {OBSTACLES} from './arena-rules.mjs';
 let onlineCore=null,pvp=null,onlineResultShown=false,lastOnlineAim=0,onlineRenderAt=0,onlinePrevious=null;
 import {redLightningPlacement} from './red-lightning-spec.mjs?v=bolt17';
@@ -56,7 +56,7 @@ import {RUNES,KEYS,DEFAULT_LOADOUT,validLoadout,assignRune,mapSequence,spellName
 let loadout={...DEFAULT_LOADOUT};try{const saved=JSON.parse(localStorage.getItem('mage-loadout-v1'));if(validLoadout(saved))loadout=saved}catch{}
 loadout=chooseCharacter(loadout,characterFor(loadout).id);
 let progress=createProgress(loadout),monsters=[],spawnTimer=0,monsterId=0;
-let draft={...loadout},activeSlot='w',selectionReturn=false;
+let draft={...loadout},selectionReturn=false;
 const $=id=>document.getElementById(id),canvas=$('arena');
 const gameAudio=new GameAudio();
 const soundButton=document.createElement('button');soundButton.id='soundToggle';document.querySelector('.actions').prepend(soundButton);
@@ -325,21 +325,19 @@ function ui(){const movement=readMovement(characterFor(loadout).id);moveSpeedSca
  const end=new T.Vector3(player.x, .08,player.z).addScaledVector(player.dir,charge.active?7:3);aimLine.geometry.dispose();aimLine.geometry=new T.BufferGeometry().setFromPoints([new T.Vector3(player.x,.08,player.z),end]);aimLine.visible=running&&!finished;
 }
 function syncLoadout(){$('playerName').textContent=characterFor(loadout).name;for(const k of KEYS){const r=RUNES[loadout[k]],node=$('key-'+k);node.style.setProperty('--key',r.color);node.querySelector('.glyph').textContent=r.icon;node.querySelector('b').textContent=r.name;node.querySelector('small').textContent=r.hint;}}
+const portraitCrops={fire:[325,35,140],ice:[305,25,145],lightning:[300,20,160],earth:[285,10,160],poison:[290,5,160],barrier:[330,35,140],field:[290,5,150],pull:[300,0,150],slash:[310,15,150],impact:[320,5,140]};
 function renderSelection(){
- const character=characterFor(draft);const skill=SPACE_SKILLS[character.rune];
- $('characterPicker').innerHTML=CHARACTERS.map(c=>`<button type="button" class="character-card" data-character="${c.id}" aria-label="${c.name} ${RUNES[c.rune].name} 캐릭터" aria-pressed="${c.id===character.id}" style="--rune:${c.color}"><img src="${c.image}" alt="" width="160" height="160"><span><b>${c.name}</b><small>${RUNES[c.rune].icon} ${RUNES[c.rune].name}</small></span></button>`).join('');
- $('characterDetail').innerHTML=`<b>${character.name} · ${character.job}</b><span>${character.line}</span>${character.rune==='i'?'<span class="space-description">좌클릭: 왼손 얼음탄 · 우클릭: 오른손 얼음안개(1.2초 지속 피해) · 얼음탄은 준비 후 발사 · 안개 사용 중 이동 불가</span>':''}<span class="space-description"><b>Space · ${skill.name}</b> ${skill.desc} 재사용 ${skill.cooldown}초 · 사용 중 충전 일시정지</span>`;
-
- $('slotPicker').innerHTML=KEYS.map(k=>{const r=RUNES[draft[k]];return `<button type="button" class="slot-btn" data-slot="${k}" ${k==='q'?'data-fixed="true" disabled':''} aria-pressed="${k===activeSlot}" aria-label="${slotLabel(k)} 슬롯 ${r.name}" style="--rune:${r.color}"><kbd>${slotLabel(k)}</kbd><span class="slot-glyph">${r.icon}</span><b>${r.name}${k==='q'?' · 전문':''}</b></button>`}).join('');
- $('runePicker').innerHTML=Object.entries(RUNES).map(([id,r])=>{const assigned=KEYS.find(k=>draft[k]===id);return `<button type="button" class="rune-btn" data-rune="${id}" ${id===draft.q?'data-fixed="true" disabled':''} aria-label="${r.name} 선택" aria-pressed="${!!assigned}" style="--rune:${r.color}"><span class="rune-symbol">${r.icon}</span><strong>${r.name}</strong>${assigned?`<span class="assigned">${slotLabel(assigned)}</span>`:''}<small>${r.desc}</small></button>`}).join('');
- $('selectionMessage').textContent=slotLabel(activeSlot)+'에 연결할 보조 마법을 고르세요. 전문 마법은 고정됩니다.';
- $('comboPreview').innerHTML=[['q','w'],['q','e'],['q','w','e']].map(keys=>`<span class="preview-item"><b>${keys.length===3?'양쪽 길게':keys[1]==='w'?'좌클릭 길게':'우클릭 길게'}</b>${spellName(mapSequence(keys,draft),NAMES)}</span>`).join('');
+ const character=characterFor(draft);
+ $('characterPicker').innerHTML=CHARACTERS.map(c=>{const [x,y,size]=portraitCrops[c.id];return `<button type="button" class="character-card" data-character="${c.id}" aria-label="${c.name} ${RUNES[c.rune].name} 캐릭터" aria-pressed="${c.id===character.id}" style="--rune:${c.color}"><span class="character-face"><img src="${c.image}" alt="" style="width:${480/size*100}%;left:${-x/size*100}%;top:${-y/size*100}%"></span><span class="character-name"><b>${c.name}</b></span></button>`;}).join('');
+ $('runePicker').innerHTML=Object.entries(RUNES).map(([id,r])=>{const assigned=KEYS.find(k=>draft[k]===id);return `<button type="button" class="rune-btn" data-rune="${id}" ${id===draft.q?'data-fixed="true" disabled':''} aria-label="${r.name}${assigned?' · '+slotLabel(assigned):''}" aria-pressed="${!!assigned}" title="${id===draft.q?'전문 마법':'좌클릭: 왼쪽에 배정 · 우클릭: 오른쪽에 배정'}" style="--rune:${r.color}"><span class="rune-symbol">${r.icon}</span><strong>${r.name}</strong>${assigned?`<span class="assigned">${slotLabel(assigned)}</span>`:''}</button>`;}).join('');
 }
-$('characterPicker').onclick=e=>{const b=e.target.closest('[data-character]');if(!b||pvp?.locked)return;draft=chooseCharacter(draft,b.dataset.character);activeSlot='w';renderSelection();};
-function openSelection(){if(onlineCore){pvp.showRoom();return;}selectionReturn=running&&!finished;pause(true);charge.clear();draft={...loadout};activeSlot='w';$('intro').classList.add('hidden');$('result').classList.add('hidden');$('cancelSelection').classList.toggle('hidden',!selectionReturn);$('confirmSelection').textContent=running?'이 마법으로 새 결투 시작 ↗':'선택한 마법으로 시작 ↗';$('selection').classList.remove('hidden');renderSelection();}
+$('characterPicker').onclick=e=>{const b=e.target.closest('[data-character]');if(!b||pvp?.locked)return;draft=chooseCharacter(draft,b.dataset.character);renderSelection();pvp?.refresh();};
+function openSelection(){if(onlineCore){pvp.showRoom();return;}selectionReturn=running&&!finished;pause(true);charge.clear();draft={...loadout};$('intro').classList.add('hidden');$('result').classList.add('hidden');$('cancelSelection').classList.toggle('hidden',!selectionReturn);$('confirmSelection').textContent='시작';$('selection').classList.remove('hidden');renderSelection();}
 function cancelSelection(){$('selection').classList.add('hidden');if(selectionReturn)pause(false)}
- $('slotPicker').onclick=e=>{const b=e.target.closest('[data-slot]');if(b&&!pvp?.locked&&b.dataset.slot!=='q'){activeSlot=b.dataset.slot;renderSelection()}};
- $('runePicker').onclick=e=>{const b=e.target.closest('[data-rune]');if(b&&!pvp?.locked){draft=chooseSupport(draft,activeSlot,b.dataset.rune);renderSelection()}};
+function assignSupportFromEvent(e,slot){const b=e.target.closest('[data-rune]');if(!b||b.disabled||pvp?.locked)return;draft=chooseSupport(draft,slot,b.dataset.rune);renderSelection();pvp?.refresh();$('runePicker').querySelector(`[data-rune="${b.dataset.rune}"]`)?.focus();}
+ $('runePicker').onclick=e=>assignSupportFromEvent(e,'w');
+ $('runePicker').oncontextmenu=e=>{e.preventDefault();assignSupportFromEvent(e,'e');};
+ $('runePicker').onkeydown=e=>{if(e.shiftKey&&e.key==='Enter'){e.preventDefault();assignSupportFromEvent(e,'e');}};
  $('confirmSelection').onclick=()=>{if(!validLoadout(draft))return;loadout={...draft};try{localStorage.setItem('mage-loadout-v1',JSON.stringify(loadout))}catch{}syncLoadout();reset();running=true;$('selection').classList.add('hidden');const first=KEYS.find(k=>progress.ranks[k]);flash('기본 공격 · '+RUNES[loadout[first]].name+' 습득 · 몬스터를 처치해 나머지 마법을 배우세요.');};
  $('cancelSelection').onclick=cancelSelection;$('choose').onclick=openSelection;$('resultChoose').onclick=openSelection;
 
@@ -409,7 +407,7 @@ function stopOnline(){
  running=false;bot=true;reset();running=false;paused=false;onlineResultShown=false;
  for(const id of ['botToggle','pause','reset','choose','help'])$(id).disabled=false;
  $('again').textContent='같은 마법으로 재대결';$('resultChoose').textContent='마법 바꾸기';$('result').classList.add('hidden');
- draft={...loadout};renderSelection();$('confirmSelection').textContent='선택한 마법으로 시작';
+ draft={...loadout};renderSelection();$('confirmSelection').textContent='시작';
 }
 pvp=mountPvpUI({
  loadout:()=>({...draft}),open:openSelection,mode:mode=>{$('cancelSelection').classList.toggle('hidden',mode==='pvp'||!selectionReturn);},stop:stopOnline,
@@ -428,5 +426,4 @@ pvp=mountPvpUI({
 const offlineAgain=$('again').onclick,offlineResultChoose=$('resultChoose').onclick;
 $('again').onclick=()=>{if(pvp.connected)pvp.showRoom();else offlineAgain();};
 $('resultChoose').onclick=()=>{if(pvp.connected)pvp.showRoom();else offlineResultChoose();};
-const oldSlotClick=$('slotPicker').onclick,oldRuneClick=$('runePicker').onclick;
-$('slotPicker').onclick=e=>{oldSlotClick(e);pvp.refresh();};$('runePicker').onclick=e=>{oldRuneClick(e);pvp.refresh();};
+
