@@ -321,7 +321,7 @@ function ui(){const movement=readMovement(characterFor(loadout).id);moveSpeedSca
  $('orbs').innerHTML=(charge.active&&charge.elapsed>=.22?charge.queue:[]).map((k,i)=>{const amount=charge.active?Math.max(0,Math.min(1,charge.elapsed/1.2-i)):0;return `<div class="orb" style="--c:${RUNES[loadout[k]].color};--p:${amount*100}%"><span>${RUNES[loadout[k]].icon}</span></div>`}).join('');
  if(charge.queue.length){$('spellName').textContent=spellName(mapSequence(charge.queue,loadout));}
 
- 
+
  const end=new T.Vector3(player.x, .08,player.z).addScaledVector(player.dir,charge.active?7:3);aimLine.geometry.dispose();aimLine.geometry=new T.BufferGeometry().setFromPoints([new T.Vector3(player.x,.08,player.z),end]);aimLine.visible=running&&!finished;
 }
 function syncLoadout(){$('playerName').textContent=characterFor(loadout).name;for(const k of KEYS){const r=RUNES[loadout[k]],node=$('key-'+k);node.style.setProperty('--key',r.color);node.querySelector('.glyph').textContent=r.icon;node.querySelector('b').textContent=r.name;node.querySelector('small').textContent=r.hint;}}
