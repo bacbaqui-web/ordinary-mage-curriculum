@@ -1,6 +1,6 @@
 export const ICE_RECIPES={
  iq:['서리안개','넓은 흰 안개와 얼음가루를 뿜습니다. 피해 없이 안에 있는 적의 이동 속도를 낮춥니다.'],
- ii:['고드름','빠르고 날카로운 고드름을 직선으로 발사합니다. 빙결 숙련 2부터 좌클릭 1륜 충전을 마치면 사용할 수 있습니다.'],
+ ii:['고드름','빠르고 날카로운 고드름을 직선으로 발사합니다. 빙결 숙련 2부터 좌클릭을 유지하면 빙결 륜이 하나씩 충전됩니다. 두 륜을 모두 채운 뒤 놓으면 발사합니다.'],
  il:['얼음벼락','예고 원이 나타난 뒤 위에서 얼음이 빠르게 꽂힙니다. 적중하면 느려집니다.'],
  id:['빙산','전방에 빙산이 솟아 적을 밀어내고 잠시 길을 막습니다.'],
  ip:['동상','초록빛 냉기를 뿜습니다. 맞은 몸에 녹색 서리가 오래 남아 둔화가 지속됩니다.'],
@@ -13,4 +13,3 @@ export const ICE_RECIPES={
 };
 export const hasIceRecipe=seq=>Object.hasOwn(ICE_RECIPES,seq);
 export function iceSpec(seq,power=1){if(!hasIceRecipe(seq))return null;const op=seq[1];return {seq,op,name:ICE_RECIPES[seq][0],power,damage:({q:0,i:12,l:10,d:8,p:4,e:0,t:5,w:7,g:1,s:9,h:12}[op])*power,range:({q:3.8,i:8.5,l:7,d:2.5,p:3,e:6,t:6,w:8,g:6,s:3,h:3}[op]),radius:({q:3.8,i:.16,l:1.25,d:1.5,p:3,e:1.8,t:2.6,w:1.35,g:2.8,s:3,h:.7}[op]),life:({q:3,e:4.5,t:4,g:3,p:.55}[op]||.6),slow:({q:.8,i:2,l:2.5,d:1,p:5,e:1,t:.8,w:1.8,g:1,s:1.2,h:1}[op]),speed:op==='i'?30:op==='w'?8:9};}
-export function promoteIceBasic(spell,{hand='left',rank=1,completedRings=0}={}){if(spell.sequence!=='i'||hand!=='left'||rank<2||completedRings<1)return spell;return {...spell,sequence:'ii',name:'고드름',power:1.76,cost:15,tap:false,iceHand:undefined,upgradedIce:true};}

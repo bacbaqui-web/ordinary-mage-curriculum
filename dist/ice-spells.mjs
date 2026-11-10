@@ -1,5 +1,5 @@
 import * as T from './three.module.js';
-import {iceSpec,hasIceRecipe} from './ice-spec.mjs?v=ice2';
+import {iceSpec,hasIceRecipe} from './ice-spec.mjs?v=ice-charge-2';
 import {crossesWard} from './forces.mjs';
 const V=(x=0,y=0,z=0)=>new T.Vector3(x,y,z);
 export class IceSpells{

@@ -1,5 +1,5 @@
 import {CHARACTERS} from './characters.mjs';
-import {KEYS,RUNES,validLoadout,assignRune} from './live-loadout.mjs?v=ice2';
+import {KEYS,RUNES,validLoadout,assignRune} from './live-loadout.mjs?v=ice-charge-2';
 export {CHARACTERS};
 export const characterFor=loadout=>CHARACTERS.find(c=>c.rune===loadout.q)||CHARACTERS[0];
 // Preserve the two support choices where possible when the main rune changes.

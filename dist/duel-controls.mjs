@@ -1,7 +1,8 @@
 import {MOVEMENT_KEYS,movementDirection} from './keyboard-movement.mjs';
-export function mouseRecipe(buttons,ranks){
+export function mouseRecipe(buttons,ranks,loadout=null){
  const base=ranks.q?'q':['w','e'].find(k=>ranks[k]);
  if(!base)return [];
+ if(buttons===1&&loadout?.q==='i'&&ranks.q>=2)return ['q','q'];
  return [base,...(buttons&1&&ranks.w&&base!=='w'?['w']:[]),...(buttons&2&&ranks.e&&base!=='e'?['e']:[])];
 }
 export function bindDuelControls(canvas,target,{enabled,begin,release,cancel,walk}){

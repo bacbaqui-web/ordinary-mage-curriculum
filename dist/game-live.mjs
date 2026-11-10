@@ -1,4 +1,4 @@
-import {promoteIceBasic,hasIceRecipe,iceSpec} from './ice-spec.mjs?v=ice2';
+import {hasIceRecipe,iceSpec} from './ice-spec.mjs?v=ice-charge-2';
 import {HealthHUD} from './health-hud.mjs?v=health-hud-1';
 import {renderSkillUpgrades} from './skill-upgrades.mjs?v=ice2';
 import {readMovement} from './character-movement.mjs?v=turn-rates-1';
@@ -11,32 +11,32 @@ import {FrostVisuals} from './frost-visuals.mjs?v=ice2';
 import {ICE_BASIC} from './ice-basic.mjs?v=click-timing-1';
 import {SpaceSkill,SPACE_SKILLS,interceptSpaceShots} from './space-skills.mjs?v=turn-rates-1';
 import {SpaceVisuals} from './space-visuals.mjs?v=turn-rates-1';
-import {CHARACTERS,characterFor,chooseCharacter,chooseSupport} from './character-loadout.mjs?v=ice2';
+import {CHARACTERS,characterFor,chooseCharacter,chooseSupport} from './character-loadout.mjs?v=ice-charge-2';
 import {GameAudio} from './game-audio.mjs?v=sync5';
 import {damageSummary} from './damage-display.mjs?v=ice2';
-import {Duel,STEP} from './duel.mjs?v=turn-rates-1';
-import {mountPvpUI} from './pvp-ui.mjs?v=turn-rates-1';
+import {Duel,STEP} from './duel.mjs?v=ice-charge-2';
+import {mountPvpUI} from './pvp-ui.mjs?v=ice-charge-2';
 import {OBSTACLES} from './arena-rules.mjs';
 let onlineCore=null,pvp=null,onlineResultShown=false,lastOnlineAim=0,onlineRenderAt=0,onlinePrevious=null;
 import {redLightningPlacement} from './red-lightning-spec.mjs?v=bolt17';
 import {steamPlacement} from './steam-spec.mjs?v=bolt17';
 import {BurnVisuals,applyBurnVisual} from './burn-visuals.mjs?v=turn-rates-1';
-import {castWithPresentation,renderCastPresentation} from './cast-presentation.mjs?v=ice2';
+import {castWithPresentation,renderCastPresentation} from './cast-presentation.mjs?v=ice-charge-2';
 import {CastRecoil,HitScreen,chargeSetback} from './combat-response.mjs?v=rim9';
 import {VisionShade} from './vision-shade.mjs';
 import {CastingFeedback,ChargeCamera,impactFeedback} from './casting-feedback.mjs?v=screenhit10';
 import {chargeMoveScale} from './magic-motion.mjs';
 import {canSee} from './vision.mjs';
 import {fireSpec,hasFireRecipe} from './fire-spec.mjs?v=bolt17';
-import {bindDuelControls,mouseRecipe} from './duel-controls.mjs?v=continue3';
+import {bindDuelControls,mouseRecipe} from './duel-controls.mjs?v=ice-charge-2';
 let walkDirection={x:0,z:0},icePressHand='left',moveSpeedScale=1;
 
 const slotLabel=k=>({q:'기본',w:'좌클릭',e:'우클릭'}[k]);
 import {createWizard,animateWizard,projectWizard,setWizardCharacter} from './wizard.mjs?v=turn-rates-1';
-import {QueuedCharge} from './queued-charge.mjs?v=click-timing-1';
-import {LiveMagic} from './live-magic.mjs?v=turn-rates-1';
-import {spellReach} from './live-spells.mjs?v=ice2';
-import {describe as describeDesign} from './combo-design.mjs?v=ice2';
+import {QueuedCharge} from './queued-charge.mjs?v=ice-charge-2';
+import {LiveMagic} from './live-magic.mjs?v=ice-charge-2';
+import {spellReach} from './live-spells.mjs?v=ice-charge-2';
+import {describe as describeDesign} from './combo-design.mjs?v=ice-charge-2';
 import {MeshFeedback} from './mesh-feedback.mjs';
 import {groundSpec,groundPoint,inGround,advanceGround} from './ground.mjs?v=zones1';
 import {projectileAsset,groundAsset} from './effect-map.mjs?v=zones1';
@@ -46,14 +46,14 @@ import {FALL_SECONDS,overheadDelivery,segmentCircleHit} from './delivery.mjs?v=z
 import {createProgress,awardKill,requiredXP,learn,mastery,MAX_LEVEL,MAX_RANK} from './progression.mjs?v=zones1';
 import {ForcedMotion} from './motion.mjs?v=zones1';
 import {LowPolyVFX} from './lowpoly-vfx.mjs';
-import {chooseLoadout,choosePlan,chooseLearnedPlan,spendEnemyPoints,OpponentCharge} from './live-opponent.mjs?v=ice2';
+import {chooseLoadout,choosePlan,chooseLearnedPlan,spendEnemyPoints,OpponentCharge} from './live-opponent.mjs?v=ice-charge-2';
 import {forceSpec,wardSpec,displacement,crossesWard,distanceToWard} from './forces.mjs?v=zones1';
 import {elementalSpec,inElementCone,lightningPoint,lightningHits} from './elements.mjs?v=zones1';
 const describeSpell=seq=>describeDesign(seq).steps.join(' ')+' '+damageSummary(seq)+' (완충·숙련 1·정지 표적 비교값)';
 import * as T from './three.module.js';
-import {Charge,ELEMENTS,NAMES,resolveSpell} from './live-charge-spells.mjs?v=ice2';
+import {Charge,ELEMENTS,NAMES,resolveSpell} from './live-charge-spells.mjs?v=ice-charge-2';
 import {Roll,ROLL_DURATION,incomingThreat,enemyChargeProgress} from './combat.mjs?v=zones1';
-import {RUNES,KEYS,DEFAULT_LOADOUT,validLoadout,assignRune,mapSequence,spellName,composition} from './live-loadout.mjs?v=ice2';
+import {RUNES,KEYS,DEFAULT_LOADOUT,validLoadout,assignRune,mapSequence,spellName,composition} from './live-loadout.mjs?v=ice-charge-2';
 let loadout={...DEFAULT_LOADOUT};try{const saved=JSON.parse(localStorage.getItem('mage-loadout-v1'));if(validLoadout(saved))loadout=saved}catch{}
 loadout=chooseCharacter(loadout,characterFor(loadout).id);
 let progress=createProgress(loadout),monsters=[],spawnTimer=0,monsterId=0;
@@ -221,7 +221,7 @@ function dispatchSpell(s,caster,dir,aimPoint){if(!s.timed&&(s.iceHand||s.tap))ca
  if(caster===player){chargeCamera.fire(s.sequence.length);castOverlay.style.setProperty('--cast-color',RUNES[s.sequence[0]].color);}if(!s.timed){caster.g.userData.puppet.magic.release(s.sequence?.length||1);caster.g.userData.puppet.magic.elapsed=2/12;}
 }
 
-function cast(result,iceHand=null){if(loadout.q==='i'&&result.parts.length===1&&!iceHand)iceHand=icePressHand;if(!running||paused||finished||player.knockdown>0)return;let s={...resolveSpell(result,loadout),timed:result.timed};s=promoteIceBasic(s,{hand:iceHand||icePressHand,rank:progress.ranks.q,completedRings:result.completedRings});if(s.upgradedIce){iceHand=null;if(player.iceLeftCool>0)return;}if(iceHand){s.iceHand=iceHand;s.cost=ICE_BASIC[iceHand].cost;s.name=ICE_BASIC[iceHand].name;}if(s.parts.some(k=>!progress.ranks[k]))return;s.mastery=mastery(progress,s.parts[0]);s.power*=s.mastery;if(iceHand&&(player[iceHand==='left'?'iceLeftCool':'iceRightCool']||0)>0){flash(ICE_BASIC[iceHand].name+' 재사용 '+player[iceHand==='left'?'iceLeftCool':'iceRightCool'].toFixed(1)+'초');return;}if(player.cool>0){flash('잠깐 기다려 주세요');return}if(bot&&player.mana<s.cost){flash('마력이 부족합니다. 잠시 쉬면 회복됩니다.');return}if(bot)player.mana-=s.cost;if(s.upgradedIce)player.iceLeftCool=1.8;if(iceHand)player[iceHand==='left'?'iceLeftCool':'iceRightCool']=ICE_BASIC[iceHand].cooldown;else player.cool=player.coolMax=s.tap?.16:.38;const seq=s.sequence,base=seq.slice(0,2),p=s.power,dir=player.dir.clone(),target=aim.clone();target.sub(new T.Vector3(player.x,0,player.z));if(!iceHand&&!hasIceRecipe(s.sequence)&&target.length()>6*(s.rangeScale||1))target.setLength(6*(s.rangeScale||1));target.add(new T.Vector3(player.x,0,player.z));const third=seq[2];
+function cast(result,iceHand=null){if(loadout.q==='i'&&result.parts.length===1&&!iceHand)iceHand=icePressHand;if(!running||paused||finished||player.knockdown>0)return;let s={...resolveSpell(result,loadout),timed:result.timed};if(s.sequence==='ii'){s.upgradedIce=true;iceHand=null;if(player.iceLeftCool>0)return;}if(iceHand){s.iceHand=iceHand;s.cost=ICE_BASIC[iceHand].cost;s.name=ICE_BASIC[iceHand].name;}if(s.parts.some(k=>!progress.ranks[k]))return;s.mastery=mastery(progress,s.parts[0]);s.power*=s.mastery;if(iceHand&&(player[iceHand==='left'?'iceLeftCool':'iceRightCool']||0)>0){flash(ICE_BASIC[iceHand].name+' 재사용 '+player[iceHand==='left'?'iceLeftCool':'iceRightCool'].toFixed(1)+'초');return;}if(player.cool>0){flash('잠깐 기다려 주세요');return}if(bot&&player.mana<s.cost){flash('마력이 부족합니다. 잠시 쉬면 회복됩니다.');return}if(bot)player.mana-=s.cost;if(s.upgradedIce)player.iceLeftCool=1.8;if(iceHand)player[iceHand==='left'?'iceLeftCool':'iceRightCool']=ICE_BASIC[iceHand].cooldown;else player.cool=player.coolMax=s.tap?.16:.38;const seq=s.sequence,base=seq.slice(0,2),p=s.power,dir=player.dir.clone(),target=aim.clone();target.sub(new T.Vector3(player.x,0,player.z));if(!iceHand&&!hasIceRecipe(s.sequence)&&target.length()>6*(s.rangeScale||1))target.setLength(6*(s.rangeScale||1));target.add(new T.Vector3(player.x,0,player.z));const third=seq[2];
  dispatchSpell(s,player,dir,aim);
  history.unshift({name:s.name,seq:s.keys.toUpperCase(),tier:seq.length===1?'1륜':seq.length===2?'2륜':'2륜 복합'});history=history.slice(0,4);$('spellName').textContent=s.name;
 }
@@ -245,8 +245,8 @@ function sendWalk(){if(!onlineCore||!pvp?.playing)return;const a=onlineCore.acto
 const controls=bindDuelControls(canvas,window,{
  enabled:()=>running&&!paused&&!finished&&!(player.knockdown>0)&&$('selection').classList.contains('hidden')&&$('intro').classList.contains('hidden'),
  walk:d=>{walkDirection=d;sendWalk();},
- begin:(buttons,e,extending)=>{if(charge.pending)return;point(e);const recipe=mouseRecipe(buttons,progress.ranks);
-  if(extending){if(onlineCore)pvp.input({action:'extend',keys:recipe});else charge.extend(recipe);return;}
+ begin:(buttons,e,extending)=>{if(charge.pending)return;point(e);const recipe=mouseRecipe(buttons,progress.ranks,onlineCore?null:loadout);
+  if(extending){if(onlineCore)pvp.input({action:'extend',keys:recipe});else if(charge.queue.join('')==='qq'&&loadout.q==='i')charge.retarget(recipe);else charge.extend(recipe);return;}
   icePressHand=buttons===2?'right':'left';
   if(onlineCore){pvp.input({action:'cancel'});for(const key of recipe)pvp.input({action:'queue',key});pvp.input({action:'begin',hand:icePressHand,point:{x:aim.x,z:aim.z}});return;}
   charge.clear();for(const key of recipe)charge.enqueue(key);charge.begin();
@@ -255,7 +255,7 @@ const controls=bindDuelControls(canvas,window,{
  cancel:()=>{if(onlineCore)pvp.input({action:'cancel'});else charge.clear();}
 });
 window.addEventListener('blur',()=>pause(true));document.addEventListener('visibilitychange',()=>{if(document.hidden)pause(true)});
-$('start').onclick=()=>{$('intro').classList.add('hidden');pause(false)};$('help').onclick=()=>{if(!running)return;pause(true);$('helpLoadout').textContent=loadout.q==='i'?'좌클릭: 왼손 얼음탄 · 우클릭: 오른손 얼음안개 · 빙결 숙련 2: 좌클릭 1.2초 충전 후 놓으면 고드름 · 얼음안개 사용 중 이동 불가':KEYS.map(k=>slotLabel(k)+' '+RUNES[loadout[k]].name).join(' · ');$('helpCombo').textContent=spellName(mapSequence(['q','w'],loadout),NAMES);$('intro').classList.remove('hidden');$('start').innerHTML='계속하기 <span>↗</span>'};$('pause').onclick=()=>pause();$('reset').onclick=()=>{if(!running)return;reset();running=true;$('intro').classList.add('hidden')};$('again').onclick=()=>{reset();running=true};$('botToggle').onclick=()=>{bot=!bot;reset();if(!bot){for(const k of KEYS)progress.ranks[k]=Math.max(1,progress.ranks[k]);renderProgress();}$('botToggle').textContent=bot?'대결 모드':'연습 모드';$('botToggle').title=bot?'연습 모드로 전환':'대결 모드로 전환';$('botToggle').classList.toggle('practice',!bot);flash(bot?'대결 모드 · 새 대결 시작':'연습 모드 · 승패 없이 조합을 연습하세요');};
+$('start').onclick=()=>{$('intro').classList.add('hidden');pause(false)};$('help').onclick=()=>{if(!running)return;pause(true);$('helpLoadout').textContent=loadout.q==='i'?'좌클릭: 왼손 얼음탄 · 우클릭: 오른손 얼음안개 · 빙결 숙련 2: 좌클릭 2.4초 충전 후 놓으면 고드름 · 얼음안개 사용 중 이동 불가':KEYS.map(k=>slotLabel(k)+' '+RUNES[loadout[k]].name).join(' · ');$('helpCombo').textContent=spellName(mapSequence(['q','w'],loadout),NAMES);$('intro').classList.remove('hidden');$('start').innerHTML='계속하기 <span>↗</span>'};$('pause').onclick=()=>pause();$('reset').onclick=()=>{if(!running)return;reset();running=true;$('intro').classList.add('hidden')};$('again').onclick=()=>{reset();running=true};$('botToggle').onclick=()=>{bot=!bot;reset();if(!bot){for(const k of KEYS)progress.ranks[k]=Math.max(1,progress.ranks[k]);renderProgress();}$('botToggle').textContent=bot?'대결 모드':'연습 모드';$('botToggle').title=bot?'연습 모드로 전환':'대결 모드로 전환';$('botToggle').classList.toggle('practice',!bot);flash(bot?'대결 모드 · 새 대결 시작':'연습 모드 · 승패 없이 조합을 연습하세요');};
 function ai(dt){
  if(!bot||enemy.knockdown>0)return;enemy.retaliate=Math.max(0,(enemy.retaliate||0)-dt);enemy.cool=Math.max(0,enemy.cool-dt);enemy.mana=Math.min(100,enemy.mana+dt*(enemyCharge.active?3:10));enemy.lastSpellTime=Math.max(0,(enemy.lastSpellTime||0)-dt);
  if(!enemyCharge.active){const pd=Math.hypot(player.x-enemy.x,player.z-enemy.z);const prey=monsters.filter(m=>!m.dead&&visibleTo(enemy,m)).sort((a,b)=>Math.hypot(a.x-enemy.x,a.z-enemy.z)-Math.hypot(b.x-enemy.x,b.z-enemy.z));enemyTarget=(pd<3.5||enemy.retaliate>0&&pd<12)&&visibleTo(enemy,player)?player:prey[0]||(visibleTo(enemy,player)?player:null);}
@@ -314,7 +314,7 @@ function drawIceTell(caster,seq,border){
  }else {const cone=['q','p','s'].includes(s.op),a=Math.atan2(dir.z,dir.x),arc=cone?1.05:Math.PI;if(cone)points.push(p.clone());for(let i=0;i<=48;i++){const t=a-arc+i/48*arc*2;points.push(new T.Vector3(p.x+Math.cos(t)*s.radius,.01,p.z+Math.sin(t)*s.radius));}if(cone)points.push(p.clone());}
  border.geometry.dispose();border.geometry=new T.BufferGeometry().setFromPoints(points);border.material.color.set(s.op==='p'?0x8fe8ae:0x86dfff);border.visible=true;
 }
-function drawTell(caster,seq,fill,border){if(caster===player&&seq==='i'&&icePressHand==='left'&&progress.ranks.q>=2&&charge.elapsed>=1.2)seq='ii';if(hasIceRecipe(seq)){drawIceTell(caster,seq,border);return;}if(hasFireRecipe(seq)){drawFireTell(caster,seq,border);return;}const spec=describeDesign(seq),reference=caster===player?aim:(enemyTarget||player),range=spellReach(seq);let center={x:caster.x,z:caster.z},radius=1.2+seq.length*.25;
+function drawTell(caster,seq,fill,border){if(hasIceRecipe(seq)){drawIceTell(caster,seq,border);return;}if(hasFireRecipe(seq)){drawFireTell(caster,seq,border);return;}const spec=describeDesign(seq),reference=caster===player?aim:(enemyTarget||player),range=spellReach(seq);let center={x:caster.x,z:caster.z},radius=1.2+seq.length*.25;
 if(['field','wall','strike','coat'].includes(spec.shape)||spec.motion==='fall'||spec.motion==='pull'){const d=new T.Vector3(reference.x-caster.x,0,reference.z-caster.z);if(d.length()>range)d.setLength(range);center={x:caster.x+d.x,z:caster.z+d.z};}
 if(spec.shape==='spread')radius*=1.6;if(spec.shape==='condensed')radius*=.6;
 const points=[];if(spec.motion==='forward'){const side=new T.Vector3(-caster.dir.z,0,caster.dir.x).multiplyScalar(.55),start=new T.Vector3(caster.x,0,caster.z),end=start.clone().addScaledVector(caster.dir,range);points.push(start.clone().add(side),end.clone().add(side),end.clone().sub(side),start.clone().sub(side),start.clone().add(side));}else if(spec.shape==='wall'){const side=new T.Vector3(-caster.dir.z,0,caster.dir.x).multiplyScalar(1.6),normal=caster.dir.clone().multiplyScalar(.15),p=new T.Vector3(center.x,0,center.z);points.push(p.clone().add(side).add(normal),p.clone().sub(side).add(normal),p.clone().sub(side).sub(normal),p.clone().add(side).sub(normal),p.clone().add(side).add(normal));}else if(['q','i','w','g'].includes(seq[0])&&spec.motion==='still'&&['spread','condensed'].includes(spec.shape)){points.push(new T.Vector3(center.x,0,center.z));for(let i=0;i<=32;i++){const angle=Math.atan2(caster.dir.z,caster.dir.x)-1.1+i/32*2.2;points.push(new T.Vector3(center.x+Math.cos(angle)*radius,0,center.z+Math.sin(angle)*radius));}points.push(new T.Vector3(center.x,0,center.z));}else for(let i=0;i<=48;i++){const angle=i/48*Math.PI*2;points.push(new T.Vector3(center.x+Math.cos(angle)*radius,0,center.z+Math.sin(angle)*radius));}
@@ -332,7 +332,7 @@ function ui(){const movement=readMovement(characterFor(loadout).id);moveSpeedSca
  for(const k of['q','w','e'])$('key-'+k).classList.toggle('active',charge.queue.includes(k));
  $('orbs').parentElement.classList.toggle('charging',charge.active&&charge.elapsed>=.22);
  $('orbs').innerHTML=(charge.active&&charge.elapsed>=.22?charge.queue:[]).map((k,i)=>{const amount=charge.active?Math.max(0,Math.min(1,charge.elapsed/1.2-i)):0;return `<div class="orb" style="--c:${RUNES[loadout[k]].color};--p:${amount*100}%"><span>${RUNES[loadout[k]].icon}</span></div>`}).join('');
- if(charge.queue.length){$('spellName').textContent=loadout.q==='i'&&icePressHand==='left'&&progress.ranks.q>=2&&charge.elapsed>=1.2&&charge.elapsed<2.4?'고드름 준비':spellName(mapSequence(charge.queue,loadout));}
+ if(charge.queue.length){$('spellName').textContent=spellName(mapSequence(charge.queue,loadout));}
 
 
  const end=new T.Vector3(player.x, .08,player.z).addScaledVector(player.dir,charge.active?7:3);aimLine.geometry.dispose();aimLine.geometry=new T.BufferGeometry().setFromPoints([new T.Vector3(player.x,.08,player.z),end]);aimLine.visible=running&&!finished;
@@ -376,7 +376,7 @@ function renderProgress(){renderSkillUpgrades(document,progress,loadout,RUNES,MA
 function updateCamera(){const fit=Math.max(1,1.1/camera.aspect);camera.position.set(player.x+12*fit*chargeView.distance,17*fit*chargeView.distance,player.z+15*fit*chargeView.distance);camera.fov=chargeView.fov;camera.updateProjectionMatrix();camera.lookAt(player.x,.5*(1-chargeView.distance),player.z);const kick=hitScreen.shake(reducedShake);camera.position.x+=kick.x+chargeView.x*(reducedShake?.15:1);camera.position.y+=kick.y+chargeView.y*(reducedShake?.15:1);castOverlay.style.opacity=String((chargeView.flash||0)*(reducedShake?.35:1));camera.updateMatrixWorld();hitOverlay.style.opacity=String(hitScreen.opacity);}
 function renderHunt(){
  const c=$('minimap').getContext('2d');c.fillStyle='#17242b';c.fillRect(0,0,180,160);const p=a=>({x:(a.x+25)/50*180,y:(a.z+23)/46*160});for(const o of obstacles){const q=p(o);c.fillStyle='#637272';c.fillRect(q.x-o.w*1.8,q.y-o.h*1.74,o.w*3.6,o.h*3.48);}for(const a of [...monsters,enemy,player]){if(a.dead||a!==player&&!visibleTo(player,a))continue;const q=p(a);c.fillStyle=a===player?'#e9d393':a===enemy?'#ff837b':'#a7d878';c.beginPath();c.arc(q.x,q.y,a.monster?2.5:3.5,0,7);c.fill();}}
-for(const k of KEYS){$('key-'+k).onclick=()=>{if(!running||paused||finished||onlineCore)return;if(learn(progress,k)){charge.clear();renderProgress();flash(RUNES[loadout[k]].name+(progress.ranks[k]===1?' 습득 · 마우스 조합에 추가':' 숙련도 상승')+(k==='q'&&loadout.q==='i'&&progress.ranks.q===2?' · 좌클릭 1.2초 충전: 고드름':''));}};}
+for(const k of KEYS){$('key-'+k).onclick=()=>{if(!running||paused||finished||onlineCore)return;if(learn(progress,k)){charge.clear();renderProgress();flash(RUNES[loadout[k]].name+(progress.ranks[k]===1?' 습득 · 마우스 조합에 추가':' 숙련도 상승')+(k==='q'&&loadout.q==='i'&&progress.ranks.q===2?' · 좌클릭 2.4초 충전: 고드름':''));}};}
  syncLoadout();renderProgress();renderSelection();
 function resize(){renderer.setSize(innerWidth,innerHeight);camera.aspect=innerWidth/innerHeight;camera.fov=38;const fit=Math.max(1,1.4/camera.aspect);camera.position.set(player.x+12*fit,17*fit,player.z+15*fit);camera.far=140*fit;camera.lookAt(player.x,0,player.z);camera.updateProjectionMatrix()}window.addEventListener('resize',resize);resize();
 const hitboxView=new HitboxView(scene);$('hitboxToggle').onclick=()=>{hitboxView.enabled=!hitboxView.enabled;$('hitboxToggle').textContent=hitboxView.enabled?'히트박스 끄기':'히트박스 켜기';$('hitboxToggle').setAttribute('aria-pressed',String(hitboxView.enabled));$('hitboxNote').hidden=!hitboxView.enabled;};

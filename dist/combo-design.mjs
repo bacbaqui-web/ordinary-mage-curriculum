@@ -1,4 +1,4 @@
-import {ICE_RECIPES} from './ice-spec.mjs?v=ice2';
+import {ICE_RECIPES} from './ice-spec.mjs?v=ice-charge-2';
 import {FIRE_RECIPES} from './fire-spec.mjs?v=bolt17';
 export const RUNES={
 q:{name:'화염',icon:'✦',color:'#ff9869',body:'화염',action:'확산합니다',effect:'짧은 화상을 남깁니다'},

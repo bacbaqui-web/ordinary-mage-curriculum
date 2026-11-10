@@ -1,4 +1,4 @@
-import {plannerSpell} from './planner-spell.mjs?v=ice2';
+import {plannerSpell} from './planner-spell.mjs?v=ice-charge-2';
 import {CHARACTERS} from './characters.mjs';
 import {FrostVisuals} from './frost-visuals.mjs?v=ice2';
 import {setCombatCamera} from './combat-hit.mjs?v=turn-rates-1';
@@ -6,15 +6,15 @@ import {fireSpec,hasFireRecipe} from './fire-spec.mjs?v=bolt17';
 import {BurnVisuals,applyBurnVisual} from './burn-visuals.mjs?v=turn-rates-1';
 import {crossesWard,distanceToWard} from './forces.mjs';
 import {CastingFeedback,ChargeCamera,impactFeedback} from './casting-feedback.mjs?v=castaxis8';
-import {castWithPresentation,renderCastPresentation} from './cast-presentation.mjs?v=ice2';
+import {castWithPresentation,renderCastPresentation} from './cast-presentation.mjs?v=ice-charge-2';
 import {CastRecoil} from './combat-response.mjs?v=rim9';
 import {BodyFollow} from './body-follow.mjs?v=turn-rates-1';
 import {canSee} from './vision.mjs';
 import * as T from './three.module.js';
 import {createWizard,animateWizard,projectWizard,setWizardCharacter} from './wizard.mjs?v=turn-rates-1';
 import {LowPolyVFX} from './lowpoly-vfx.mjs';
-import {LiveMagic} from './live-magic.mjs?v=turn-rates-1';
-import {RUNES} from './combo-design.mjs?v=ice2';
+import {LiveMagic} from './live-magic.mjs?v=ice-charge-2';
+import {RUNES} from './combo-design.mjs?v=ice-charge-2';
 import {advanceMovingWard} from './moving-ward.mjs';
 import {ForcedMotion} from './motion.mjs';
 export function mountAtlasPreview(host,seq,audio={},options={}){

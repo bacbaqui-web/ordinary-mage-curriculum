@@ -1,8 +1,8 @@
-import {iceSpec,hasIceRecipe} from './ice-spec.mjs?v=ice2';
-import {plannerSpell} from './planner-spell.mjs?v=ice2';
+import {iceSpec,hasIceRecipe} from './ice-spec.mjs?v=ice-charge-2';
+import {plannerSpell} from './planner-spell.mjs?v=ice-charge-2';
 import {ICE_BASIC} from './ice-basic.mjs?v=pose-speed-1';
 import {fireSpec,hasFireRecipe} from './fire-spec.mjs?v=bolt17';
-import {compileSpell,spellReach} from './live-spells.mjs?v=ice2';
+import {compileSpell,spellReach} from './live-spells.mjs?v=ice-charge-2';
 // Distances follow the runtime's delivery rule, not the decorative particles.
 export function plannerRange(seq,options={}){
  const spell=plannerSpell(seq,options),scale=spell.rangeScale||1;
