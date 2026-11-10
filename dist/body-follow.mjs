@@ -13,7 +13,7 @@ export class BodyFollow{
   while(this.history.length>2&&this.history[1].time<this.clock-.5)this.history.shift();
   const delayed=delay=>{let value=this.history[0].aim;for(const sample of this.history){if(sample.time>this.clock-delay)break;value=sample.aim;}return value;};
   this.pelvis=follow(this.pelvis,delayed(.20),dt,.28);
-  this.chest=follow(this.chest,delayed(.09),dt,.16);this.chest=this.pelvis+clamp(angleDelta(this.chest,this.pelvis),-.7,.7);
+  this.chest=follow(this.chest,delayed(.06),dt,.12);this.chest=this.pelvis+clamp(angleDelta(this.chest,this.pelvis),-.7,.7);
   this.head=follow(this.head,aim,dt,.05);this.head=this.chest+clamp(angleDelta(this.head,this.chest),-.9,.9);
  }
  apply(p){

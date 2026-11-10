@@ -23,7 +23,7 @@ import {CastingFeedback,ChargeCamera,impactFeedback} from './casting-feedback.mj
 import {chargeMoveScale} from './magic-motion.mjs';
 import {canSee} from './vision.mjs';
 import {fireSpec,hasFireRecipe} from './fire-spec.mjs?v=bolt17';
-import {BodyFollow} from './body-follow.mjs?v=stride2';
+import {BodyFollow} from './body-follow.mjs?v=chest-follow-3';
 import {bindDuelControls,mouseRecipe} from './duel-controls.mjs?v=continue3';
 let walkDirection={x:0,z:0},icePressHand='left';
 const slotLabel=k=>({q:'기본',w:'좌클릭',e:'우클릭'}[k]);
