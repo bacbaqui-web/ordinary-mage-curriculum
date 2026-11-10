@@ -6,7 +6,7 @@ import {wardTouches} from './combat-hit.mjs?v=no-floor-rings-1';
 import {ICE_BASIC} from './ice-basic.mjs?v=forward-glow-1';
 import * as T from './three.module.js';
 import {spellAimHeight} from './cursor-aim.mjs?v=iceberg-rise-1';
-import {LiveMagic} from './live-magic.mjs?v=iceberg-rise-1';
+import {LiveMagic} from './live-magic.mjs?v=iceberg-shatter-1';
 import {QueuedCharge} from './queued-charge.mjs?v=instant-first-ring-1';
 import {SpaceSkill,interceptSpaceShots} from './space-skills.mjs?v=ice-trail-fall-1';
 import {ForcedMotion} from './motion.mjs';
@@ -19,7 +19,7 @@ import {advanceMovingWard} from './moving-ward.mjs?v=iceberg-rise-1';
 import {crossesWard,distanceToWard} from './forces.mjs?v=iceberg-rise-1';
 import {arenaCollision} from './arena-rules.mjs';
 
-export const STEP=1/30, PROTOCOL=12;
+export const STEP=1/30, PROTOCOL=13;
 const V=(x,z)=>new T.Vector3(x,0,z);
 const numeric=['iceVX','iceVZ','x','z','hp','mana','shield','shieldTime','cool','iceLeftCool','iceRightCool','iceCastLock','castControlLock','slow','frostSlow','burn','burnTick','burnDamage','poison','poisonTick','poisonDamage','wet','ashTime','greenFireTime','dustTime','knockdown','rooted','slipImmune','greenFrost','frozen'];
 const motionKeys=['elapsed','duration','x','z','distance'];

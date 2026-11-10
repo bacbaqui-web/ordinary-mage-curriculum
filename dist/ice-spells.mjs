@@ -18,12 +18,19 @@ export class IceSpells{
  if(s.op==='l'){const e=this.add('fall',s,owner,p,dir,.95),ring=this.mesh(new T.RingGeometry(s.radius-.07,s.radius,40),0x86ddff,.75);ring.rotation.x=-Math.PI/2;ring.position.y=.025;e.mesh.add(ring);e.ice=this.shard(e.mesh,0,5,0,.5);e.ice.visible=false;return true;}
  if(s.op==='d'){
  const e=this.add('iceberg',s,owner,p,dir,3),rock=new T.Group();e.mesh.add(rock);e.rock=rock;
- // Asymmetric facets form a tall boulder, rather than a wall or a row of spikes.
- const geometry=new T.IcosahedronGeometry(1,1),positions=geometry.attributes.position;
- for(let i=0;i<positions.count;i++){const x=positions.getX(i),y=positions.getY(i),z=positions.getZ(i),t=(y+1)/2,wide=1-.32*t;positions.setXYZ(i,x*1.45*wide+.18*t,(y+1)*1.65,z*1.3*wide+.12*Math.sin(y*4));}
+ // Broad triangular foot tapering to a narrow, slightly leaning peak.
+ const geometry=new T.CylinderGeometry(.035,1.55,3.3,3,3),positions=geometry.attributes.position;
+ for(let i=0;i<positions.count;i++){const x=positions.getX(i),y=positions.getY(i)+1.65,z=positions.getZ(i),t=y/3.3;positions.setXYZ(i,x+.2*t,y,z+.12*t);}
+ geometry.rotateY(.35);
  geometry.computeVertexNormals();const body=this.mesh(geometry,0x9bdbe8,.55);body.material.roughness=.2;body.material.metalness=.08;body.material.emissiveIntensity=.1;rock.add(body);
  const edges=new T.LineSegments(new T.EdgesGeometry(geometry,24),new T.LineBasicMaterial({color:0xd5f6ff,transparent:true,opacity:.32}));rock.add(edges);rock.position.y=-3.3;
- this.area(e,p,s.radius,{force:3.2,once:true});this.burst(p,s.radius);
+ this.area(e,p,s.radius,{force:3.2,once:true});
+ const cracks=new T.Group();e.mesh.add(cracks);e.cracks=cracks;
+ for(let i=0;i<9;i++){const angle=i*Math.PI*2/9,points=[V(Math.cos(angle)*.35,.035,Math.sin(angle)*.35),V(Math.cos(angle+.13)*1.15,.038,Math.sin(angle+.13)*1.15),V(Math.cos(angle-.08)*(1.8+(i%3)*.22),.04,Math.sin(angle-.08)*(1.8+(i%3)*.22))];
+ const crack=this.mesh(new T.TubeGeometry(new T.CatmullRomCurve3(points),6,.033,3,false),0x244b62,.85);cracks.add(crack);
+ const branch=[points[1],V(points[1].x+Math.cos(angle+.7)*.65,.04,points[1].z+Math.sin(angle+.7)*.65)];cracks.add(this.mesh(new T.TubeGeometry(new T.CatmullRomCurve3(branch),2,.018,3,false),0xb8f1ff,.8));}
+ cracks.scale.setScalar(.1);
+ for(let i=0;i<80;i++){const a=i*2.4,r=.4+(i%7)*.12,speed=2+(i%5)*.65;this.a.vfx.particle?.('shard',[p.x+Math.cos(a)*r,.12,p.z+Math.sin(a)*r],[Math.cos(a)*speed,2+(i%6)*.6,Math.sin(a)*speed],.025+(i%4)*.018,i%3?0xd9f8ff:0x8ad9f2,.65+(i%5)*.1,{gravity:8,stretch:1.5});}
  const ward={owner,m:e.mesh,x:p.x,z:p.z,nx:dir.x,nz:dir.z,width:2.6,radius:1.25,hp:24,maxHp:24,baseY:0,life:e.life,travelled:0,speed:0,effectCooldown:.8,spec:{moving:false,travel:0}};
  this.a.wards.push(ward);e.ward=ward;return true;
  }
@@ -57,18 +64,24 @@ export class IceSpells{
   if(time+1e-8>=s.freezeAfter&&!e.frozen.has(v)){this.interrupt(v);v.motion?.clear();v.frozen=s.freezeTime;this.controlled.add(v);e.frozen.add(v);this.burst(v,.7,0xe2faff);}
  }
  }
+ shatterIceberg(e){
+ if(e.shattered)return;e.shattered=true;
+ const debris=this.add('iceDebris',e.s,e.owner,e.point,e.dir,1.2);
+ for(let i=0;i<28;i++){const a=i*2.4,y=.2+(i%7)*.44,r=(1-y/3.6)*.75,shard=this.shard(debris.mesh,Math.cos(a)*r,y,Math.sin(a)*r,.1+(i%4)*.045,i%3?0xa5e6f6:0xe4fbff);shard.material.transparent=true;shard.material.opacity=.7;shard.material.depthWrite=false;shard.userData.spin=i*2.4;shard.userData.origin=shard.position.clone();shard.userData.velocity=V(Math.cos(a)*(1.5+i%3),1.2+(i%4)*.5,Math.sin(a)*(1.5+i%3));}
+ }
  updateRinkSurface(){const zones=this.effects.filter(e=>e.type==='rink').map(e=>({kind:'i',x:e.point.x,z:e.point.z,radius:e.s.radius,life:e.life}));if(!zones.length&&!this.rinkSurface)return;this.rinkSurface??=new IceSurface(this.a.scene);this.rinkSurface.update(zones);}
  trip(v,owner,dir,damage=0){if(v.slipImmune>0||this.a.hit(v,damage,dir,0,owner)===false)return false;this.interrupt(v);v.knockdown=.75;v.slipImmune=2.5;this.controlled.add(v);const d=v.dir||dir;v.motion?.start(d.x,d.z,1.8);this.burst(v,.6);return true;}
  update(dt){for(const v of this.controlled){for(const k of ['knockdown','rooted','slipImmune','greenFrost','frozen'])v[k]=Math.max(0,(v[k]||0)-dt);if(!v.knockdown&&!v.rooted&&!v.slipImmune&&!v.greenFrost&&!v.frozen)this.controlled.delete(v);}
- for(let i=this.effects.length-1;i>=0;i--){const e=this.effects[i],s=e.s;e.life-=dt;e.age+=dt;e.tick-=dt;let done=e.life<=0;if(done){if(e.ward)e.ward.life=0;this.a.remove(e.mesh);this.effects.splice(i,1);continue;}
+ for(let i=this.effects.length-1;i>=0;i--){const e=this.effects[i],s=e.s;e.life-=dt;e.age+=dt;e.tick-=dt;let done=e.life<=0;if(done){if(e.type==='iceberg')this.shatterIceberg(e);if(e.ward)e.ward.life=0;this.a.remove(e.mesh);this.effects.splice(i,1);continue;}
  if(e.type==='beam')this.updateBeam(e,dt);
  if(e.type==='shot'||e.type==='punch'){const dist=Math.min(s.speed*dt,s.range-e.distance),steps=Math.max(1,Math.ceil(dist/.07));for(let j=0;j<steps&&!done;j++){const from=e.mesh.position.clone(),to=from.clone().addScaledVector(e.dir,dist/steps);const ward=this.a.wards.find(w=>w.owner!==e.owner&&w.hp>0&&crossesWard(from,to,w,.2));if(ward||this.a.collides(to.x,to.z,.2)||this.a.wallBlocks(from,to)){if(ward)ward.hp-=roundDamage(s.damage);this.burst(from,s.radius);done=true;break;}e.mesh.position.copy(to);e.point={x:to.x,z:to.z};e.distance+=dist/steps;if(e.type==='punch'){e.owner.x=to.x;e.owner.z=to.z;this.area(e,e.point,.85,{once:true,force:1.5,root:.55});if(e.hit.size)done=true;}else{const target=this.a.targets(e.owner).find(v=>this.a.screenHit({mesh:e.mesh,owner:e.owner},from,to,v));if(target){if(s.op==='w')this.area(e,{...e.point,y:1},s.radius);else{if(this.a.hit(target,s.damage,e.dir,0,e.owner)!==false)target.slow=Math.max(target.slow||0,s.slow);}this.burst(e.point,s.radius);done=true;}}if(e.distance>=s.range)done=true;}if(s.op==='w')e.projectile.rotation.z+=dt*3;}
  if(e.type==='fall'){if(e.age>=.55&&!e.struck){e.struck=true;e.ice.visible=true;e.ice.position.y=.65;this.area(e);this.burst(e.point,s.radius);}e.ice.scale.y=e.struck?Math.max(.1,e.life*5):2.5;}
- if(e.type==='iceberg'){const rise=1-Math.pow(1-Math.min(1,e.age/.22),3);e.rock.position.y=-3.3*(1-rise);if(e.life<.25)e.rock.position.y=-3.3*(1-e.life/.25);if(e.ward.hp<=0||e.ward.life<=0)done=true;}
+ if(e.type==='iceberg'){const rise=1-Math.pow(1-Math.min(1,e.age/.22),3);e.rock.position.y=-3.3*(1-rise);e.cracks.scale.setScalar(Math.min(1,.1+e.age/.13));if(e.ward.hp<=0||e.ward.life<=0)done=true;}
+ if(e.type==='iceDebris'){for(const m of e.mesh.children){const t=e.age;m.position.copy(m.userData.origin).addScaledVector(m.userData.velocity,t);m.position.y=Math.max(.04,m.position.y-4.5*t*t);m.rotation.set(t*3+m.userData.spin,t*4+m.userData.spin*.7,t*2+m.userData.spin*.3);m.material.opacity=.7*Math.min(1,e.life/.4);}}
  if(e.type==='wall'){e.mesh.scale.y=Math.min(1,e.age/.15);if(e.ward.hp<=0||e.ward.life<=0)done=true;}
  if(['fog','frostbite','blizzard'].includes(e.type)){for(const m of e.mesh.children){const i=m.userData.flake??m.userData.fog??0,a=i*2.4+e.age*(e.type==='blizzard'?3:.2),r=s.radius*Math.sqrt(((i*.618+e.age*.3)%1));if(e.type==='blizzard')m.position.set(Math.cos(a)*r,.2+(i%9)/9*2.5,Math.sin(a)*r);else{const t=(i*.137+e.age*.55)%1,angle=Math.atan2(e.dir.z,e.dir.x)+(Math.sin(i)*1.02);m.position.set(Math.cos(angle)*s.radius*t,.25+Math.sin(i*2)*.25+t*.6,Math.sin(angle)*s.radius*t);}m.rotation.y+=dt*2;}if(e.tick<=0){e.tick=.3;if(e.type==='fog')this.area(e,e.point,s.radius,{cone:true,damage:0});if(e.type==='blizzard'){this.area(e,e.point,s.radius,{damage:s.damage});for(const v of this.a.targets(e.owner)){if(!this.a.areaHit(v,e.point,s.radius)||!this.a.clearPath(e.point,v)){e.dwell.delete(v);continue;}const time=(e.dwell.get(v)||0)+.3;e.dwell.set(v,time);v.motion?.start(e.point.x-v.x,e.point.z-v.z,.3);if(time>=1.5&&time<1.8){v.rooted=Math.max(v.rooted||0,.6);this.controlled.add(v);}}}}}
  if(e.type==='rink'&&e.tick<=0){e.tick=.1;for(const v of this.a.targets(e.owner)){if(v.slipImmune>0||!this.a.areaHit(v,e.point,s.radius,null,false,false,.12)||!this.a.clearPath(e.point,v))continue;this.trip(v,e.owner,e.dir,s.damage);}}
  if(e.type==='cut')e.mesh.scale.setScalar(1+(1-e.life/e.max)*.15);
- if(done){if(e.ward)e.ward.life=0;this.a.remove(e.mesh);this.effects.splice(i,1);}
+ if(done){if(e.type==='iceberg')this.shatterIceberg(e);if(e.ward)e.ward.life=0;this.a.remove(e.mesh);this.effects.splice(i,1);}
  }this.updateRinkSurface();}
 }

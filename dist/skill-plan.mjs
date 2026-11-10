@@ -6,7 +6,7 @@ import {RevisionRequests} from './revision-requests.mjs?v=compact2';
 import {mountPlanAudio} from './plan-audio.mjs?v=compact2';
 import {DAMAGE_CATALOG,BASIC_DAMAGE_CATALOG,ICE_PAIR_DAMAGE_CATALOG} from './damage-catalog.mjs?v=integer-damage-1';
 import {RUNES,valid,describe} from './combo-design.mjs?v=iceberg-rise-1';
-import {mountAtlasPreview} from './atlas-preview.mjs?v=iceberg-rise-1';
+import {mountAtlasPreview} from './atlas-preview.mjs?v=iceberg-shatter-1';
 const $=id=>document.getElementById(id),ids=Object.keys(RUNES);let seq=valid(location.hash.slice(1))?location.hash.slice(1):'qqw',branch=seq.slice(0,2),dispose=()=>{},disposeSound=()=>{};
 let basicHand='left',chargedBasic=false;
 const requests=new RevisionRequests();let disposeRequest=()=>{};
