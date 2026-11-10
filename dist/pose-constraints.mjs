@@ -10,7 +10,7 @@ function solveJoint(base,joint,target,preferredBend=null,footClearance=.10){
   const chest=v(base.Spine),neck=v(base.Neck),head=v(base.Head);
   const length=chest.distanceTo(neck)+neck.distanceTo(head);
   const ratio=length>1e-8?chest.distanceTo(neck)/length:.57;
-  p.Head=end.toArray();p.Neck=chest.lerp(end,ratio).toArray();return p;
+  p.Head=end.toArray();p.Neck=neck.add(end.clone().sub(head).multiplyScalar(ratio)).toArray();return p;
  }
  if(joint==='Hips'){
   const d=end.clone().sub(old);p[joint]=end.toArray();shiftChildren(p,joint,d);
@@ -44,6 +44,16 @@ function solveJoint(base,joint,target,preferredBend=null,footClearance=.10){
 export function moveJoint(base,joint,target,{footClearance=.10,lockedFeet={}}={}){
  base=withNeck(base);
  if(lockedFeet[joint])return structuredClone(base);
+ if(joint==='Head'){
+  // Head edits do not move the pelvis or legs: unrelated foot IK must not reject them.
+  // Clamp only vertical travel, leaving horizontal dragging free along the floor.
+  const chest=v(base.Spine),neck=v(base.Neck),head=v(base.Head);
+  const length=chest.distanceTo(neck)+neck.distanceTo(head);
+  const ratio=length>1e-8?chest.distanceTo(neck)/length:.57;
+  let minY=Math.min(.215,base.Head[1]);
+  if(ratio>1e-8)minY=Math.max(minY,base.Head[1]+(Math.min(0,base.Neck[1])-base.Neck[1])/ratio);
+  return solveJoint(base,joint,[target[0],Math.max(minY,target[1]),target[2]]);
+ }
  const clearance=n=>n==='Head'?.215:n.includes('Foot')?footClearance:0;
  const valid=p=>Object.entries(p).every(([n,a])=>a[1]>=Math.min(clearance(n),base[n][1])-1e-9);
  // Slide ankle targets along the floor instead of rejecting the entire diagonal drag.

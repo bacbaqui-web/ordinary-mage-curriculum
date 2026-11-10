@@ -12,7 +12,7 @@ import {footFaces} from './foot-shape.mjs';
 import {PassiveFoot} from './passive-foot.mjs';
 const feet={LeftFoot:new PassiveFoot(),RightFoot:new PassiveFoot()};
 let footShapes={};
-import {moveJoint as movePoseJoint,applyFootLocks} from './pose-constraints.mjs?v=head-distance-1';
+import {moveJoint as movePoseJoint,applyFootLocks} from './pose-constraints.mjs?v=head-free-2';
 import {demoMotion} from './motion-puppet.mjs?v=loop-playback-2';
 import {JOINTS,LABELS,samplePose,validateProject} from './pose-data.mjs?v=smooth-motion-1';
 const $=id=>document.getElementById(id);

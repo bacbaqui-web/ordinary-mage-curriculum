@@ -69,3 +69,10 @@ for(const height of [base.Head[1]-.15,base.Head[1]+.4]){
  for(const n of JOINTS.filter(n=>!['Head','Neck'].includes(n)))assert.deepEqual(moved[n],base[n]);
 }
 console.log('PASS: adjustable chest-head distance, neck follows, other joints unchanged');
+const headTarget=[base.Head[0]+.3,base.Head[1]+.2,base.Head[2]-.2];
+const lockedHead=moveJoint(base,'Head',headTarget,{lockedFeet:{LeftFoot:[0,0,100],RightFoot:[0,0,-100]}});
+assert.deepEqual(lockedHead.Head,headTarget);
+for(const n of JOINTS.filter(n=>!['Head','Neck'].includes(n)))assert.deepEqual(lockedHead[n],base[n]);
+const floorHead=moveJoint(base,'Head',[.8,-2,.7]);assert.equal(floorHead.Head[0],.8);assert.equal(floorHead.Head[2],.7);assert.ok(floorHead.Head[1]>=.215-1e-8);
+const bent=structuredClone(base);bent.Neck[2]+=.12;assert.deepEqual(moveJoint(bent,'Head',bent.Head).Neck,bent.Neck);
+console.log('PASS: head ignores unrelated foot reach, slides along floor, and preserves existing neck offset');
