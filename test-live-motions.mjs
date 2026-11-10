@@ -63,3 +63,14 @@ for(const [hand,height] of [['left',2.2],['right',2.6]]){
  p.update(2);projectWizard(iceWizard,camera);assert.equal(p.basicAttack,null,'attack ends instead of looping');
 }
 console.log('PASS: left/right basic attack clips play separately, survive procedural arm override, and end');
+
+const {animateWizard}=await import('./dist/wizard.mjs');
+const idle={...makeWalk(2.3,101),name:'대기',binding:'대기'};
+stores.set(motionStorageKey('ice'),JSON.stringify({version:1,rigVersion:7,actions:[makeWalk(1.5),idle,left]}));
+animateWizard(iceWizard,0,{speed:0});projectWizard(iceWizard,camera);
+assert.equal(iceWizard.userData.puppet.lastPositions.Head.y,2.3,'standing uses saved idle');
+animateWizard(iceWizard,0,{speed:4.4});projectWizard(iceWizard,camera);
+assert.equal(iceWizard.userData.puppet.lastPositions.Head.y,1.5,'moving returns to saved walk');
+animateWizard(iceWizard,0,{speed:0});iceWizard.userData.puppet.playBasicAttack('left');projectWizard(iceWizard,camera);
+assert.equal(iceWizard.userData.puppet.lastPositions.Head.y,2.2,'attack overrides idle');
+console.log('PASS: saved idle in actual game, walking transition, attack priority');

@@ -1,16 +1,16 @@
-import {ensureBasicAttacks,actionGroups} from './motion-catalog.mjs?v=game-actions-only-1';
+import {ensureBasicAttacks,ensureIdle,actionGroups} from './motion-catalog.mjs?v=idle-pose-1';
 import {migrateAnklePivot} from './ankle-pivot.mjs?v=heel-free-1';
 import {CHARACTERS,characterProfile,motionStorageKey,projectForCharacter,assertCharacterImport} from './character-profiles.mjs?v=heel-free-1';
 import {CharacterRig,fitProjectToRig} from './character-rig.mjs?v=bag-swing-1';
 import {ensureMagicClips} from './magic-clips.mjs?v=compound-label';
-import {uniqueMotions,mergeMotions} from './pose-library.mjs?v=action-list-1';
+import {uniqueMotions,mergeMotions} from './pose-library.mjs?v=idle-pose-1';
 import * as T from './three.module.js';
 import {footFaces} from './foot-shape.mjs';
 import {PassiveFoot} from './passive-foot.mjs';
 const feet={LeftFoot:new PassiveFoot(),RightFoot:new PassiveFoot()};
 let footShapes={};
 import {moveJoint as movePoseJoint} from './pose-constraints.mjs?v=ankle-slide-1';
-import {demoMotion} from './motion-puppet.mjs?v=action-list-1';
+import {demoMotion} from './motion-puppet.mjs?v=idle-pose-1';
 import {JOINTS,LABELS,samplePose,validateProject} from './pose-data.mjs?v=cuff-pivot-1';
 const $=id=>document.getElementById(id);
 const editableJoints=JOINTS.filter(n=>n!=='Neck');
@@ -34,7 +34,7 @@ function compactShoulders(p){
 function prepare(p){
  compactShoulders(p);
  for(const a of p.actions)if(!a.binding&&['기본 걷기','베기','주먹 타격','방어','마법 시전'].includes(a.name))a.binding=a.name;
- p.actions=uniqueMotions(p.actions);ensureMagicClips(p);ensureBasicAttacks(p);return p;
+ p.actions=uniqueMotions(p.actions);ensureMagicClips(p);ensureBasicAttacks(p);ensureIdle(p);return p;
 }
 prepare(project);
 const current=()=>project.actions[index],pose=()=>samplePose(current(),frame);

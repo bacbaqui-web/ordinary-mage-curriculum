@@ -54,8 +54,8 @@ export class MotionPuppet{
   this.magic.apply(positions);
   const specific=this.magic.mode!=='idle'?magicClipName(this.magic.stage,this.magic.mode):null;
   const split=specific&&readMotion(specific);
-  const motionName=this.magic.mode!=='idle'?(split?specific:'마법 시전'):this.clips[this.selectedClip]?.name;
-  const edited=readPose(motionName,this.magic.mode!=='idle'?(split?this.magic.phaseElapsed:this.magic.elapsed):(this.editorActionTime??this.time),{loop:this.magic.mode==='idle'&&this.editorActionTime===undefined,hold:!split&&this.magic.mode==='hold'});
+  const motionName=this.magic.mode!=='idle'?(split?specific:'마법 시전'):this.locomotionName||this.clips[this.selectedClip]?.name;
+  const edited=readPose(motionName,this.magic.mode!=='idle'?(split?this.magic.phaseElapsed:this.magic.elapsed):(this.editorActionTime??(motionName==='대기'?this.idleTime||0:this.time)),{loop:this.magic.mode==='idle'&&this.editorActionTime===undefined,hold:!split&&this.magic.mode==='hold'});
   if(edited){for(const [n,a] of Object.entries(edited))positions[n]=new T.Vector3(...a);positions.LeftToe=positions.LeftFoot.clone().add(new T.Vector3(0,0,.22));positions.RightToe=positions.RightFoot.clone().add(new T.Vector3(0,0,.22));}
   if(this.magic.mode==='hold')this.basicAttack=null;
   let basicEdited=false;

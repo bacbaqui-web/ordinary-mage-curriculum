@@ -1,4 +1,4 @@
-import {wardTouches} from './combat-hit.mjs?v=bodyhit11';
+import {wardTouches} from './combat-hit.mjs?v=idle-pose-1';
 import * as T from './three.module.js';
 import {redLightningSpec,redLightningPlacement} from './red-lightning-spec.mjs?v=bolt17';
 import {crossesWard,distanceToWard} from './forces.mjs';
