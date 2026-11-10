@@ -1,4 +1,4 @@
-import {attachWolf,animateWolf} from './wolf-monster.mjs?v=1';
+import {attachWolf,animateWolf} from './wolf-monster.mjs?v=points-1';
 import * as T from './three.module.js';
 export const MONSTERS=[
  {name:'잿빛 사냥개',color:0x303447,hp:34,xp:25,speed:3.6,range:4.2,wind:.65,duration:.42,recovery:1.3,damage:8},
