@@ -1,3 +1,4 @@
+import {iceMovement} from './ice-motion.mjs?v=ice-surface-1';
 import {roundDamage} from './damage-number.mjs?v=integer-damage-1';
 import {castControlsLocked,followCastAim} from './cast-lock.mjs?v=charge-move-1';
 import {attackCooldown} from './attack-cooldown.mjs';
@@ -7,7 +8,7 @@ import * as T from './three.module.js';
 import {spellAimHeight} from './cursor-aim.mjs?v=shift-trajectory-1';
 import {LiveMagic} from './live-magic.mjs?v=ice-step-1';
 import {QueuedCharge} from './queued-charge.mjs?v=instant-first-ring-1';
-import {SpaceSkill,interceptSpaceShots} from './space-skills.mjs?v=ice-step-1';
+import {SpaceSkill,interceptSpaceShots} from './space-skills.mjs?v=ice-surface-1';
 import {ForcedMotion} from './motion.mjs';
 import {CastRecoil,chargeSetback} from './combat-response.mjs';
 import {chargeMoveScale} from './magic-motion.mjs?v=charge-move-1';
@@ -18,9 +19,9 @@ import {advanceMovingWard} from './moving-ward.mjs';
 import {crossesWard,distanceToWard} from './forces.mjs';
 import {arenaCollision} from './arena-rules.mjs';
 
-export const STEP=1/30, PROTOCOL=8;
+export const STEP=1/30, PROTOCOL=9;
 const V=(x,z)=>new T.Vector3(x,0,z);
-const numeric=['x','z','hp','mana','shield','shieldTime','cool','iceLeftCool','iceRightCool','iceCastLock','castControlLock','slow','frostSlow','burn','burnTick','burnDamage','poison','poisonTick','poisonDamage','wet','ashTime','greenFireTime','dustTime','knockdown','rooted','slipImmune','greenFrost','frozen'];
+const numeric=['iceVX','iceVZ','x','z','hp','mana','shield','shieldTime','cool','iceLeftCool','iceRightCool','iceCastLock','castControlLock','slow','frostSlow','burn','burnTick','burnDamage','poison','poisonTick','poisonDamage','wet','ashTime','greenFireTime','dustTime','knockdown','rooted','slipImmune','greenFrost','frozen'];
 const motionKeys=['elapsed','duration','x','z','distance'];
 const recoilKeys=['elapsed','duration','delay','x','z','distance'];
 const pick=(o,keys)=>Object.fromEntries(keys.map(k=>[k,o[k]||0]));
@@ -67,7 +68,7 @@ export class Duel {
  statuses(dt){for(const a of this.actors){for(const key of ['slow','frostSlow','wet','ashTime','greenFireTime','dustTime'])a[key]=Math.max(0,(a[key]||0)-dt);for(const status of ['burn','poison'])if(a[status]>0){a[status]-=dt;a[status+'Tick']-=dt;if(a[status+'Tick']<=0){a[status+'Tick']=.5;this.hit(a,a[status+'Damage']||2,V(0,0),0,a[status+'Owner']);}}if(a.echo){a.echo.time-=dt;if(a.echo.time<=0){const e=a.echo;a.echo=null;this.hit(a,e.damage,V(0,0),0,e.owner);}}}}
  updateWards(dt){for(let i=this.wards.length-1;i>=0;i--){const w=this.wards[i];advanceMovingWard(w,dt,{actors:this.actors,collides:arenaCollision,wards:this.wards});w.m.position.set(w.x,w.baseY??1.2,w.z);w.life-=dt;w.effectCooldown-=dt;if(w.hp>0&&w.life>0&&w.effectCooldown<=0){w.effectCooldown=.8;for(const a of this.actors.filter(a=>a!==w.owner&&wardTouches(a,w))){const p=w.spec,side=(a.x-w.x)*w.nx+(a.z-w.z)*w.nz>=0?1:-1,d=V(w.nx*side,w.nz*side);if((p.burn||p.slow||p.shock||p.push||p.pull)&&this.hit(a,p.shock||0,d,0,w.owner)){this.payload(a,p,w.owner);if(p.push||p.pull)a.motion.start(d.x,d.z,p.push||-p.pull);}}}if(w.life<=0||w.hp<=0){this.remove(w.m);this.wards.splice(i,1);}}}
  step(dt=STEP){if(this.finished)return;this.tick++;this.time+=dt;
-  for(const a of this.actors){const r=a.roll.tick(dt,a,{targets:owner=>this.actors.filter(b=>b!==owner),clearPath:(a,b)=>this.clearPath(a,b),hit:(a,d,v,f,o)=>this.hit(a,d,V(v.x,v.z),f,o)});a.charge.tick(r.chargeDt);const queued=a.charge.takeRelease();if(queued)this.castResult(a,queued);const scale=chargeMoveScale(a.charge.active,a.charge.parts.length);if(a.frozen>0)a.motion.clear();if(a.motion.active){const s=a.motion.tick(dt);this.move(a,s.x,s.z);}const rolling=r.chargeDt<dt;if(rolling)this.move(a,r.x,r.z);else if(!castControlsLocked(a)&&!(a.knockdown>0)&&!(a.rooted>0)&&!(a.iceCastLock>0)&&a.target&&!a.motion.active&&!a.recoil.active&&scale>0){const d=V(a.target.x-a.x,a.target.z-a.z),distance=d.length();if(distance<.15)a.target=null;else{const speed=4.4*a.roll.moveScale*scale*(a.frostSlow>0?.35:a.slow>0?.55:1),travel=Math.min(distance,speed*dt);d.normalize();this.move(a,d.x*travel,d.z*travel);}}
+  for(const a of this.actors){const r=a.roll.tick(dt,a,{targets:owner=>this.actors.filter(b=>b!==owner),clearPath:(a,b)=>this.clearPath(a,b),hit:(a,d,v,f,o)=>this.hit(a,d,V(v.x,v.z),f,o)});a.charge.tick(r.chargeDt);const queued=a.charge.takeRelease();if(queued)this.castResult(a,queued);const scale=chargeMoveScale(a.charge.active,a.charge.parts.length);if(a.frozen>0)a.motion.clear();if(a.motion.active){const s=a.motion.tick(dt);this.move(a,s.x,s.z);}const rolling=r.chargeDt<dt;if(rolling)this.move(a,r.x,r.z);else iceMovement(a,dt,this.actors.filter(b=>b!==a).flatMap(b=>b.roll.zones),(a,x,z)=>this.move(a,x,z),()=>{if(!castControlsLocked(a)&&!(a.knockdown>0)&&!(a.rooted>0)&&!(a.iceCastLock>0)&&a.target&&!a.motion.active&&!a.recoil.active&&scale>0){const d=V(a.target.x-a.x,a.target.z-a.z),distance=d.length();if(distance<.15)a.target=null;else{const speed=4.4*a.roll.moveScale*scale*(a.frostSlow>0?.35:a.slow>0?.55:1),travel=Math.min(distance,speed*dt);d.normalize();this.move(a,d.x*travel,d.z*travel);}}},a.frozen>0||a.knockdown>0||a.rooted>0||a.motion.active||a.recoil.active||castControlsLocked(a));
    followCastAim(a,a.aim,dt);a.castControlLock=Math.max(0,(a.castControlLock||0)-dt);a.cool=Math.max(0,a.cool-dt);a.iceCastLock=Math.max(0,(a.iceCastLock||0)-dt);a.iceLeftCool=Math.max(0,(a.iceLeftCool||0)-dt);a.iceRightCool=Math.max(0,(a.iceRightCool||0)-dt);a.mana=Math.min(100,a.mana+dt*(a.charge.active?3:10));a.shieldTime=Math.max(0,a.shieldTime-dt);if(!a.shieldTime)a.shield=0;
   }
   for(const a of this.actors)if(!a.roll.blocking&&a.roll.pendingRelease){a.roll.pendingRelease=false;this.input(a.id,{action:'release',point:{x:a.aim.x,z:a.aim.z}});}interceptSpaceShots(this.actors,this.magic,dt,m=>this.remove(m));this.magic.update(dt);for(const a of this.actors)if(a.recoil.active){const r=a.recoil.tick(dt);if(!castControlsLocked(a))this.move(a,r.x,r.z);}this.statuses(dt);if(!this.finished)this.updateWards(dt);

@@ -1,3 +1,4 @@
+import {iceMovement} from './ice-motion.mjs?v=ice-surface-1';
 import {roundDamage} from './damage-number.mjs?v=integer-damage-1';
 import {projectileGuideSpec,projectileGuidePoints} from './projectile-guide.mjs?v=forward-glow-1';
 import {cursorAim,spellAimHeight} from './cursor-aim.mjs?v=shift-trajectory-1';
@@ -12,13 +13,13 @@ import {HitboxView} from './hitbox-view.mjs?v=ice-step-1';
 import {LevelUpVfx} from './level-up-vfx.mjs?v=screenhit10';
 import {FrostVisuals} from './frost-visuals.mjs?v=shift-trajectory-1';
 import {ICE_BASIC} from './ice-basic.mjs?v=forward-glow-1';
-import {SpaceSkill,SPACE_SKILLS,interceptSpaceShots} from './space-skills.mjs?v=ice-step-1';
-import {SpaceVisuals} from './space-visuals.mjs?v=ice-step-1';
+import {SpaceSkill,SPACE_SKILLS,interceptSpaceShots} from './space-skills.mjs?v=ice-surface-1';
+import {SpaceVisuals} from './space-visuals.mjs?v=ice-surface-1';
 import {CHARACTERS,characterFor,chooseCharacter,chooseSupport} from './character-loadout.mjs?v=integer-damage-1';
 import {GameAudio} from './game-audio.mjs?v=sync5';
 import {damageSummary} from './damage-display.mjs?v=integer-damage-1';
-import {Duel,STEP} from './duel.mjs?v=ice-step-1';
-import {mountPvpUI} from './pvp-ui.mjs?v=ice-step-1';
+import {Duel,STEP} from './duel.mjs?v=ice-surface-1';
+import {mountPvpUI} from './pvp-ui.mjs?v=ice-surface-1';
 import {OBSTACLES} from './arena-rules.mjs';
 let onlineCore=null,pvp=null,onlineResultShown=false,lastOnlineAim=0,onlineRenderAt=0,onlinePrevious=null;
 import {redLightningPlacement} from './red-lightning-spec.mjs?v=bolt17';
@@ -229,7 +230,7 @@ function cast(result,iceHand=null){if(loadout.q==='i'&&result.parts.length===1&&
  history.unshift({name:s.name,seq:s.keys.toUpperCase(),tier:seq.length===1?'1륜':seq.length===2?'2륜':'2륜 복합'});history=history.slice(0,4);$('spellName').textContent=s.name;
 }
 function endRound(win){if(!bot){const a=win?enemy:player;a.hp=100;a.shield=0;a.burn=0;a.slow=0;a.echo=null;flash(win?'연습 상대의 체력을 회복했습니다':'연습 모드 · 체력을 회복했습니다');return}finished=true;charge.clear();enemyCharge.clear();moveTarget=null;if(win)wins++;else losses++;$('resultTitle').textContent=win?'승리':'패배';$('resultText').textContent=win?'주문을 조합해 상대 마법사를 제압했습니다.':'몬스터의 공격을 피하며 사냥하세요. 새 대결은 레벨 1부터 시작합니다.';$('result').classList.remove('hidden')}
-function reset(){healthHUD.reset();walkDirection={x:0,z:0};gameAudio.stopAll();levelUpVfx.clear();frostVisuals.clear();burnVisuals.clear();for(const a of[player,enemy]){a.ashTime=0;a.greenFireTime=0;}hitScreen.clear();for(const a of[player,enemy])a.recoil?.clear();castingFeedback.clear();chargeCamera.clear();liveMagic.clear();resetHunt();spellVfx.clear();pixelVfx.clear();enemy.strikePoint=null;enemy.strikeLocked=false;enemyCharge.clear();enemyLoadout=chooseLoadout();enemyProgress=createProgress(enemyLoadout);enemyTarget=null;enemy.retaliate=0;fallingStrikes=[];enemy.lastSpell="";enemy.lastSpellTime=0;for(const a of[player,enemy]){a.castControlLock=0;a.motion.clear();a.hitFlash=0;a.pendingCastLight=null;a.poison=0;a.wet=0;a.frostSlow=0;a.slow=0;a.burn=0;a.echo=null;a.burnTick=0;a.shieldHeat=false;}roll.reset();roll.kind=loadout.q;player.roll=roll;player.velocity=new T.Vector3();enemy.dodge=0;enemy.dodgeCool=0;enemy.defendCool=0;enemy.attackCount=0;enemy.sidestep=1;for(const s of shots)remove(s.m);for(const f of fields)remove(f.m);for(const f of fx)remove(f.m);for(const w of [...waves,...wards])remove(w.m);waves=[];wards=[];shots=[];fields=[];fx=[];Object.assign(player,{iceLeftCool:0,iceRightCool:0,iceCastLock:0,x:-5,z:4,hp:100,mana:100,shield:0,shieldTime:0,cool:0});Object.assign(enemy,{x:16,z:-14,hp:100,mana:100,shield:0,shieldTime:0,cool:2,wind:0});charge.clear();moveTarget=null;finished=false;paused=false;clock=0;history=[];$('result').classList.add('hidden');$('paused').classList.add('hidden');$('pause').textContent='일시정지';$('spellName').textContent=RUNES[loadout.q].name;resetHealthHUD();}
+function reset(){healthHUD.reset();walkDirection={x:0,z:0};gameAudio.stopAll();levelUpVfx.clear();frostVisuals.clear();burnVisuals.clear();for(const a of[player,enemy]){a.ashTime=0;a.greenFireTime=0;}hitScreen.clear();for(const a of[player,enemy])a.recoil?.clear();castingFeedback.clear();chargeCamera.clear();liveMagic.clear();resetHunt();spellVfx.clear();pixelVfx.clear();enemy.strikePoint=null;enemy.strikeLocked=false;enemyCharge.clear();enemyLoadout=chooseLoadout();enemyProgress=createProgress(enemyLoadout);enemyTarget=null;enemy.retaliate=0;fallingStrikes=[];enemy.lastSpell="";enemy.lastSpellTime=0;for(const a of[player,enemy]){a.castControlLock=0;a.iceVX=0;a.iceVZ=0;a.motion.clear();a.hitFlash=0;a.pendingCastLight=null;a.poison=0;a.wet=0;a.frostSlow=0;a.slow=0;a.burn=0;a.echo=null;a.burnTick=0;a.shieldHeat=false;}roll.reset();roll.kind=loadout.q;player.roll=roll;player.velocity=new T.Vector3();enemy.dodge=0;enemy.dodgeCool=0;enemy.defendCool=0;enemy.attackCount=0;enemy.sidestep=1;for(const s of shots)remove(s.m);for(const f of fields)remove(f.m);for(const f of fx)remove(f.m);for(const w of [...waves,...wards])remove(w.m);waves=[];wards=[];shots=[];fields=[];fx=[];Object.assign(player,{iceLeftCool:0,iceRightCool:0,iceCastLock:0,x:-5,z:4,hp:100,mana:100,shield:0,shieldTime:0,cool:0});Object.assign(enemy,{x:16,z:-14,hp:100,mana:100,shield:0,shieldTime:0,cool:2,wind:0});charge.clear();moveTarget=null;finished=false;paused=false;clock=0;history=[];$('result').classList.add('hidden');$('paused').classList.add('hidden');$('pause').textContent='일시정지';$('spellName').textContent=RUNES[loadout.q].name;resetHealthHUD();}
 function pause(value=!paused){controls.reset();if(onlineCore){pvp?.input({action:"stop"});return;}if(!running||finished)return;paused=value;charge.clear();moveTarget=null;$('paused').classList.toggle('hidden',!paused);$('pause').textContent=paused?'계속하기':'일시정지'}
 let hasCursor=false;
 function aimingSequence(){const parts=charge.parts.length?charge.parts:['q'],count=charge.active?Math.max(1,Math.min(parts.length,Math.floor((charge.elapsed+1e-8)/1.2))):1;return mapSequence(parts.slice(0,count),loadout);}
@@ -293,7 +294,7 @@ player.castControlLock=Math.max(0,(player.castControlLock||0)-dt);enemy.castCont
  player.velocity=new T.Vector3((player.x-beforeX)/dt,0,(player.z-beforeZ)/dt);
  const facing=aim.clone().sub(new T.Vector3(player.x,0,player.z));if(facing.length()>.1)player.dir.copy(facing.normalize());
  interceptSpaceShots([player],liveMagic,dt,remove);liveMagic.update(dt);for(const a of[player,enemy])if(a.recoil?.active){const step=a.recoil.tick(dt);if(castControlsLocked(a,a===player?charge:enemyCharge))continue;const count=Math.max(1,Math.ceil(Math.hypot(step.x,step.z)/.06));for(let j=0;j<count;j++){const next={x:a.x+step.x/count,z:a.z+step.z/count};if(collides(next.x,next.z)||wallBlocks(a,next)){break;}a.x=next.x;a.z=next.z;}}for(const a of[player,enemy,...monsters.filter(m=>!m.dead)]){a.wet=Math.max(0,(a.wet||0)-dt);if(a.poison>0){a.poison-=dt;a.poisonTick-=dt;if(a.poisonTick<=0){a.poisonTick=.5;hit(a,a.poisonDamage||2,new T.Vector3(),0,a.poisonOwner);}}}updateStatuses(dt);if(finished)return;
- updateForces(dt);updateFalling(dt);if(finished)return;ai(dt);
+ updateForces(dt);updateFalling(dt);if(finished)return;iceMovement(enemy,dt,roll.zones,move,()=>ai(dt),!bot||enemy.frozen>0||enemy.knockdown>0||enemy.rooted>0||enemy.motion.active||enemy.recoil?.active||castControlsLocked(enemy,enemyCharge));
  for(const a of[player,enemy]){a.shieldTime=Math.max(0,a.shieldTime-dt);if(a.shieldTime<=0)a.shield=0}
  updateOrbs(dt);
  for(let i=fields.length-1;i>=0;i--){const f=fields[i];if(f.ground){const alive=advanceGround(f,dt,()=>tickGround(f));f.m.material.opacity=.14+.05*(1+Math.sin(clock*4));if(!alive){remove(f.m);fields.splice(i,1);}continue;}f.life-=dt;f.tick-=dt;f.m.material.opacity=.12+Math.sin(clock*5)*.04;if(f.tick<=0){f.tick=.5;area(f.owner,f.x,f.z,f.r,f.damage*.5,f.color,f.force,null,f.payload)}if(f.life<=0){remove(f.m);fields.splice(i,1)}}
@@ -392,9 +393,11 @@ function killMonster(m,source){if(m.dead)return;m.dead=true;ring(m.x,m.z,0xe9cb7
  if(source===player||source===enemy){const state=source===player?progress:enemyProgress,levels=awardKill(state,m.xp);if(levels)levelUpVfx.play(source,state.level,levels);source.mana=Math.min(100,source.mana+10);
  if(levels){source.hp=Math.min(100,source.hp+20);ring(source.x,source.z,0xffdf83,2,.8);if(source===enemy)spendEnemyPoints(enemyProgress,enemyLoadout);else flash('레벨 '+progress.level+' · 스킬 포인트 +'+levels);}else if(source===player)flash('몬스터 처치 · 경험치 +'+m.xp);if(source===player)renderProgress();}}
 function updateHunt(dt){spawnTimer-=dt;if(spawnTimer<=0){spawnTimer=5;if(!monsters.length){for(const p of[{x:-10,z:3},{x:-7,z:10},{x:-15,z:-3},{x:8,z:6},{x:12,z:-15},{x:18,z:-9},{x:20,z:-17}])spawnMonster(p);}spawnMonster();}
- for(const m of monsters){if(m.dead)continue;if((m.knockdown>0||m.frozen>0)){m.wind=0;m.g.position.set(m.x,0,m.z);continue;}m.cool=Math.max(0,m.cool-dt);const nearest=bot&&Math.hypot(enemy.x-m.x,enemy.z-m.z)<Math.hypot(player.x-m.x,player.z-m.z)?enemy:player,target=m.aggroTarget&&(m.aggroTarget!==enemy||bot)?m.aggroTarget:nearest,dx=target.x-m.x,dz=target.z-m.z,d=Math.hypot(dx,dz),speed=(m.frostSlow>0?.35:m.slow>0?.55:1)*1.45;
+ for(const m of monsters){if(m.dead)continue;if((m.knockdown>0||m.frozen>0)){m.wind=0;m.iceVX=0;m.iceVZ=0;m.g.position.set(m.x,0,m.z);continue;}m.cool=Math.max(0,m.cool-dt);const nearest=bot&&Math.hypot(enemy.x-m.x,enemy.z-m.z)<Math.hypot(player.x-m.x,player.z-m.z)?enemy:player,target=m.aggroTarget&&(m.aggroTarget!==enemy||bot)?m.aggroTarget:nearest,dx=target.x-m.x,dz=target.z-m.z,d=Math.hypot(dx,dz),speed=(m.frostSlow>0?.35:m.slow>0?.55:1)*1.45;
+ iceMovement(m,dt,roll.zones,move,()=>{
  if(d<(m.aggro?6.5:3.2)&&visibleTo(m,target)){m.dir.set(dx,0,dz).normalize();if(m.wind>0){m.wind-=dt;if(m.wind<=0){if(d<1.5)hit(target,2+m.type,m.dir,0,m);m.cool=2;}}else if(d<1.2&&m.cool<=0){m.wind=.5;}else if(d>1&&!(m.rooted>0)&&!m.motion.active)move(m,m.dir.x*speed*dt,m.dir.z*speed*dt);}
  else {m.wind=0;m.aggro=false;m.aggroTarget=null;const hx=m.homeX-m.x,hz=m.homeZ-m.z,hd=Math.hypot(hx,hz);if(hd>.5&&!(m.rooted>0)&&!m.motion.active)move(m,hx/hd*dt,hz/hd*dt);}
+ },m.rooted>0||m.motion.active);
  m.g.position.set(m.x,0,m.z);m.g.rotation.y=Math.atan2(m.dir.x,m.dir.z);m.body.position.y=.65+Math.sin(clock*5+m.id)*.06;m.body.material.color.copy(m.color);if(m.wind>0)m.body.material.color.set(0xff6655);else if(m.slow>0)m.body.material.color.lerp(new T.Color(0x479eff),.6);if(m.hitFlash>0)m.body.material.color.set(0xffffff);
  }monsters=monsters.filter(m=>!m.dead);
 }

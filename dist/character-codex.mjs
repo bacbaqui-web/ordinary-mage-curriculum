@@ -1,6 +1,6 @@
 import {CHARACTERS} from './characters.mjs';
 import {RUNES,describe} from './combo-design.mjs?v=shift-trajectory-1';
-import {SPACE_SKILLS} from './space-skills.mjs?v=ice-step-1';
+import {SPACE_SKILLS} from './space-skills.mjs?v=ice-surface-1';
 import {ICE_BASIC} from './ice-basic.mjs?v=forward-glow-1';
 
 export function mountCharacterCodex(host){
