@@ -1,6 +1,6 @@
 import {iceSpec,hasIceRecipe} from './ice-spec.mjs?v=shift-trajectory-1';
-import {plannerSpell} from './planner-spell.mjs?v=cast-light-1';
-import {ICE_BASIC} from './ice-basic.mjs?v=cast-light-1';
+import {plannerSpell} from './planner-spell.mjs?v=hand-flash-1';
+import {ICE_BASIC} from './ice-basic.mjs?v=hand-flash-1';
 import {fireSpec,hasFireRecipe} from './fire-spec.mjs?v=bolt17';
 import {compileSpell,spellReach} from './live-spells.mjs?v=integer-damage-1';
 // Distances follow the runtime's delivery rule, not the decorative particles.

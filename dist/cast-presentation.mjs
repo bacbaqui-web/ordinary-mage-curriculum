@@ -20,4 +20,9 @@ export function castWithPresentation({magic,wards,clearPath,collides,wallBlocks}
  const beamTarget=moving?null:()=>({point:end,active:false});
  caster.castFlash=.3;caster.pendingCastLight={colors:[...s.sequence].map(k=>RUNES[k].color),tier:s.sequence.length,dir:dir.clone(),origin:hand,beamTarget};
 }
-export function renderCastPresentation(actor,feedback){if(!actor.pendingCastLight)return;const event=actor.pendingCastLight,u=actor.g.userData,hand=event.origin?.clone()||new T.Vector3(actor.x,1,actor.z).addScaledVector(event.dir,.5);feedback.fire(hand,event.dir,event.colors,event.tier);if(event.beamTarget)feedback.beam(hand,event.beamTarget,event.colors,()=>actor.g.visible,event.tier);actor.pendingCastLight=null;}
+export function castHandPoint(actor,event){
+ const puppet=actor.g?.userData?.puppet,hand=event.hand||puppet?.icePose?.[0]?.hand||'right';
+ const bone=puppet?.lastPositions?.[hand==='left'?'LeftHand':'RightHand'];
+ return bone?bone.clone().addScaledVector(event.dir,.12):event.origin?.clone()||new T.Vector3(actor.x,1,actor.z).addScaledVector(event.dir,.5);
+}
+export function renderCastPresentation(actor,feedback){if(!actor.pendingCastLight)return;const event=actor.pendingCastLight,hand=()=>castHandPoint(actor,event);feedback.fire(hand,event.dir,event.colors,event.tier);if(event.beamTarget)feedback.beam(hand,event.beamTarget,event.colors,()=>actor.g.visible,event.tier);actor.pendingCastLight=null;}
