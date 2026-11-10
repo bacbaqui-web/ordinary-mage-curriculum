@@ -46,7 +46,8 @@ const current=()=>project.actions[index],pose=()=>samplePose(current(),frame);
 function save(message='브라우저에 저장됨'){syncLoop(current(),frame);for(const action of project.actions)for(const key of action.keys)key.ease='smooth';current().updatedAt=Date.now();project.characterId=characterId;try{localStorage.setItem(storage,JSON.stringify(project));$('status').textContent=`${characterProfile(characterId).label} · ${message}`;unsaved=false;return true;}catch{unsaved=true;$('status').textContent='자동 저장 공간이 부족합니다. 파일 저장으로 보관하세요.';return false;}}
 function checkpoint(){history.push(JSON.stringify({project,index,frame}));if(history.length>60)history.shift();future=[];}
 function restore(s){const v=JSON.parse(s);project=v.project;index=v.index;frame=v.frame;playing=false;save();sync();}
-function stop(){playing=false;$('play').textContent='재생';}
+function syncPlayButton(){const label=playing?'일시정지':'재생';$('play').textContent=playing?'⏸':'▶';$('play').setAttribute('aria-label',label);$('play').title=label;}
+function stop(){playing=false;syncPlayButton();}
 function key(){let k=current().keys.find(k=>k.frame===frame);if(!k){k={frame,ease:'smooth',pose:pose()};current().keys.push(k);current().keys.sort((a,b)=>a.frame-b.frame);}return k;}
 let keyDrag=null;
 function finishKeyDrag(commit){
@@ -88,9 +89,9 @@ function sync(){
  for(const side of ['Left','Right'])$('lock'+side+'Foot').checked=!!current().footLocks?.[side+'Foot'];
  const visible=actionGroups(project.actions).flatMap(g=>g.entries);if(visible.length&&!visible.some(e=>e.index===index)){index=visible[0].index;frame=0;stop();}
  $('action').replaceChildren(...actionGroups(project.actions).map(group=>{const el=document.createElement('optgroup');el.label=group.label;el.append(...group.entries.map(({action,index})=>new Option(action.name,index)));return el;}));$('action').value=index;$('frames').value=current().frames;$('fps').value=current().fps;$('joint').value=selected;
- $('scrub').max=current().frames-1;$('scrub').value=frame;$('frameLabel').textContent=`${Math.floor(frame)+1} / ${current().frames} 프레임`;
+ $('scrub').max=current().frames-1;$('scrub').value=frame;
  const p=pose()[selected];['x','y','z'].forEach((n,i)=>$(n).value=p[i].toFixed(3));
- $('play').textContent=playing?'일시정지':'재생';
+ syncPlayButton();
  $('timeline').replaceChildren(...Array.from({length:current().frames},(_,i)=>{const b=document.createElement('button');const has=current().keys.some(k=>k.frame===i);b.textContent=(has?'◆ ':'')+(i+1);b.className=(has?'key ':'')+(i===Math.floor(frame)?'selected':'');b.setAttribute('aria-label',`${i+1}프레임${has?' 키프레임':''}`);b.dataset.frame=i;b.onclick=()=>{if(loading)return;stop();frame=i;sync();};if(has&&!loopEndpoint(current(),i))bindKeyDrag(b,i);return b;}));alignScrub();
 }
 for(const side of ['Left','Right'])$('lock'+side+'Foot').onchange=()=>{
@@ -129,7 +130,7 @@ $('fps').onchange=()=>{const n=Number($('fps').value);if(n<1||n>60||!Number.isFi
 function alignScrub(){const cell=$('timeline').firstElementChild;if(cell)$('timelineContent').style.setProperty('--scrub-inset',(cell.getBoundingClientRect().width/2-8)+'px');}
 new ResizeObserver(alignScrub).observe($('timelineContent'));
 function syncPlayback(){
- const index=Math.floor(frame);$('scrub').value=index;$('frameLabel').textContent=`${index+1} / ${current().frames} 프레임`;
+ const index=Math.floor(frame);$('scrub').value=index;
  for(const cell of $('timeline').children)cell.classList.toggle('selected',Number(cell.dataset.frame)===index);
  if(playing){const cell=$('timeline').children[index],scroll=$('timelineScroll');if(cell){const x=cell.offsetLeft-$('timeline').children[0].offsetLeft;if(x<scroll.scrollLeft)scroll.scrollLeft=x;else if(x+cell.offsetWidth>scroll.scrollLeft+scroll.clientWidth)scroll.scrollLeft=x+cell.offsetWidth-scroll.clientWidth;}}
 }
