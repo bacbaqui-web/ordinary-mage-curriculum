@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {JOINTS,samplePose,validateProject} from './dist/pose-data.mjs';
+import {syncLoop,resizeLoop,loopEndpoint} from './dist/pose-loop.mjs';
+const pose=x=>Object.fromEntries(JOINTS.map(n=>[n,[x,1,0]]));
+const a={name:'반복',frames:9,fps:12,loop:true,keys:[{frame:0,ease:'smooth',pose:pose(1)},{frame:4,ease:'smooth',pose:pose(2)},{frame:8,ease:'smooth',pose:pose(3)}]};
+syncLoop(a);assert.deepEqual(samplePose(a,0),samplePose(a,8));assert.equal(a.keys[1].pose.Head[0],2);
+a.keys.at(-1).pose=pose(4);syncLoop(a,8);assert.equal(a.keys[0].pose.Head[0],4);
+a.keys[0].pose.Head[0]=5;syncLoop(a,0);assert.equal(a.keys.at(-1).pose.Head[0],5);assert.notEqual(a.keys[0].pose,a.keys.at(-1).pose);
+assert.ok(resizeLoop(a,12));assert.equal(a.keys.at(-1).frame,11);assert.ok(!a.keys.some(k=>k.frame===8));assert.deepEqual(samplePose(a,0),samplePose(a,11));
+assert.ok(resizeLoop(a,6));assert.ok(!resizeLoop(a,4));assert.equal(a.frames,6);assert.ok(loopEndpoint(a,5));
+const restored=validateProject(JSON.parse(JSON.stringify({version:1,actions:[a]})));assert.equal(restored.actions[0].loop,true);
+a.loop=false;const before=JSON.stringify(a);syncLoop(a,5);assert.equal(JSON.stringify(a),before);
+console.log('PASS: linked endpoints, bidirectional edits, resize, interior key protection, saved loop setting, disabled loop');
