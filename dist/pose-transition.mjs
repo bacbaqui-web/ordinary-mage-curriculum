@@ -5,7 +5,7 @@ export class PoseTransition{
   const changed=this.key!==key;
   if(changed){this.key=key;this.from=this.last;this.elapsed=0;}
   else this.elapsed+=Math.max(0,dt||0);
-  const t=Math.min(1,this.elapsed/this.duration),weight=t*t*(3-2*t);
+  const t=this.duration<=0?1:Math.min(1,this.elapsed/this.duration),weight=t*t*(3-2*t);
   if(this.from&&t<1)for(const [n,v] of Object.entries(p))if(this.from[n])v.copy(this.from[n].clone().lerp(v,weight));
   this.last=Object.fromEntries(Object.entries(p).map(([n,v])=>[n,v.clone()]));return p;
  }

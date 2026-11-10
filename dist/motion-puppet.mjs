@@ -72,16 +72,29 @@ export class MotionPuppet{
   }
   const releaseName=this.chargeHand&&this.magic.stage===1?firstRingClip(this.chargeHand,'release'):magicClipName(this.magic.stage,'release');const magicClip=readMotion(releaseName)||readMotion('마법 시전');this.magic.splitRelease=!!readMotion(releaseName);this.magic.releaseDuration=magicClip?Math.max(10/12,magicClip.frames/magicClip.fps):10/12;
   if(this.magic.mode==='hold'&&this.magic.stage===1&&this.moveSpeed>0){const walk=readPose('걷기',this.time,{loop:true});for(const [n,p] of Object.entries(walkingLegs))positions[n]=walk?.[n]?new T.Vector3(...walk[n]):p;for(const side of ['Left','Right'])positions[side+'Toe']=positions[side+'Foot'].clone().add(new T.Vector3(0,0,.22));}
+  // While the cast is pending, blend the last displayed charge pose into the
+  // actual saved release pose, rather than holding the charge pose unchanged.
+  const transition=this.castTransition;
+  if(transition){
+   const release=readPose(releaseName,0)||readPose('마법 시전',2/12);
+   if(release){for(const [n,a] of Object.entries(release))positions[n]=new T.Vector3(...a);}
+   else{const motion=new MagicMotion();motion.release(this.magic.stage);motion.elapsed=2/12;motion.apply(positions);}
+  }
   this.bodyFollow?.apply(positions,this.group);
+  if(transition){
+   const t=Math.max(0,Math.min(1,transition.progress)),weight=t*t*(3-2*t);
+   for(const [n,v] of Object.entries(positions))if(transition.from[n])v.copy(transition.from[n].clone().lerp(v,weight));
+   this.poseTransition??=new PoseTransition();this.poseTransition.last=Object.fromEntries(Object.entries(positions).map(([n,v])=>[n,v.clone()]));
+  }
   for(const n of Object.keys(positions))this.group.localToWorld(positions[n]);
   // Basic ice casts own the arm pose, after saved clips and body turning.
   if(this.icePose?.length&&!edited&&!basicEdited){for(const side of ['Left','Right']){const shoulder=positions[side+'Arm'],elbow=positions[side+'ForeArm'],hand=positions[side+'Hand'];elbow.copy(shoulder).add(new T.Vector3(0,-.32,0));hand.copy(shoulder).add(new T.Vector3(0,-.64,0));const pose=this.icePose.find(p=>p.hand===side.toLowerCase());if(pose){const w=Math.max(0,Math.min(1,pose.weight));elbow.lerp(shoulder.clone().addScaledVector(pose.dir,.29).add(new T.Vector3(0,-.08,0)),w);const end=new T.Vector3().setFromMatrixPosition(this.group.matrixWorld).setY(pose.height??1.42).addScaledVector(pose.dir,pose.reach??.60);hand.lerp(end,w);}}}
-  if(this.blendTransitions){
+  if(this.blendTransitions&&!transition){
    const clip=readMotion(motionName),time=this.editorActionTime??(motionName==='이동기'?this.mobilityTime||0:motionName==='대기'?this.idleTime||0:this.time);
    const cycle=this.magic.mode==='idle'&&clip&&!clip.loop?Math.floor(time/(clip.frames/clip.fps)):0;
    const state=[motionName,this.magic.mode,this.magic.stage,this.basicAttack?.name||'',this.icePose?.map(p=>p.hand).join(',')||'',cycle].join(':');
    for(const v of Object.values(positions))this.group.worldToLocal(v);
-   this.poseTransition??=new PoseTransition();this.poseTransition.duration=this.magic.mode==='hold'?1/12:.18;this.poseTransition.apply(positions,state,this.transitionDt||0);
+   this.poseTransition??=new PoseTransition();this.poseTransition.duration=this.magic.mode==='hold'?1/12:this.magic.mode==='release'?(this.releaseBlendSeconds??.18):.18;this.poseTransition.apply(positions,state,this.transitionDt||0);
    for(const v of Object.values(positions))this.group.localToWorld(v);
   }
   this.transitionDt=0;
