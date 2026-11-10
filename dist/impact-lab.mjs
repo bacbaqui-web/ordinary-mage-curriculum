@@ -23,11 +23,11 @@ $('export').onclick=()=>{const url=URL.createObjectURL(new Blob([JSON.stringify(
 $('sound').onclick=async()=>{try{if(!audio)audio=new GameAudio();audio.enabled=true;await audio.unlock();if(!audio.available||!audio.buffers.has('hit'))throw Error('audio');soundEnabled=!soundEnabled;$('sound').textContent=soundEnabled?'소리 끄기':'소리 켜기';$('sound').setAttribute('aria-pressed',String(soundEnabled));if(!soundEnabled)audio.stopAll();}catch{$('sound').textContent='소리를 불러오지 못했습니다. 다시 누르세요.';}};
 function playHit(){if(soundEnabled&&audio&&settings.volume>0)audio.hit({x:0,z:0},{x:0,z:0},false,settings.volume/35);}
 sync();
-const scene=new T.Scene();scene.add(new T.HemisphereLight(0xcfe7ff,0x263650,2.5));const light=new T.DirectionalLight(0xffe4bd,3);light.position.set(-3,8,5);scene.add(light);
-let renderer;try{renderer=new T.WebGLRenderer({canvas:$('scene'),alpha:true,antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setClearColor(0,0);}catch{$('canvasError').hidden=false;}
-const camera=new T.PerspectiveCamera(36,1,.1,80),origin=new T.Vector3(2.5,3.4,7),target=new T.Vector3(0,.7,0);
+const scene=new T.Scene();scene.add(new T.HemisphereLight(0xe2efff,0x5a614c,2.3));const light=new T.DirectionalLight(0xffe4ba,3.2);light.position.set(-8,18,9);light.castShadow=true;light.shadow.mapSize.set(2048,2048);Object.assign(light.shadow.camera,{left:-12,right:12,top:12,bottom:-12});light.shadow.normalBias=.04;scene.add(light);
+let renderer;try{renderer=new T.WebGLRenderer({canvas:$('scene'),alpha:true,antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setClearColor(0,0);renderer.outputColorSpace=T.SRGBColorSpace;renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFSoftShadowMap;}catch{$('canvasError').hidden=false;}
+const camera=new T.PerspectiveCamera(38,1,.1,100),origin=new T.Vector3(12,17,15).multiplyScalar(.32),target=new T.Vector3(0,0,0);
 function mesh(geometry,material,parent,x=0,y=0,z=0){const m=new T.Mesh(geometry,material);m.position.set(x,y,z);parent.add(m);return m;}
-function actor(parent,id,x){const root=createWizard(parent,0x8edcff,0xa2dfff);root.position.x=x;root.rotation.y=x<0?Math.PI/2:-Math.PI/2;const ready=setWizardCharacter(root,id);return {root,ready,id,dir:new T.Vector3(x<0?1:-1,0,0)};}
+function actor(parent,id,x){const root=createWizard(parent,id==='ice'?0x394351:0x73899c,id==='ice'?0xe7b367:0xc2d6df);root.position.x=x;root.rotation.y=x<0?Math.PI/2:-Math.PI/2;const ready=setWizardCharacter(root,id);return {root,ready,id,dir:new T.Vector3(x<0?1:-1,0,0)};}
 function poseActor(a,time,releaseAt){const g=a.root,u=g.userData,puppet=u.puppet,pre=time<releaseAt,post=Math.max(0,time-releaseAt);g.position.set(a.dir.x>0?-2:2,0,0);g.rotation.set(0,a.dir.x>0?Math.PI/2:-Math.PI/2,0);g.scale.set(1,1,1);u.body.rotation.set(0,0,0);puppet.blendTransitions=false;puppet.chargeHand='left';puppet.chargeUsesIce=a.id==='ice';
  puppet.magic.reset();puppet.basicAttack=null;animateWizard(g,0,{charging:pre,cast:pre?0:Math.max(0,1-post/.5)});
  if(pre){puppet.magic.mode='hold';puppet.magic.elapsed=time;puppet.magic.phaseElapsed=time;}
