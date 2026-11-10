@@ -1,4 +1,4 @@
-import {actorShapes} from './combat-hit.mjs?v=smooth-motion-1';
+import {actorShapes} from './combat-hit.mjs?v=hand-clips-1';
 import {meshOutline} from './screen-hit.mjs?v=screenhit10';
 export class HitboxView{
  constructor(){this.enabled=false;this.canvas=document.createElement('canvas');this.canvas.style.cssText='position:fixed;inset:0;width:100%;height:100%;pointer-events:none';document.querySelector('#arena').after(this.canvas);this.ctx=this.canvas.getContext('2d');}

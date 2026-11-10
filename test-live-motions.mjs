@@ -78,12 +78,12 @@ console.log('PASS: saved idle in actual game, walking transition, attack priorit
 stores.set(motionStorageKey('ice'),JSON.stringify({version:1,rigVersion:7,actions:[makeWalk(1.5),left,right]}));
 for(const [hand,clip] of [['left',left],['right',right]]){
  const p=iceWizard.userData.puppet;p.chargeHand=hand;p.chargeUsesIce=true;p.magic.press();p.magic.update(.4,1);projectWizard(iceWizard,camera);
- const held=samplePose(clip,2);
- assert.deepEqual(p.lastPositions.Head.toArray(),held.Head,'first ring holds the matching basic cast pose');
+ const held=samplePose(clip,Math.min(clip.frames-1,p.magic.phaseElapsed*clip.fps));
+ assert.deepEqual(p.lastPositions.Head.toArray(),held.Head,'first ring plays the matching charge clip');
  assert.deepEqual(p.lastPositions.LeftHand.toArray(),held.LeftHand,'charge arm correction preserves authored cast pose');
  p.magic.reset();
 }
-console.log('PASS: left and right first-ring charge reuse the matching cast pose');
+console.log('PASS: left and right first-ring charge play the matching charge clip');
 
 // Real game transitions begin at the last displayed pose, including interrupted blends.
 stores.set(motionStorageKey('ice'),JSON.stringify({version:1,rigVersion:7,actions:[makeWalk(1.5),idle,left,right]}));
@@ -97,3 +97,17 @@ const middle=blendPuppet.lastPositions.Head.clone();assert.ok(middle.distanceTo(
 blendPuppet.playBasicAttack('right');animateWizard(iceWizard,.016,{speed:0});projectWizard(iceWizard,camera);
 assert.ok(blendPuppet.lastPositions.Head.distanceTo(middle)<1e-8,'interrupted transition starts from rendered pose');
 console.log('PASS: smooth standing/walking transition and interruption without snapping');
+
+const {firstRingClip}=await import('./dist/motion-catalog.mjs');
+const fourClips=['left','right'].flatMap((hand,i)=>['hold','release'].map((mode,j)=>({...makeWalk(3+i+j*.2,200),name:firstRingClip(hand,mode),binding:firstRingClip(hand,mode)})));
+stores.set(motionStorageKey('ice'),JSON.stringify({version:1,rigVersion:7,actions:[makeWalk(1.5),...fourClips]}));
+blendPuppet.blendTransitions=false;
+for(const hand of ['left','right']){
+ blendPuppet.magic.reset();blendPuppet.chargeHand=hand;blendPuppet.magic.press();blendPuppet.magic.update(2,1);projectWizard(iceWizard,camera);
+ const chargeClip=fourClips.find(c=>c.name===firstRingClip(hand,'hold'));
+ assert.deepEqual(blendPuppet.lastPositions.Head.toArray(),samplePose(chargeClip,chargeClip.frames-1).Head,'charge ends in a held final pose');
+ blendPuppet.magic.reset();blendPuppet.playBasicAttack(hand);projectWizard(iceWizard,camera);
+ const releaseClip=fourClips.find(c=>c.name===firstRingClip(hand,'release'));
+ assert.deepEqual(blendPuppet.lastPositions.Head.toArray(),samplePose(releaseClip,0).Head,'release starts the separate hand-specific cast');
+}
+console.log('PASS: four independent first-ring clips, charge final hold, hand-specific release');

@@ -1,5 +1,5 @@
-import {areaTouches} from './combat-hit.mjs?v=smooth-motion-1';
-import {RedLightningSpells} from './red-lightning-spells.mjs?v=smooth-motion-1';
+import {areaTouches} from './combat-hit.mjs?v=hand-clips-1';
+import {RedLightningSpells} from './red-lightning-spells.mjs?v=hand-clips-1';
 import {isRedLightning} from './red-lightning-spec.mjs?v=bolt17';
 import {SteamSpells} from './steam-spells.mjs?v=bodyhit11';
 import {isSteam} from './steam-spec.mjs?v=bolt17';

@@ -1,10 +1,11 @@
+import {ensureFirstRingClips} from './motion-catalog.mjs?v=hand-clips-1';
 import {validateProject,samplePose} from './pose-data.mjs?v=smooth-motion-1';
 import {motionStorageKey,characterProfile} from './character-profiles.mjs?v=heel-free-1';
 import {migrateAnklePivot} from './ankle-pivot.mjs?v=heel-free-1';
 let storage=motionStorageKey('default'),ankleLift=0,ankleBack=0;
 export function useMotionCharacter(id){storage=motionStorageKey(id);ankleLift=characterProfile(id).ankleLift||0;ankleBack=characterProfile(id).ankleBack||0;refresh();}
 let project=null;
-function refresh(){try{const raw=globalThis.localStorage?.getItem(storage);project=raw?validateProject(JSON.parse(raw)):null;if(project)migrateAnklePivot(project,ankleLift,ankleBack);}catch{project=null;}}
+function refresh(){try{const raw=globalThis.localStorage?.getItem(storage);project=raw?validateProject(JSON.parse(raw)):null;if(project){migrateAnklePivot(project,ankleLift,ankleBack);ensureFirstRingClips(project);}}catch{project=null;}}
 refresh();
 globalThis.addEventListener?.('storage',e=>{if(e.key===storage||e.key===null)refresh();});
 globalThis.addEventListener?.('focus',refresh);
@@ -15,7 +16,7 @@ export function savedPose(name,time,{loop=false,hold=false}={}){const a=savedMot
 export function createMotionReader(id,{fallback=true}={}){
  const profile=characterProfile(id),key=motionStorageKey(profile.id),defaultKey=motionStorageKey('default');
  let lastRaw,lastFallback,current=null,legacy=null;
- const parse=raw=>{try{return raw?validateProject(JSON.parse(raw)):null;}catch{return null;}};
+ const parse=raw=>{try{const p=raw?validateProject(JSON.parse(raw)):null;if(p)ensureFirstRingClips(p);return p;}catch{return null;}};
  function refreshActor(){
   try{
    const raw=globalThis.localStorage?.getItem(key)??null;

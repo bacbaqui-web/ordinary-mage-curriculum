@@ -1,6 +1,7 @@
+import {firstRingClip} from './motion-catalog.mjs?v=hand-clips-1';
 import {PoseTransition} from './pose-transition.mjs?v=smooth-motion-1';
 import {magicClipName} from './magic-clips.mjs?v=smooth-motion-1';
-import {savedMotion,savedPose,createMotionReader} from './live-motions.mjs?v=smooth-motion-1';
+import {savedMotion,savedPose,createMotionReader} from './live-motions.mjs?v=hand-clips-1';
 import * as T from './three.module.js';
 import {MagicMotion} from './magic-motion.mjs';
 import {actionClips} from './action-clips.mjs';
@@ -33,7 +34,7 @@ export class MotionPuppet{
   this.eyes=[-.085,.085].map(x=>{const m=new T.Mesh(new T.CircleGeometry(.025,8),material(0x25313b));m.userData.x=x;this.visual.add(m);return m;});
   this.magic=new MagicMotion();this.setMotion(motion);
  }
- playBasicAttack(hand){this.basicAttack={name:hand==='right'?'우클릭 기본 공격':'좌클릭 기본 공격',time:0};}
+ playBasicAttack(hand){this.basicAttack={name:firstRingClip(hand,'release'),time:0};}
  setMotionCharacter(id){if(this.motionCharacter===id)return;this.motionCharacter=id;this.motionReader=createMotionReader(id);}
  setMotion({root,clips},mapping={}){
   const bones={};root.traverse(o=>{const key=o.name.replace(/^mixamorig[:_]?/i,'').replace(/[^a-z]/gi,'').toLowerCase();for(const n of names)if(key===n.toLowerCase())bones[n]=o;});
@@ -53,23 +54,19 @@ export class MotionPuppet{
   positions.LeftToe=positions.LeftFoot.clone().add(new T.Vector3(0,0,.22));positions.RightToe=positions.RightFoot.clone().add(new T.Vector3(0,0,.22));
   if(this.magic.mode==='idle'&&(this.charging||this.cast>0)){positions.RightForeArm.copy(positions.RightArm).add(new T.Vector3(0,-.08,.31));positions.RightHand.copy(positions.RightForeArm).add(new T.Vector3(0,this.charging?.2:0,.3));}
   this.magic.apply(positions);
-  const specific=this.magic.mode!=='idle'?magicClipName(this.magic.stage,this.magic.mode):null;
+  const handClip=this.chargeHand&&this.magic.stage===1?firstRingClip(this.chargeHand,this.magic.mode):null;
+  const specific=this.magic.mode!=='idle'?(handClip&&readMotion(handClip)?handClip:magicClipName(this.magic.stage,this.magic.mode)):null;
   const split=specific&&readMotion(specific);
   const motionName=this.magic.mode!=='idle'?(split?specific:'마법 시전'):this.locomotionName||this.clips[this.selectedClip]?.name;
   const edited=readPose(motionName,this.magic.mode!=='idle'?(split?this.magic.phaseElapsed:this.magic.elapsed):(this.editorActionTime??(motionName==='대기'?this.idleTime||0:this.time)),{loop:this.magic.mode==='idle'&&this.editorActionTime===undefined,hold:!split&&this.magic.mode==='hold'});
   if(edited){for(const [n,a] of Object.entries(edited))positions[n]=new T.Vector3(...a);positions.LeftToe=positions.LeftFoot.clone().add(new T.Vector3(0,0,.22));positions.RightToe=positions.RightFoot.clone().add(new T.Vector3(0,0,.22));}
   if(this.magic.mode==='hold')this.basicAttack=null;
   let basicEdited=false;
-  if(this.chargeHand&&this.magic.mode==='hold'&&this.magic.stage===1){
-   const name=this.chargeHand==='right'?'우클릭 기본 공격':'좌클릭 기본 공격';
-   const attack=readMotion(name),releaseName=attack?.updatedAt?name:!this.chargeUsesIce?'1륜 발사':null;
-   const clip=releaseName&&readMotion(releaseName);
-   if(clip){const held=readPose(releaseName,Math.min(2,clip.frames-1)/clip.fps);for(const [n,a] of Object.entries(held))positions[n]=new T.Vector3(...a);positions.LeftToe=positions.LeftFoot.clone().add(new T.Vector3(0,0,.22));positions.RightToe=positions.RightFoot.clone().add(new T.Vector3(0,0,.22));basicEdited=true;}
-  }
+  if(handClip&&specific===handClip&&edited)basicEdited=true;
   if(this.basicAttack){
    const clip=readMotion(this.basicAttack.name),duration=clip?clip.frames/clip.fps:.8;
    if(this.basicAttack.time>=duration)this.basicAttack=null;
-   else if(clip?.updatedAt){const basic=readPose(this.basicAttack.name,this.basicAttack.time);for(const [n,a] of Object.entries(basic))positions[n]=new T.Vector3(...a);positions.LeftToe=positions.LeftFoot.clone().add(new T.Vector3(0,0,.22));positions.RightToe=positions.RightFoot.clone().add(new T.Vector3(0,0,.22));basicEdited=true;}
+   else if(clip){const basic=readPose(this.basicAttack.name,this.basicAttack.time);for(const [n,a] of Object.entries(basic))positions[n]=new T.Vector3(...a);positions.LeftToe=positions.LeftFoot.clone().add(new T.Vector3(0,0,.22));positions.RightToe=positions.RightFoot.clone().add(new T.Vector3(0,0,.22));basicEdited=true;}
   }
   const magicClip=readMotion(magicClipName(this.magic.stage,'release'))||readMotion('마법 시전');this.magic.splitRelease=!!readMotion(magicClipName(this.magic.stage,'release'));this.magic.releaseDuration=magicClip?Math.max(10/12,magicClip.frames/magicClip.fps):10/12;
   this.bodyFollow?.apply(positions,this.group);
