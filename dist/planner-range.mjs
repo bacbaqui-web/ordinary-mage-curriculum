@@ -1,11 +1,12 @@
-import {iceSpec,hasIceRecipe} from './ice-spec.mjs?v=ice-charge-2';
-import {plannerSpell} from './planner-spell.mjs?v=ring-origin-2';
+import {iceSpec,hasIceRecipe} from './ice-spec.mjs?v=shift-trajectory-1';
+import {plannerSpell} from './planner-spell.mjs?v=shift-trajectory-1';
 import {ICE_BASIC} from './ice-basic.mjs?v=ring-origin-2';
 import {fireSpec,hasFireRecipe} from './fire-spec.mjs?v=bolt17';
-import {compileSpell,spellReach} from './live-spells.mjs?v=ice-charge-2';
+import {compileSpell,spellReach} from './live-spells.mjs?v=shift-trajectory-1';
 // Distances follow the runtime's delivery rule, not the decorative particles.
 export function plannerRange(seq,options={}){
  const spell=plannerSpell(seq,options),scale=spell.rangeScale||1;
+ if(spell.iceVariant==='beam')return {value:5.5,kind:'직선 분사 거리'};
  if(spell.iceHand)return {value:ICE_BASIC[spell.iceHand].range*scale,kind:spell.iceHand==='left'?'투사체 이동 거리':'분사 거리'};
  if(hasIceRecipe(seq)){const s=iceSpec(seq,spell.power);return {value:s.range,kind:['i','w'].includes(s.op)?'투사체 이동 거리':['q','p','s'].includes(s.op)?'공격 범위 반경':s.op==='h'?'돌진 거리':'설치·낙하 중심까지의 조준 거리'};}
  if(hasFireRecipe(seq)){

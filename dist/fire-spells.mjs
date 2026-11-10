@@ -1,7 +1,7 @@
 import {areaTouches} from './combat-hit.mjs?v=cast-lock-1';
-import {RedLightningSpells} from './red-lightning-spells.mjs?v=cast-lock-1';
+import {RedLightningSpells} from './red-lightning-spells.mjs?v=shift-trajectory-1';
 import {isRedLightning} from './red-lightning-spec.mjs?v=bolt17';
-import {SteamSpells} from './steam-spells.mjs?v=bodyhit11';
+import {SteamSpells} from './steam-spells.mjs?v=shift-trajectory-1';
 import {isSteam} from './steam-spec.mjs?v=bolt17';
 import * as T from './three.module.js';
 import {crossesWard} from './forces.mjs';
@@ -31,7 +31,7 @@ export class FireSpells{
  this.a.vfx.particle('chunk',[x,.25+Math.random()*.8,z],[Math.cos(angle)*(ash?1.1:.5),ash?.8+Math.random()*.8:1.5,Math.sin(angle)*(ash?1.1:.5)],ash?.035+Math.random()*.035:.025+Math.random()*.025,color,ash?1.1+Math.random()*.6:.55+Math.random()*.35,{gravity:ash?.35:0});}}
  damage(e,point,radius,{cone=false,ring=false,once=false}={}){for(const v of this.a.targets(e.owner)){const dx=v.x-point.x,dz=v.z-point.z,d=Math.hypot(dx,dz);if(!this.a.areaHit(v,point,radius,e.dir,cone,ring)||!this.a.clearPath(point,v))continue;if(once&&e.hit.has(v))continue;
  if(this.a.hit(v,e.s.damage,e.dir,e.s.op==='h'?e.s.knockback:0,e.owner)){this.a.applyPayload(v,e.s,e.owner);if(once)e.hit.add(v);}}}
- cast(seq,power,owner,dir,target,emission=null,rangeScale=1){if(this.effects.length>55)return;if(isRedLightning(seq)){this.redLightning.cast(seq,power,owner,dir,target);return;}if(isSteam(seq)){this.steam.cast(seq,power,owner,dir,target);return;}const s=fireSpec(seq,power);if(seq.length===1){s.range*=rangeScale;s.radius*=rangeScale;}const origin=emission?{x:emission.x,z:emission.z}:{x:owner.x,z:owner.z},delta=new T.Vector3(target.x-owner.x,0,target.z-owner.z);if(delta.length()>s.range)delta.setLength(s.range);const point={x:owner.x+delta.x,z:owner.z+delta.z};let e;
+ cast(seq,power,owner,dir,target,emission=null,rangeScale=1){if(this.effects.length>55)return;if(isRedLightning(seq)){this.redLightning.cast(seq,power,owner,dir,target,emission);return;}if(isSteam(seq)){this.steam.cast(seq,power,owner,dir,target,emission);return;}const s=fireSpec(seq,power);if(seq.length===1){s.range*=rangeScale;s.radius*=rangeScale;}const origin=emission?{x:emission.x,z:emission.z}:{x:owner.x,z:owner.z},delta=new T.Vector3(target.x-owner.x,0,target.z-owner.z);if(delta.length()>s.range)delta.setLength(s.range);const point={x:owner.x+delta.x,z:owner.z+delta.z};let e;
  if(s.op==='i'){const p={x:owner.x+dir.x*3,z:owner.z+dir.z*3},mesh=this.cloud(s,s.radius,'circle');this.add('smokescreen',mesh,{...s,damage:s.tickDamage},owner,p,dir,s.life,{radius:s.radius});if(s.upgraded){const light=new T.PointLight(0xff3218,5,8);light.position.y=1;mesh.add(light);}return;}
  if(['q','d','p'].includes(s.op)){const mesh=this.cloud(s,s.radius);mesh.rotation.y=-Math.atan2(dir.z,dir.x);e=this.add('cone',mesh,s,owner,origin,dir,s.life,{radius:s.radius});this.damage(e,origin,s.radius,{cone:true});this.embers(e,s.upgraded?85:55);if(s.op==='d')this.ashFall(s,owner,origin,dir);if(seq==='qq'||seq==='qqq')this.coneResidue(s,owner,origin,dir);return;}
  if(s.op==='l'){const mesh=new T.Group();this.a.scene.add(mesh);e=this.add('lightning',mesh,s,owner,point,dir,.42,{radius:s.radius});const pts=Array.from({length:10},(_,i)=>new T.Vector3(i===9?0:(Math.random()-.5)*.65,6-i*6/9,i===9?0:(Math.random()-.5)*.4));for(let i=0;i<9;i++){this.segment(mesh,pts[i],pts[i+1],.065,0xff241a);this.segment(mesh,pts[i],pts[i+1],.022,0xffb45a);if(i===3||i===5)this.segment(mesh,pts[i],pts[i].clone().add(new T.Vector3(.65,-.65,.2)),.035,0xff492a);}mesh.scale.setScalar(s.scale);this.damage(e,point,s.radius);this.residue(s,owner,point,dir,s.upgraded?2.4:1);return;}
