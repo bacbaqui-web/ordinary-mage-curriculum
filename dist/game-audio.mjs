@@ -52,7 +52,7 @@ export class GameAudio {
   this.play(first,{...spatial,volume:spatial.volume*(.68+tier*.07),rate:1});
   if(tier>1&&last!==first)this.play(last,{...spatial,volume:spatial.volume*.22,rate:1.05});
  }
- hit(actor,listener,blocked=false){const spatial=this.spatial(actor,listener);this.play(blocked?'barrier':'hit',{...spatial,volume:spatial.volume*(blocked?.32:.38),throttle:100});}
+ hit(actor,listener,blocked=false,volumeScale=1){const spatial=this.spatial(actor,listener);this.play(blocked?'barrier':'hit',{...spatial,volume:spatial.volume*(blocked?.32:.38)*Math.max(0,volumeScale),throttle:100});}
  update({active,charging,stage=1,rolling=false}){
   this.suspended=!active||document.hidden||!this.focused;
   if(this.suspended){this.stopAll();this.wasRolling=false;return;}
