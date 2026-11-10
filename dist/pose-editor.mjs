@@ -1,4 +1,4 @@
-import {BAG_POINTS,BAG_LABELS,bagHandles,moveBag} from './bag-controls.mjs?v=bag-translate-1';
+import {BAG_POINTS,BAG_LABELS,bagHandles,moveBag} from './bag-controls.mjs?v=bag-follow-1';
 import {loopFrame} from './motion-timing.mjs';
 import {normalizeMovement,readMovement} from './character-movement.mjs?v=turn-rates-1';
 import {syncLoop,resizeLoop,loopEndpoint} from './pose-loop.mjs';
@@ -124,7 +124,7 @@ for(const [i,n] of ['x','y','z'].entries()){
   if(!drag)return;const dx=e.clientX-drag.x;
   if(!drag.moved){if(Math.abs(dx)<4)return;stop();frame=Math.floor(frame);checkpoint();drag.moved=true;drag.key=key();drag.base=structuredClone(drag.key.pose);drag.target=[...editPoint(drag.base,selected)];input.setPointerCapture(drag.pointer);input.classList.add('scrubbing');}
   e.preventDefault();const target=[...drag.target];target[i]=T.MathUtils.clamp(target[i]+dx*.005,-10,10);
-  drag.key.pose=moveJoint(drag.base,selected,target);syncLoop(current(),frame);sync();
+  drag.key.pose=moveJoint(BAG_POINTS.includes(selected)?drag.key.pose:drag.base,selected,target);syncLoop(current(),frame);sync();
  };
  const finish=()=>{if(!drag)return;const changed=drag.moved,pointer=drag.pointer;if(changed){input.blur();save();}drag=null;input.classList.remove('scrubbing');if(input.hasPointerCapture(pointer))input.releasePointerCapture(pointer);};
  input.onpointerup=finish;input.onpointercancel=finish;input.onlostpointercapture=finish;
@@ -206,7 +206,7 @@ const views=[['앞',[0,0,6]],['옆',[6,0,0]],['위',[0,6,0]],['쿼터뷰',[5,4,6
  canvas.addEventListener('wheel',e=>{e.preventDefault();const delta=e.deltaY*(e.deltaMode===1?16:e.deltaMode===2?canvas.clientHeight:1);v.zoom=T.MathUtils.clamp(v.zoom*Math.exp(-delta*.0015),.4,3);},{passive:false});
  if(orbit){title.textContent='쿼터뷰 · 빈 곳을 끌어 회전';const reset=document.createElement('button');reset.textContent='시점 초기화';reset.className='view-reset';reset.onclick=()=>{yaw=initialYaw;pitch=initialPitch;orient();};box.append(reset);canvas.oncontextmenu=e=>e.preventDefault();}
  canvas.onpointerdown=e=>{if(loading)return;const r=canvas.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;const nearest=Object.entries(v.points).filter(([n])=>n!=='Neck').map(([n,p])=>({n,d:Math.hypot(p.x-x,p.y-y)})).sort((a,b)=>a.d-b.d)[0];if(orbit&&(e.button===2||!$('handles').checked||!nearest||nearest.d>18)){drag={orbit:true,x:e.clientX,y:e.clientY,yaw,pitch};canvas.setPointerCapture(e.pointerId);e.preventDefault();return;}if(!$('handles').checked||!nearest||nearest.d>18)return;stop();frame=Math.floor(frame);selected=nearest.n;canvas.focus();checkpoint();const k=key();drag={x:e.clientX,y:e.clientY,start:[...editPoint(k.pose,selected)],base:structuredClone(k.pose),k};canvas.setPointerCapture(e.pointerId);sync();};
- canvas.onpointermove=e=>{if(!drag)return;if(drag.orbit){yaw=drag.yaw-(e.clientX-drag.x)*.008;pitch=T.MathUtils.clamp(drag.pitch+(e.clientY-drag.y)*.008,-1.35,1.35);orient();return;}const dx=(e.clientX-drag.x)/v.scale,dy=-(e.clientY-drag.y)/v.scale,p=new T.Vector3(...drag.start).addScaledVector(right,dx).addScaledVector(up,dy);drag.k.pose=moveJoint(drag.base,selected,p.toArray());syncLoop(current(),frame);sync();};
+ canvas.onpointermove=e=>{if(!drag)return;if(drag.orbit){yaw=drag.yaw-(e.clientX-drag.x)*.008;pitch=T.MathUtils.clamp(drag.pitch+(e.clientY-drag.y)*.008,-1.35,1.35);orient();return;}const dx=(e.clientX-drag.x)/v.scale,dy=-(e.clientY-drag.y)/v.scale,p=new T.Vector3(...drag.start).addScaledVector(right,dx).addScaledVector(up,dy);drag.k.pose=moveJoint(BAG_POINTS.includes(selected)?drag.k.pose:drag.base,selected,p.toArray());syncLoop(current(),frame);sync();};
  canvas.onpointerup=()=>{if(drag){const changed=!drag.orbit;drag=null;if(changed)save();}};canvas.onpointercancel=()=>{const changed=drag&&!drag.orbit;drag=null;if(changed)save();};return v;
 });
 function draw(v,p){const {canvas,camera}=v,w=Math.round(canvas.clientWidth),h=Math.round(canvas.clientHeight);if(!w||!h)return;if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}const ctx=canvas.getContext('2d'),scale=h/3.1*v.zoom;v.scale=scale;const point=a=>{const local=new T.Vector3(...a).applyMatrix4(camera.matrixWorldInverse);return {x:w/2+local.x*scale,y:h/2-local.y*scale,z:local.z};};const controlPose=rig?rig.controlPose(p):p;v.points=Object.fromEntries([...JOINTS,...BAG_POINTS.filter(n=>controlPose[n])].map(n=>[n,point(controlPose[n])]));ctx.fillStyle='#2b3c44';ctx.fillRect(0,0,w,h);ctx.strokeStyle='#354a52';ctx.lineWidth=1;const spacing=scale*.25;for(let x=w/2%spacing;x<w;x+=spacing){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke();}for(let y=h/2%spacing;y<h;y+=spacing){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();}
