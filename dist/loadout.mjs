@@ -1,4 +1,4 @@
-import {groundSpec,groundName} from './ground.mjs?v=zones1';
+import {groundSpec,groundName} from './ground.mjs?v=integer-damage-1';
 import {fallsFromAbove,launchesOrb,movingWard,orbTuning} from './delivery.mjs?v=zones1';
 export const RUNES={
  q:{name:'화염',color:'#ff9c45',icon:'✦',role:'공격',hint:'분사 · 화상',desc:'가까운 곳에 화염을 뿜고 짧은 화상을 남깁니다. 원이 늘면 사거리가 늘어납니다.'},

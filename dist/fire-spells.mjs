@@ -1,7 +1,8 @@
-import {areaTouches} from './combat-hit.mjs?v=cast-lock-1';
-import {RedLightningSpells} from './red-lightning-spells.mjs?v=shift-trajectory-1';
+import {roundDamage} from './damage-number.mjs?v=integer-damage-1';
+import {areaTouches} from './combat-hit.mjs?v=integer-damage-1';
+import {RedLightningSpells} from './red-lightning-spells.mjs?v=integer-damage-1';
 import {isRedLightning} from './red-lightning-spec.mjs?v=bolt17';
-import {SteamSpells} from './steam-spells.mjs?v=shift-trajectory-1';
+import {SteamSpells} from './steam-spells.mjs?v=integer-damage-1';
 import {isSteam} from './steam-spec.mjs?v=bolt17';
 import * as T from './three.module.js';
 import {crossesWard} from './forces.mjs';
@@ -64,7 +65,7 @@ export class FireSpells{
  if(e.redLightning){done=this.redLightning.update(e,dt);}
  else if(e.steam){done=this.steam.update(e,dt);}
  else if(e.type==='ashfall'){this.updateAsh(e,dt);}
- else if(e.type==='shot'||e.type==='punch'){const travel=Math.min(e.speed*dt,e.travel-e.distance),steps=Math.max(1,Math.ceil(travel/.1));for(let j=0;j<steps;j++){const next={x:e.point.x+e.dir.x*travel/steps,z:e.point.z+e.dir.z*travel/steps};const wall=this.a.wards.find(w=>w.hp>0&&w.life>0&&w.owner!==e.owner&&crossesWard(e.point,next,w,e.type==='punch'?.45:.2));if(this.a.collides(next.x,next.z,e.type==='punch'?.45:.2)||wall){if(wall)wall.hp=Math.max(0,wall.hp-e.s.damage);done=true;break;}e.point=next;e.distance+=travel/steps;
+ else if(e.type==='shot'||e.type==='punch'){const travel=Math.min(e.speed*dt,e.travel-e.distance),steps=Math.max(1,Math.ceil(travel/.1));for(let j=0;j<steps;j++){const next={x:e.point.x+e.dir.x*travel/steps,z:e.point.z+e.dir.z*travel/steps};const wall=this.a.wards.find(w=>w.hp>0&&w.life>0&&w.owner!==e.owner&&crossesWard(e.point,next,w,e.type==='punch'?.45:.2));if(this.a.collides(next.x,next.z,e.type==='punch'?.45:.2)||wall){if(wall)wall.hp=Math.max(0,wall.hp-roundDamage(e.s.damage));done=true;break;}e.point=next;e.distance+=travel/steps;
  if(e.type==='punch'){if(this.a.wallBlocks?.(e.owner,next)){done=true;break;}e.owner.x=next.x;e.owner.z=next.z;}
  this.damage(e,e.point,e.radius,{once:true});if(e.hit.size&&e.s.op==='w'){done=true;break;}}
  e.mesh.position.set(e.point.x+(e.type==='punch'?e.dir.x*.7:0),e.height??1,e.point.z+(e.type==='punch'?e.dir.z*.7:0));done||=e.distance>=e.travel;this.embers({...e,radius:e.radius},4);}

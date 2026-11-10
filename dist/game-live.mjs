@@ -1,47 +1,48 @@
-import {projectileGuideSpec,projectileGuidePoints} from './projectile-guide.mjs?v=shift-trajectory-1';
+import {roundDamage} from './damage-number.mjs?v=integer-damage-1';
+import {projectileGuideSpec,projectileGuidePoints} from './projectile-guide.mjs?v=integer-damage-1';
 import {cursorAim,spellAimHeight} from './cursor-aim.mjs?v=shift-trajectory-1';
 import {hasIceRecipe,iceSpec} from './ice-spec.mjs?v=shift-trajectory-1';
-import {HealthHUD} from './health-hud.mjs?v=health-hud-1';
+import {HealthHUD} from './health-hud.mjs?v=integer-damage-1';
 import {renderSkillUpgrades} from './skill-upgrades.mjs?v=shift-trajectory-1';
 import {readMovement} from './character-movement.mjs?v=turn-rates-1';
 import {BodyFollow} from './body-follow.mjs?v=turn-rates-1';
 import {attackCooldown} from './attack-cooldown.mjs';
-import {wardTouches,setCombatCamera} from './combat-hit.mjs?v=cast-lock-1';
-import {HitboxView} from './hitbox-view.mjs?v=cast-lock-1';
+import {wardTouches,setCombatCamera} from './combat-hit.mjs?v=integer-damage-1';
+import {HitboxView} from './hitbox-view.mjs?v=integer-damage-1';
 import {LevelUpVfx} from './level-up-vfx.mjs?v=screenhit10';
 import {FrostVisuals} from './frost-visuals.mjs?v=shift-trajectory-1';
 import {ICE_BASIC} from './ice-basic.mjs?v=ring-origin-2';
-import {SpaceSkill,SPACE_SKILLS,interceptSpaceShots} from './space-skills.mjs?v=cast-lock-1';
-import {SpaceVisuals} from './space-visuals.mjs?v=cast-lock-1';
-import {CHARACTERS,characterFor,chooseCharacter,chooseSupport} from './character-loadout.mjs?v=shift-trajectory-1';
+import {SpaceSkill,SPACE_SKILLS,interceptSpaceShots} from './space-skills.mjs?v=integer-damage-1';
+import {SpaceVisuals} from './space-visuals.mjs?v=integer-damage-1';
+import {CHARACTERS,characterFor,chooseCharacter,chooseSupport} from './character-loadout.mjs?v=integer-damage-1';
 import {GameAudio} from './game-audio.mjs?v=sync5';
-import {damageSummary} from './damage-display.mjs?v=shift-trajectory-1';
-import {Duel,STEP} from './duel.mjs?v=shift-trajectory-1';
-import {mountPvpUI} from './pvp-ui.mjs?v=shift-trajectory-1';
+import {damageSummary} from './damage-display.mjs?v=integer-damage-1';
+import {Duel,STEP} from './duel.mjs?v=integer-damage-1';
+import {mountPvpUI} from './pvp-ui.mjs?v=integer-damage-1';
 import {OBSTACLES} from './arena-rules.mjs';
 let onlineCore=null,pvp=null,onlineResultShown=false,lastOnlineAim=0,onlineRenderAt=0,onlinePrevious=null;
 import {redLightningPlacement} from './red-lightning-spec.mjs?v=bolt17';
 import {steamPlacement} from './steam-spec.mjs?v=bolt17';
-import {BurnVisuals,applyBurnVisual} from './burn-visuals.mjs?v=shift-trajectory-1';
-import {castWithPresentation,renderCastPresentation} from './cast-presentation.mjs?v=shift-trajectory-1';
+import {BurnVisuals,applyBurnVisual} from './burn-visuals.mjs?v=integer-damage-1';
+import {castWithPresentation,renderCastPresentation} from './cast-presentation.mjs?v=integer-damage-1';
 import {CastRecoil,HitScreen,chargeSetback} from './combat-response.mjs?v=rim9';
 import {VisionShade} from './vision-shade.mjs';
 import {CastingFeedback,ChargeCamera,impactFeedback} from './casting-feedback.mjs?v=screenhit10';
-import {castControlsLocked} from './cast-lock.mjs?v=cast-lock-1';
-import {chargeMoveScale} from './magic-motion.mjs?v=cast-lock-1';
+import {castControlsLocked} from './cast-lock.mjs?v=integer-damage-1';
+import {chargeMoveScale} from './magic-motion.mjs?v=integer-damage-1';
 import {canSee} from './vision.mjs';
 import {fireSpec,hasFireRecipe} from './fire-spec.mjs?v=bolt17';
 import {bindDuelControls,mouseRecipe} from './duel-controls.mjs?v=shift-trajectory-1';
 let walkDirection={x:0,z:0},icePressHand='left',moveSpeedScale=1;
 
 const slotLabel=k=>({q:'기본',w:'좌클릭',e:'우클릭'}[k]);
-import {createWizard,animateWizard,projectWizard,setWizardCharacter} from './wizard.mjs?v=cast-lock-1';
-import {QueuedCharge} from './queued-charge.mjs?v=ice-charge-2';
-import {LiveMagic} from './live-magic.mjs?v=shift-trajectory-1';
-import {spellReach} from './live-spells.mjs?v=shift-trajectory-1';
+import {createWizard,animateWizard,projectWizard,setWizardCharacter} from './wizard.mjs?v=integer-damage-1';
+import {QueuedCharge} from './queued-charge.mjs?v=integer-damage-1';
+import {LiveMagic} from './live-magic.mjs?v=integer-damage-1';
+import {spellReach} from './live-spells.mjs?v=integer-damage-1';
 import {describe as describeDesign} from './combo-design.mjs?v=shift-trajectory-1';
 import {MeshFeedback} from './mesh-feedback.mjs';
-import {groundSpec,groundPoint,inGround,advanceGround} from './ground.mjs?v=zones1';
+import {groundSpec,groundPoint,inGround,advanceGround} from './ground.mjs?v=integer-damage-1';
 import {projectileAsset,groundAsset} from './effect-map.mjs?v=zones1';
 
 import {advanceMovingWard} from './moving-ward.mjs?v=zones1';
@@ -49,14 +50,14 @@ import {FALL_SECONDS,overheadDelivery,segmentCircleHit} from './delivery.mjs?v=z
 import {createProgress,awardKill,requiredXP,learn,mastery,MAX_LEVEL,MAX_RANK} from './progression.mjs?v=zones1';
 import {ForcedMotion} from './motion.mjs?v=zones1';
 import {LowPolyVFX} from './lowpoly-vfx.mjs';
-import {chooseLoadout,choosePlan,chooseLearnedPlan,spendEnemyPoints,OpponentCharge} from './live-opponent.mjs?v=shift-trajectory-1';
+import {chooseLoadout,choosePlan,chooseLearnedPlan,spendEnemyPoints,OpponentCharge} from './live-opponent.mjs?v=integer-damage-1';
 import {forceSpec,wardSpec,displacement,crossesWard,distanceToWard} from './forces.mjs?v=zones1';
-import {elementalSpec,inElementCone,lightningPoint,lightningHits} from './elements.mjs?v=zones1';
+import {elementalSpec,inElementCone,lightningPoint,lightningHits} from './elements.mjs?v=integer-damage-1';
 const describeSpell=seq=>describeDesign(seq).steps.join(' ')+' '+damageSummary(seq)+' (완충·숙련 1·정지 표적 비교값)';
 import * as T from './three.module.js';
-import {Charge,ELEMENTS,NAMES,resolveSpell} from './live-charge-spells.mjs?v=shift-trajectory-1';
+import {Charge,ELEMENTS,NAMES,resolveSpell} from './live-charge-spells.mjs?v=integer-damage-1';
 import {Roll,ROLL_DURATION,incomingThreat,enemyChargeProgress} from './combat.mjs?v=zones1';
-import {RUNES,KEYS,DEFAULT_LOADOUT,validLoadout,assignRune,mapSequence,spellName,composition} from './live-loadout.mjs?v=shift-trajectory-1';
+import {RUNES,KEYS,DEFAULT_LOADOUT,validLoadout,assignRune,mapSequence,spellName,composition} from './live-loadout.mjs?v=integer-damage-1';
 let loadout={...DEFAULT_LOADOUT};try{const saved=JSON.parse(localStorage.getItem('mage-loadout-v1'));if(validLoadout(saved))loadout=saved}catch{}
 loadout=chooseCharacter(loadout,characterFor(loadout).id);
 let progress=createProgress(loadout),monsters=[],spawnTimer=0,monsterId=0;
@@ -122,7 +123,7 @@ function wallBlocks(from,to){return wards.some(w=>w.hp>0&&w.life>0&&crossesWard(
 function move(a,dx,dz){if(!collides(a.x+dx,a.z)&&!wallBlocks(a,{x:a.x+dx,z:a.z}))a.x+=dx;if(!collides(a.x,a.z+dz)&&!wallBlocks(a,{x:a.x,z:a.z+dz}))a.z+=dz}
 const hitScreen=new HitScreen(),hitOverlay=document.createElement('div');hitOverlay.id='hitScreen';hitOverlay.setAttribute('aria-hidden','true');hitOverlay.style.cssText='position:fixed;inset:0;pointer-events:none;z-index:80;opacity:0;background:radial-gradient(ellipse at center,transparent 42%,rgba(164,0,8,.35) 70%,rgba(255,24,36,.88) 100%);box-shadow:inset 0 0 65px 12px rgba(255,25,40,.6)';document.body.append(hitOverlay);const reducedShake=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const castOverlay=document.createElement('div');castOverlay.id='castFlash';castOverlay.setAttribute('aria-hidden','true');castOverlay.style.cssText='position:fixed;inset:0;pointer-events:none;z-index:79;opacity:0;background:radial-gradient(ellipse at center,#fff 0%,#fff 25%,var(--cast-color,#fff) 100%)';document.body.append(castOverlay);
-function hit(a,damage,dir,force=0,source=null){if(finished||a.dead||(a===player&&roll.invulnerable))return false;if(a===player){const guarded=roll.guard(damage,force,dir,source,a);if(guarded.blocked)return false;damage=guarded.damage;force=guarded.force;}if(a.monster&&(source===player||source===enemy)){a.aggro=true;a.aggroTarget=source;}if(source?.castContacts)source.castContacts.push(new T.Vector3(a.x,a.monster ? .65 : 1,a.z));if(a===enemy&&source===player)enemy.retaliate=6;let block=Math.min(a.shield,damage);a.shield-=block;damage-=block;if(block){pixelVfx.play('parry',a.x,a.z,{width:1.8,y:1});ring(a.x,a.z,0xafdfff,.8,.2);if(a.shieldHeat){const other=a===player?enemy:player;if(Math.hypot(other.x-a.x,other.z-a.z)<3)other.hp=Math.max(0,other.hp-block*.32)}}a.hp=Math.max(0,a.hp-damage);healthHUD.observe(a);if(damage||block)gameAudio.hit(a,player,block>0&&!damage);if(damage){pixelVfx.play('hit-spark',a.x,a.z,{width:1.1,y:1});spark(a.x,a.z,a===player?0xffca8f:0xb8ddff,5);}impactFeedback(a,damage,dir,a.frozen>0?0:force);if(a===player){hitScreen.hit(damage);charge.disrupt(chargeSetback(damage));}else if(a===enemy)enemyCharge.disrupt(chargeSetback(damage));if(a===player&&damage)flash('피격 −'+Math.round(damage)+(charge.active?' · 충전 방해':''));if(a.hp<=0){if(a.monster)killMonster(a,source);else endRound(a===enemy)};return true}
+function hit(a,damage,dir,force=0,source=null){if(finished||a.dead||(a===player&&roll.invulnerable))return false;if(a===player){const guarded=roll.guard(damage,force,dir,source,a);if(guarded.blocked)return false;damage=guarded.damage;force=guarded.force;}if(a.monster&&(source===player||source===enemy)){a.aggro=true;a.aggroTarget=source;}if(source?.castContacts)source.castContacts.push(new T.Vector3(a.x,a.monster ? .65 : 1,a.z));if(a===enemy&&source===player)enemy.retaliate=6;let block=Math.min(a.shield,damage);a.shield-=block;damage=roundDamage(damage-block);if(block){pixelVfx.play('parry',a.x,a.z,{width:1.8,y:1});ring(a.x,a.z,0xafdfff,.8,.2);if(a.shieldHeat){const other=a===player?enemy:player;if(Math.hypot(other.x-a.x,other.z-a.z)<3)other.hp=Math.max(0,other.hp-roundDamage(block*.32))}}a.hp=Math.max(0,a.hp-damage);healthHUD.observe(a);if(damage||block)gameAudio.hit(a,player,block>0&&!damage);if(damage){pixelVfx.play('hit-spark',a.x,a.z,{width:1.1,y:1});spark(a.x,a.z,a===player?0xffca8f:0xb8ddff,5);}impactFeedback(a,damage,dir,a.frozen>0?0:force);if(a===player){hitScreen.hit(damage);charge.disrupt(chargeSetback(damage));}else if(a===enemy)enemyCharge.disrupt(chargeSetback(damage));if(a===player&&damage)flash('피격 −'+Math.round(damage)+(charge.active?' · 충전 방해':''));if(a.hp<=0){if(a.monster)killMonster(a,source);else endRound(a===enemy)};return true}
 function castOrb(spell,dir,caster){const spec=elementalSpec(spell.sequence,spell.power),color=RUNES[spec.kind].color;
  const m=new T.Object3D();m.position.set(caster.x,.95,caster.z);scene.add(m);
  const screenStart=m.position.clone().project(camera),screenEnd=m.position.clone().add(dir).project(camera),rotation=Math.atan2(screenEnd.y-screenStart.y,screenEnd.x-screenStart.x);
@@ -134,7 +135,7 @@ function explodeOrb(shot){const {spec,m,owner,color}=shot,point=m.position;pixel
 }
 function updateOrbs(dt){for(let i=shots.length-1;i>=0;i--){const s=shots[i],travel=Math.min(s.spec.range-s.distance,s.spec.speed*dt),steps=Math.max(1,Math.ceil(travel/.08));let done=false,blocked=false;
  for(let j=0;j<steps&&!done;j++){const from=s.m.position.clone(),to=from.clone().addScaledVector(s.dir,travel/steps),wall=wards.find(w=>w.owner!==s.owner&&w.hp>0&&crossesWard(from,to,w,s.spec.radius));
- if(wall){wall.hp=Math.max(0,wall.hp-s.spec.damage);spark(from.x,from.z,0xb9eaff,8);done=true;blocked=true;break;}
+ if(wall){wall.hp=Math.max(0,wall.hp-roundDamage(s.spec.damage));spark(from.x,from.z,0xb9eaff,8);done=true;blocked=true;break;}
  if(collides(to.x,to.z,s.spec.radius)){done=true;break;}
  let nearest=1,contact=false;for(const target of targets(s.owner)){const t=segmentCircleHit(from,to,target,s.spec.radius+.4);if(t!==null&&t<=nearest){nearest=t;contact=true;}}
  s.m.position.copy(from).lerp(to,nearest);s.distance+=travel/steps*nearest;if(contact)done=true;

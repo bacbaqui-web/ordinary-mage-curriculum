@@ -1,12 +1,13 @@
-import {CAST_RELEASE_SECONDS} from './cast-lock.mjs?v=cast-lock-1';
-import {IceSpells} from './ice-spells.mjs?v=shift-trajectory-1';
+import {roundDamage} from './damage-number.mjs?v=integer-damage-1';
+import {CAST_RELEASE_SECONDS} from './cast-lock.mjs?v=integer-damage-1';
+import {IceSpells} from './ice-spells.mjs?v=integer-damage-1';
 import {hasIceRecipe} from './ice-spec.mjs?v=shift-trajectory-1';
-import {areaTouches,shotTouches,shotContact} from './combat-hit.mjs?v=cast-lock-1';
+import {areaTouches,shotTouches,shotContact} from './combat-hit.mjs?v=integer-damage-1';
 import {IceBasic} from './ice-basic.mjs?v=ring-origin-2';
 import {hasFireRecipe} from './fire-spec.mjs?v=bolt17';
-import {FireSpells} from './fire-spells.mjs?v=shift-trajectory-1';
+import {FireSpells} from './fire-spells.mjs?v=integer-damage-1';
 import * as T from './three.module.js';
-import {compileSpell,spellReach,spellPayload} from './live-spells.mjs?v=shift-trajectory-1';
+import {compileSpell,spellReach,spellPayload} from './live-spells.mjs?v=integer-damage-1';
 import {RUNES} from './combo-design.mjs?v=shift-trajectory-1';
 import {crossesWard,distanceToWard} from './forces.mjs';
 export class LiveMagic {
@@ -40,7 +41,7 @@ export class LiveMagic {
  install(n,owner,point,dir,c,velocity=null){const wall=n.op==='e',r=wall?1.6:c.radius;if(wall){point={...point};for(let i=0;i<35&&(this.a.collides(point.x,point.z,.3)||this.a.targets(owner).concat(owner).some(v=>distanceToWard(v,{x:point.x,z:point.z,nx:dir.x,nz:dir.z,width:r*2})<.6));i++){point.x-=dir.x*.2;point.z-=dir.z*.2;}for(const w of this.a.wards.filter(w=>w.owner===owner))w.life=0;}const mesh=this.shape(n.kind,r,wall?'wall':'field');mesh.position.set(point.x,wall?1.2:.08,point.z);mesh.rotation.y=Math.atan2(-dir.z,dir.x);if(wall){const spec={moving:!!velocity,damage:0,shock:n.kind==='l'?5:0,burn:n.kind==='q'?2:0,slow:n.kind==='i'?2:0,push:n.kind==='w'?1:0,pull:n.kind==='g'?1:0,travel:7};this.a.wards.push({owner,mesh,m:mesh,x:point.x,z:point.z,nx:dir.x,nz:dir.z,width:r*2,hp:36*n.depth,maxHp:36*n.depth,life:3+n.depth,spec,travelled:0,speed:velocity?3.8:0,effectCooldown:0});return;}
  this.effects.push({type:'field',mesh,owner,node:n.inner||n,point:{...point},dir,ctx:c,life:3+n.depth,tick:0,velocity});}
  update(dt){for(const [owner,p] of this.castPoses){p.life-=dt;if(p.life<=0){this.castPoses.delete(owner);owner.hitPose=null;}}this.iceCombos.update(dt);this.ice.update(dt);this.fire.update(dt);for(let i=this.effects.length-1;i>=0;i--){const e=this.effects[i];e.life-=dt;let done=e.life<=0;
- if(e.type==='projectile'){const step=Math.min(e.speed*dt,e.ctx.range-e.distance),from=e.mesh.position.clone(),to=from.clone().addScaledVector(e.dir,step);let impact=false,blocked=false,tmin=1;for(let n=0;n<Math.ceil(step/.08);n++){const p=from.clone().lerp(to,(n+1)/Math.ceil(step/.08));const wall=this.a.wards.find(w=>w.owner!==e.owner&&w.hp>0&&crossesWard(from,p,w,.25));if(wall){wall.hp=Math.max(0,wall.hp-this.payload(e.node).damage);blocked=true;break;}if(this.a.collides(p.x,p.z,.25)){blocked=true;break;}}if(!blocked)for(const v of this.a.targets(e.owner)){const t=this.a.clearPath(e.owner,v)?shotContact(e,from,to,v):null;if(t!==null&&t<tmin){tmin=t;impact=true;}}e.mesh.position.copy(from).lerp(to,tmin);e.distance+=step;done||=blocked||impact||e.distance>=e.ctx.range-.01;if(done&&!blocked){const p={x:e.mesh.position.x,z:e.mesh.position.z};this.execute(e.node,e.owner,p,e.dir,p,e.ctx);}this.a.vfx.particle('chunk',e.mesh.position.toArray(),[0,.4,0],.12,new T.Color(RUNES[e.node.kind].color).getHex(),.2);}
+ if(e.type==='projectile'){const step=Math.min(e.speed*dt,e.ctx.range-e.distance),from=e.mesh.position.clone(),to=from.clone().addScaledVector(e.dir,step);let impact=false,blocked=false,tmin=1;for(let n=0;n<Math.ceil(step/.08);n++){const p=from.clone().lerp(to,(n+1)/Math.ceil(step/.08));const wall=this.a.wards.find(w=>w.owner!==e.owner&&w.hp>0&&crossesWard(from,p,w,.25));if(wall){wall.hp=Math.max(0,wall.hp-roundDamage(this.payload(e.node).damage));blocked=true;break;}if(this.a.collides(p.x,p.z,.25)){blocked=true;break;}}if(!blocked)for(const v of this.a.targets(e.owner)){const t=this.a.clearPath(e.owner,v)?shotContact(e,from,to,v):null;if(t!==null&&t<tmin){tmin=t;impact=true;}}e.mesh.position.copy(from).lerp(to,tmin);e.distance+=step;done||=blocked||impact||e.distance>=e.ctx.range-.01;if(done&&!blocked){const p={x:e.mesh.position.x,z:e.mesh.position.z};this.execute(e.node,e.owner,p,e.dir,p,e.ctx);}this.a.vfx.particle('chunk',e.mesh.position.toArray(),[0,.4,0],.12,new T.Color(RUNES[e.node.kind].color).getHex(),.2);}
  else if(e.type==='drop'){e.mesh.position.y=.2+4.8*Math.max(0,e.life/e.max);if(done)this.execute(e.node,e.owner,e.point,e.dir,e.point,e.ctx);}
  else if(e.type==='field'){if(e.velocity){const next={x:e.point.x+e.velocity.x*dt,z:e.point.z+e.velocity.z*dt};if(!this.a.collides(next.x,next.z,.2)){Object.assign(e.point,next);e.mesh.position.set(next.x,.08,next.z);}}e.tick-=dt;if(e.tick<=0){e.tick=.65;this.apply(e.node,e.owner,e.point,e.ctx.radius,null,false,e.ctx.mult*.3);this.particles(e.node.kind,e.point,e.ctx.radius);} }
  if(done){this.a.remove(e.mesh);this.effects.splice(i,1);}

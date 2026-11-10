@@ -1,4 +1,4 @@
-import {RING_SECONDS} from './spells.mjs';
+import {RING_SECONDS} from './spells.mjs?v=integer-damage-1';
 export class QueuedCharge {
  constructor(){this.clear();}
  clear(){this.pending=null;this.queue=[];this.parts=[];this.held=[];this.active=false;this.progress=0;this.elapsed=0;}

@@ -1,6 +1,6 @@
 import * as T from './three.module.js';
 import {spellAimHeight} from './cursor-aim.mjs?v=shift-trajectory-1';
-import {spellReach} from './live-spells.mjs?v=shift-trajectory-1';
+import {spellReach} from './live-spells.mjs?v=integer-damage-1';
 import {RUNES} from './combo-design.mjs?v=shift-trajectory-1';
 export function castWithPresentation({magic,wards,clearPath,collides,wallBlocks},s,caster,dir,aimPoint){
  const hand=s.emission?.clone()||new T.Vector3(caster.x,spellAimHeight(s.sequence)||1,caster.z).addScaledVector(dir,.5);

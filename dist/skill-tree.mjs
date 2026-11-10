@@ -1,9 +1,9 @@
-import {groundSpec} from './ground.mjs?v=zones1';
-import {mountPreview} from './spell-preview.mjs?v=cast-lock-1';
-import {RUNES,DEFAULT_LOADOUT,validLoadout,spellName} from './loadout.mjs?v=zones1';
-import {elementalSpec} from './elements.mjs?v=zones1';
+import {groundSpec} from './ground.mjs?v=integer-damage-1';
+import {mountPreview} from './spell-preview.mjs?v=integer-damage-1';
+import {RUNES,DEFAULT_LOADOUT,validLoadout,spellName} from './loadout.mjs?v=integer-damage-1';
+import {elementalSpec} from './elements.mjs?v=integer-damage-1';
 import {forceSpec,wardSpec} from './forces.mjs?v=zones1';
-import {describeSpell} from './guide.mjs?v=zones1';
+import {describeSpell} from './guide.mjs?v=integer-damage-1';
 const $=id=>document.getElementById(id),ids=Object.keys(RUNES);
 let saved={...DEFAULT_LOADOUT};try{const v=JSON.parse(localStorage.getItem('mage-loadout-v1'));if(validLoadout(v))saved=v;}catch{}
 let disposePreview=()=>{};

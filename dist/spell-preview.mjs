@@ -1,9 +1,9 @@
 import * as T from './three.module.js';
-import {createWizard,animateWizard,projectWizard} from './wizard.mjs?v=cast-lock-1';
+import {createWizard,animateWizard,projectWizard} from './wizard.mjs?v=integer-damage-1';
 import {PixelVFX,frameAt} from './pixel-vfx.mjs?v=studio1';
-import {RUNES} from './loadout.mjs?v=zones1';
-import {groundSpec} from './ground.mjs?v=zones1';
-import {elementalSpec} from './elements.mjs?v=zones1';
+import {RUNES} from './loadout.mjs?v=integer-damage-1';
+import {groundSpec} from './ground.mjs?v=integer-damage-1';
+import {elementalSpec} from './elements.mjs?v=integer-damage-1';
 import {forceSpec,wardSpec,displacement} from './forces.mjs?v=zones1';
 import {impactAsset,projectileAsset,groundAsset} from './effect-map.mjs?v=zones1';
 import {ASSET_INDEX} from './asset-index.mjs?v=studio1';

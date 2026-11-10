@@ -13,7 +13,7 @@ import {PassiveFoot} from './passive-foot.mjs';
 const feet={LeftFoot:new PassiveFoot(),RightFoot:new PassiveFoot()};
 let footShapes={};
 import {moveJoint as movePoseJoint,applyFootLocks} from './pose-constraints.mjs?v=head-free-2';
-import {demoMotion} from './motion-puppet.mjs?v=cast-lock-1';
+import {demoMotion} from './motion-puppet.mjs?v=integer-damage-1';
 import {JOINTS,LABELS,samplePose,validateProject} from './pose-data.mjs?v=smooth-motion-1';
 const $=id=>document.getElementById(id);
 const editableJoints=JOINTS.filter(n=>n!=='Neck');

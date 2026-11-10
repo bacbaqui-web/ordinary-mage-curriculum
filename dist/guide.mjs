@@ -1,7 +1,7 @@
-import {groundDescription} from './ground.mjs?v=zones1';
+import {groundDescription} from './ground.mjs?v=integer-damage-1';
 import {forceDescription} from './forces.mjs?v=zones1';
-import {elementalDescription} from './elements.mjs?v=zones1';
-import {composition} from './loadout.mjs?v=zones1';
+import {elementalDescription} from './elements.mjs?v=integer-damage-1';
+import {composition} from './loadout.mjs?v=integer-damage-1';
 export function describeSpell(seq){
  const ground=groundDescription(seq);if(ground)return ground;
  const force=forceDescription(seq);if(force)return force;

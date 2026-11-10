@@ -1,11 +1,12 @@
-import {plannerRange} from './planner-range.mjs?v=shift-trajectory-1';
-import {plannerSpell,basicKey} from './planner-spell.mjs?v=shift-trajectory-1';
-import {mountCharacterCodex} from './character-codex.mjs?v=shift-trajectory-1';
+import {damageNumber} from './damage-number.mjs?v=integer-damage-1';
+import {plannerRange} from './planner-range.mjs?v=integer-damage-1';
+import {plannerSpell,basicKey} from './planner-spell.mjs?v=integer-damage-1';
+import {mountCharacterCodex} from './character-codex.mjs?v=integer-damage-1';
 import {RevisionRequests} from './revision-requests.mjs?v=compact2';
 import {mountPlanAudio} from './plan-audio.mjs?v=compact2';
-import {DAMAGE_CATALOG,BASIC_DAMAGE_CATALOG,ICE_PAIR_DAMAGE_CATALOG} from './damage-catalog.mjs?v=shift-trajectory-1';
+import {DAMAGE_CATALOG,BASIC_DAMAGE_CATALOG,ICE_PAIR_DAMAGE_CATALOG} from './damage-catalog.mjs?v=integer-damage-1';
 import {RUNES,valid,describe} from './combo-design.mjs?v=shift-trajectory-1';
-import {mountAtlasPreview} from './atlas-preview.mjs?v=shift-trajectory-1';
+import {mountAtlasPreview} from './atlas-preview.mjs?v=integer-damage-1';
 const $=id=>document.getElementById(id),ids=Object.keys(RUNES);let seq=valid(location.hash.slice(1))?location.hash.slice(1):'qqw',branch=seq.slice(0,2),dispose=()=>{},disposeSound=()=>{};
 let basicHand='left',chargedBasic=false;
 const requests=new RevisionRequests();let disposeRequest=()=>{};
@@ -15,7 +16,7 @@ function button(s){const d=(s.length===1||s==='ii')?plannerSpell(s,{hand:basicHa
 function render(){const base=seq[0],d=(seq.length===1||seq==='ii')?plannerSpell(seq,{hand:basicHand,charged:chargedBasic}):describe(seq);if(branch.length!==2||branch[0]!==base)branch=base+base;if(seq.length>1)branch=seq.slice(0,2);document.documentElement.style.setProperty('--accent',d.color);
 $('bases').innerHTML=ids.map(k=>`<button class="base-rune" data-seq="${k}" aria-pressed="${base===k}"><span class="rune-icon" style="--rune:${RUNES[k].color}">${RUNES[k].icon}</span><span><b>${RUNES[k].name}</b></span></button>`).join('');
 const pool=ids;$('root').innerHTML=button(base);$('pairs').innerHTML=pool.map(k=>button(base+k)).join('');$('triples').innerHTML=pool.map(k=>button(branch+k)).join('');
-dispose();disposeSound();disposeRequest();const damage=seq==='ii'?ICE_PAIR_DAMAGE_CATALOG[basicHand]:seq.length===1?BASIC_DAMAGE_CATALOG[basicKey(seq,basicHand,chargedBasic)]:DAMAGE_CATALOG[seq],number=v=>Math.round(v).toLocaleString('ko-KR');
+dispose();disposeSound();disposeRequest();const damage=seq==='ii'?ICE_PAIR_DAMAGE_CATALOG[basicHand]:seq.length===1?BASIC_DAMAGE_CATALOG[basicKey(seq,basicHand,chargedBasic)]:DAMAGE_CATALOG[seq],number=damageNumber;
 const reach=plannerRange(seq,{hand:basicHand,charged:chargedBasic});
 const stats=damage?`<section class="damage-panel compact-damage"><div class="damage-metrics"><strong title="선택한 충전 상태·숙련 1·방어력 0인 고정 표적 기준. 누적 피해를 시전 후 피해 종료 시간(최소 1초)으로 나눕니다. 충전·재사용 시간은 제외합니다.">${number(damage.total/Math.max(1,damage.duration))} <span>DPS</span></strong><span class="spell-range" title="${reach.kind} · 발사 지점 기준이며 벽과 대상 크기에 따라 실제 명중 거리는 달라집니다.">사정거리 <b>${Number(reach.value.toFixed(2)).toLocaleString('ko-KR')}m</b></span></div><dl><dt>타격 피해</dt><dd>${number(damage.direct)}</dd><dt>지속 피해</dt><dd>${number(damage.dot)}</dd></dl></section>`:'';
 $('detail').innerHTML=`<div class="spell-heading"><div class="icon-formula">${icons(seq)}</div><h2>${d.name}</h2></div>${seq.length===1||seq==='ii'?`<div class="basic-preview-controls"><button data-hand="left" aria-pressed="${basicHand==='left'}">좌클릭</button><button data-hand="right" aria-pressed="${basicHand==='right'}">우클릭</button>${seq.length===1?`<label><input id="chargedBasic" type="checkbox" ${chargedBasic?'checked':''}> 1륜 충전 · 사거리 +25%</label>`:''}</div>`:''}<div class="preview-wrap"><div id="atlasPreview"></div><div id="planSound"></div></div>${stats}<section id="revisionRequest" class="revision-request"></section>`;

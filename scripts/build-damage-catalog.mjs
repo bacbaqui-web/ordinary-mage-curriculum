@@ -1,3 +1,4 @@
+import {roundDamage} from '../dist/damage-number.mjs';
 import {plannerSpell,basicKey} from '../dist/planner-spell.mjs';
 import {writeFile} from 'node:fs/promises';
 import * as T from '../dist/three.module.js';
@@ -12,7 +13,7 @@ const samples=[[1.5,0],[2.2,0],[3,0],[5.2,0],[3,.8]];
 export function measure(seq,pos=[3,0],options={}){
  const d=new Duel([DEFAULT_LOADOUT,DEFAULT_LOADOUT]),[a,b]=d.actors;
  a.x=a.z=0;b.x=pos[0];b.z=pos[1];a.dir.set(1,0,0);let phase='direct',time=0;const events=[];
- d.hit=(v,damage)=>{if(v===b&&damage>0)events.push({kind:phase,value:damage,time});return true;};
+ d.hit=(v,damage)=>{damage=roundDamage(damage);if(v===b&&damage>0)events.push({kind:phase,value:damage,time});return true;};
  d.magic.a.collides=()=>false;d.magic.a.clearPath=()=>true;d.magic.a.wallBlocks=()=>false;
  const spell=plannerSpell(seq,options),power=spell.power;
  d.magic.cast(spell,a,new T.Vector3(1,0,0),new T.Vector3(3,0,0));

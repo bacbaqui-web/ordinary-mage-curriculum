@@ -2,7 +2,7 @@ import {Vector3} from './three.module.js';
 import {ICE_BASIC} from './ice-basic.mjs';
 import {hasIceRecipe,iceSpec} from './ice-spec.mjs?v=shift-trajectory-1';
 import {hasFireRecipe,fireSpec} from './fire-spec.mjs';
-import {compileSpell,spellReach} from './live-spells.mjs?v=shift-trajectory-1';
+import {compileSpell,spellReach} from './live-spells.mjs?v=integer-damage-1';
 // Only traveling shots use an airborne lane. Installed areas keep ground markers.
 export function projectileGuideSpec(sequence,hand='left'){
  if(sequence==='i')return hand==='left'?{range:ICE_BASIC.left.range,width:.13}:null;

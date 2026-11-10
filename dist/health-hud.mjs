@@ -1,3 +1,4 @@
+import {damageNumber} from './damage-number.mjs?v=integer-damage-1';
 import {Vector3} from './three.module.js';
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 export class HealthTrail{
@@ -23,7 +24,7 @@ export class HealthHUD{
   const entry=this.entries.get(actor);if(!entry)return;
   const damage=entry.state.update(actor.hp,this.time);
   if(damage&&this.visible(actor)){
-   const node=document.createElement('span');node.className='damage-number';node.textContent=String(Number(damage.toFixed(1)));node.setAttribute('aria-label','피해 '+node.textContent);this.root.append(node);
+   const node=document.createElement('span');node.className='damage-number';node.textContent=damageNumber(damage);node.setAttribute('aria-label','피해 '+node.textContent);this.root.append(node);
    this.numbers.push({node,x:actor.x,z:actor.z,y:actor.monster?1.9:3.2,born:this.time,offset:((this.serial++%3)-1)*15});
    if(this.numbers.length>80)this.numbers.shift().node.remove();
   }
