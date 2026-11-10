@@ -10,7 +10,15 @@ export class FacingMotion{
    const ended=this.preparation&&!preparation;if(ended)this.duration=0;
    const t=ended||this.duration===0?1:Math.min(1,progress??this.elapsed/this.duration);
    const weight=t*t*(3-2*t);this.yaw=this.from+angleDelta(target,this.from)*weight;
-  }else this.yaw+=angleDelta(target,this.yaw)*(1-Math.exp(-dt/.035));
+  }else{
+   const duration=Math.max(0,prepareSeconds);
+   if(this.casting||this.moveTarget===undefined||Math.abs(angleDelta(target,this.moveTarget))>1e-6||duration!==this.moveDuration){
+    this.moveFrom=this.yaw;this.moveTarget=target;this.moveElapsed=0;this.moveDuration=duration;
+   }
+   this.moveElapsed+=dt;
+   const t=duration===0?1:Math.min(1,this.moveElapsed/duration),weight=t*t*(3-2*t);
+   this.yaw=this.moveFrom+angleDelta(this.moveTarget,this.moveFrom)*weight;
+  }
   this.casting=casting;this.preparation=preparation;return this.yaw;
  }
 }

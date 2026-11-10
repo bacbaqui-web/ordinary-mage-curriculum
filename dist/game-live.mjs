@@ -1,5 +1,5 @@
 import {drawMinimapLandmarks} from './minimap-landmarks.mjs';
-import {FacingMotion} from './facing-motion.mjs?v=fast-turn-1';
+import {FacingMotion} from './facing-motion.mjs?v=prepare-turn-1';
 import {wheelZoomSpan} from './camera-zoom.mjs';
 import {MONSTERS,createMonster,animateMonster,tickMonster,cancelMonsterAttack} from './monsters.mjs?v=points-1';
 import {toolbarIcon} from './toolbar-icons.mjs?v=toolbar-icons-1';

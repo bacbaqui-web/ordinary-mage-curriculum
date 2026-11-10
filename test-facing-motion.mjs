@@ -2,11 +2,23 @@ import assert from 'node:assert/strict';
 import {FacingMotion} from './dist/facing-motion.mjs';
 import {angleDelta} from './dist/body-follow.mjs';
 const f=new FacingMotion();f.update(0,{target:0});
-const first=f.update(1/60,{target:Math.PI/2});assert.ok(first>0&&first<Math.PI/2);
-for(let i=0;i<60;i++)f.update(1/60,{target:Math.PI/2});assert.ok(Math.abs(f.yaw-Math.PI/2)<.001);
+const first=f.update(1/60,{target:Math.PI/2,prepareSeconds:.2});assert.ok(first>0&&first<Math.PI/2);
+for(let i=0;i<60;i++)f.update(1/60,{target:Math.PI/2,prepareSeconds:.2});assert.ok(Math.abs(f.yaw-Math.PI/2)<.001);
 const before=f.yaw,p={};f.update(0,{target:-1,casting:true,prepareSeconds:.4,preparation:p,progress:0});assert.equal(f.yaw,before);
 f.update(.2,{target:-1,casting:true,prepareSeconds:.4,preparation:p,progress:.5});assert.ok(Math.abs(angleDelta(f.yaw,before+angleDelta(-1,before)*.5))<1e-9);
 f.update(.2,{target:-1,casting:true,prepareSeconds:.4});assert.ok(Math.abs(angleDelta(f.yaw,-1))<1e-9);
 f.update(.1,{target:2,casting:false});f.update(0,{target:-2,casting:true,prepareSeconds:0});assert.ok(Math.abs(angleDelta(f.yaw,-2))<1e-9);
-const a=new FacingMotion(),b=new FacingMotion();for(const c of [a,b])c.update(0,{target:3.1});for(let i=0;i<30;i++)a.update(1/30,{target:-3.1});for(let i=0;i<120;i++)b.update(1/120,{target:-3.1});assert.ok(Math.abs(a.yaw-b.yaw)<1e-9);
+const a=new FacingMotion(),b=new FacingMotion();for(const c of [a,b])c.update(0,{target:3.1});for(let i=0;i<30;i++)a.update(1/30,{target:-3.1,prepareSeconds:.4});for(let i=0;i<120;i++)b.update(1/120,{target:-3.1,prepareSeconds:.4});assert.ok(Math.abs(a.yaw-b.yaw)<1e-9);
 console.log('PASS: smooth movement, frame-rate independence, shortest turn, preparation progress and zero-time cast');
+
+for(const duration of [0,.1,.26,.8]){
+ const turn=new FacingMotion();turn.update(0,{target:0});
+ const start=turn.update(0,{target:Math.PI/2,prepareSeconds:duration});
+ assert.equal(start,duration===0?Math.PI/2:0);
+ if(duration){turn.update(duration/2,{target:Math.PI/2,prepareSeconds:duration});assert.ok(Math.abs(turn.yaw-Math.PI/4)<1e-9);turn.update(duration/2,{target:Math.PI/2,prepareSeconds:duration});assert.ok(Math.abs(turn.yaw-Math.PI/2)<1e-9);}
+ turn.update(.02,{target:-1,prepareSeconds:.8});const current=turn.yaw;
+ turn.update(0,{target:1,prepareSeconds:.26});assert.equal(turn.yaw,current);
+ turn.update(.26,{target:1,prepareSeconds:.26});assert.ok(Math.abs(turn.yaw-1)<1e-9);
+ turn.update(0,{target:-2,prepareSeconds:0});assert.ok(Math.abs(angleDelta(turn.yaw,-2))<1e-9);
+}
+console.log('PASS: movement uses preparation duration, zero-ms snaps, mid-turn retarget and live duration changes');
