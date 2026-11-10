@@ -7,3 +7,5 @@ input[hidden]{display:none!important}header .button{margin:0}
 #motionControls{border:0;padding:0;margin:0;min-width:0}#modelStatus{color:#a9d5ed;font-size:12px;line-height:1.5}fieldset:disabled{opacity:.55}
 
 .view-reset{position:absolute;right:8px;top:8px;z-index:2;padding:4px 7px;font-size:11px}
+
+.movement-settings{border-bottom:1px solid #43575e;padding:8px 0 14px;margin-bottom:14px}.movement-settings summary{cursor:pointer;color:#eacb80;margin-bottom:12px}.movement-settings output{float:right;color:#a9d5ed}.movement-settings small{display:block;margin-bottom:10px}

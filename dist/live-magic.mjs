@@ -1,7 +1,7 @@
-import {areaTouches,shotTouches,shotContact} from './combat-hit.mjs?v=pose-speed-1';
+import {areaTouches,shotTouches,shotContact} from './combat-hit.mjs?v=movement-settings-1';
 import {IceBasic} from './ice-basic.mjs?v=click-timing-1';
 import {hasFireRecipe} from './fire-spec.mjs?v=bolt17';
-import {FireSpells} from './fire-spells.mjs?v=pose-speed-1';
+import {FireSpells} from './fire-spells.mjs?v=movement-settings-1';
 import * as T from './three.module.js';
 import {compileSpell,spellReach,spellPayload} from './live-spells.mjs?v=bolt17';
 import {RUNES} from './combo-design.mjs?v=bolt17';

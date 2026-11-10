@@ -1,8 +1,9 @@
+import {normalizeMovement,readMovement} from './character-movement.mjs?v=movement-settings-1';
 import {syncLoop,resizeLoop,loopEndpoint} from './pose-loop.mjs';
 import {ensureBasicAttacks,ensureIdle,ensureFirstRingClips,actionGroups} from './motion-catalog.mjs?v=hand-clips-1';
 import {migrateAnklePivot} from './ankle-pivot.mjs?v=heel-free-1';
 import {CHARACTERS,characterProfile,motionStorageKey,projectForCharacter,assertCharacterImport} from './character-profiles.mjs?v=heel-free-1';
-import {CharacterRig,fitProjectToRig} from './character-rig.mjs?v=smooth-motion-1';
+import {CharacterRig,fitProjectToRig} from './character-rig.mjs?v=movement-settings-1';
 import {ensureMagicClips} from './magic-clips.mjs?v=smooth-motion-1';
 import {uniqueMotions,mergeMotions} from './pose-library.mjs?v=hand-clips-1';
 import * as T from './three.module.js';
@@ -34,6 +35,7 @@ function compactShoulders(p){
  p.compactShoulders=true;return true;
 }
 function prepare(p){
+ p.movementSettings=normalizeMovement(p.movementSettings||readMovement(p.characterId||'default'));
  compactShoulders(p);
  for(const a of p.actions)if(!a.binding&&['기본 걷기','베기','주먹 타격','방어','마법 시전'].includes(a.name))a.binding=a.name;
  p.actions=uniqueMotions(p.actions);ensureMagicClips(p);ensureBasicAttacks(p);ensureFirstRingClips(p);ensureIdle(p);for(const a of p.actions)syncLoop(a);return p;
@@ -79,6 +81,7 @@ function bindKeyDrag(button,source){
 document.addEventListener('keydown',e=>{if(!keyDrag)return;if(e.key==='Escape'){e.preventDefault();finishKeyDrag(false);}else if(e.ctrlKey||e.metaKey||e.key==='Delete'||e.key==='Backspace'){e.preventDefault();e.stopImmediatePropagation();}},true);
 window.addEventListener('blur',()=>finishKeyDrag(false));
 function sync(){
+ syncMovement();
  $('loopMotion').checked=!!current().loop;
  for(const side of ['Left','Right'])$('lock'+side+'Foot').checked=!!current().footLocks?.[side+'Foot'];
  const visible=actionGroups(project.actions).flatMap(g=>g.entries);if(visible.length&&!visible.some(e=>e.index===index)){index=visible[0].index;frame=0;stop();}
@@ -97,6 +100,10 @@ for(const side of ['Left','Right'])$('lock'+side+'Foot').onchange=()=>{
  checkpoint();current().footLocks=locks;current().keys.forEach((k,i)=>k.pose=poses[i]);save((side==='Left'?'왼발':'오른발')+(enabled?' 고정됨 · 동작 전체에 적용':' 고정 해제됨'));sync();
 };
 $('loopMotion').onchange=()=>{stop();checkpoint();current().loop=$('loopMotion').checked;syncLoop(current());save(current().loop?'반복 동작 설정됨 · 첫 프레임과 끝 프레임이 함께 바뀝니다.':'반복 동작 해제됨');sync();};
+const movementFields={baseMoveSpeed:'moveSpeed',headSpeed:'headSpeed',chestSpeed:'chestSpeed',pelvisSpeed:'pelvisSpeed'};
+function syncMovement(){const settings=normalizeMovement(project.movementSettings);for(const [id,key] of Object.entries(movementFields)){$(id).value=settings[key];$(id+'Value').textContent=key==='moveSpeed'?settings[key].toFixed(1)+'배':settings[key]===0?'즉시':settings[key]+'°/초';}}
+for(const [id,key] of Object.entries(movementFields)){$(id).oninput=()=>{$(id+'Value').textContent=key==='moveSpeed'?Number($(id).value).toFixed(1)+'배':Number($(id).value)===0?'즉시':$(id).value+'°/초';};$(id).onchange=()=>{checkpoint();project.movementSettings=normalizeMovement({...project.movementSettings,[key]:Number($(id).value)});save('캐릭터 이동 설정 저장됨');syncMovement();};}
+$('resetMovement').onclick=()=>{checkpoint();project.movementSettings=normalizeMovement();save('이동 설정 초기화됨');syncMovement();};
 $('joint').replaceChildren(...editableJoints.map(n=>new Option(LABELS[JOINTS.indexOf(n)],n)));$('joint').onchange=()=>{selected=$('joint').value;sync();};
 $('action').onchange=()=>{stop();index=Number($('action').value);frame=0;sync();};
 $('name').oninput=()=>{const n=$('name').value.trim();if(!n||n===current().name)return;checkpoint();current().name=n;save();$('action').selectedOptions[0].textContent=n;};
@@ -132,7 +139,7 @@ document.addEventListener('keydown',e=>{
  else if(command==='z'||command==='y'){e.preventDefault();$(command==='y'||e.shiftKey?'redo':'undo').click();}
 });
 $('export').onclick=()=>{const url=URL.createObjectURL(new Blob([JSON.stringify(projectForCharacter(project,characterId),null,2)],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download=`ordinary-mage-${characterId}-motions.json`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
-$('import').onchange=async()=>{try{const file=$('import').files[0];if(!file)return;if(file.size>10*1024*1024)throw Error('10MB 이하의 동작 파일을 선택하세요.');const targetId=characterId;const incoming=validateProject(JSON.parse(await file.text()));if(targetId!==characterId)throw Error('캐릭터가 바뀌었습니다. 파일을 다시 선택하세요.');assertCharacterImport(incoming,characterId);compactShoulders(incoming);ensureMagicClips(incoming);ensureBasicAttacks(incoming);ensureFirstRingClips(incoming);if(rig&&!incoming.rigVersion){const fitted=fitProjectToRig(incoming,rig.restPose,defaultRest());incoming.actions=fitted.actions;incoming.rigVersion=7;}if(rig)migrateAnklePivot(incoming,rig.ankleLift,rig.ankleBack);incoming.actions=uniqueMotions(incoming.actions);for(const a of incoming.actions)a.updatedAt=Date.now();const merged=mergeMotions(project.actions,incoming.actions);if(merged.length>100)throw Error('동작은 최대 100개까지 보관할 수 있습니다.');checkpoint();project.actions=merged;index=Math.max(0,project.actions.indexOf(incoming.actions[0]));frame=0;stop();save();sync();}catch(e){$('status').textContent='불러오지 못했습니다. '+e.message;}};
+$('import').onchange=async()=>{try{const file=$('import').files[0];if(!file)return;if(file.size>10*1024*1024)throw Error('10MB 이하의 동작 파일을 선택하세요.');const targetId=characterId;const incoming=validateProject(JSON.parse(await file.text()));if(targetId!==characterId)throw Error('캐릭터가 바뀌었습니다. 파일을 다시 선택하세요.');assertCharacterImport(incoming,characterId);compactShoulders(incoming);ensureMagicClips(incoming);ensureBasicAttacks(incoming);ensureFirstRingClips(incoming);if(rig&&!incoming.rigVersion){const fitted=fitProjectToRig(incoming,rig.restPose,defaultRest());incoming.actions=fitted.actions;incoming.rigVersion=7;}if(rig)migrateAnklePivot(incoming,rig.ankleLift,rig.ankleBack);incoming.actions=uniqueMotions(incoming.actions);for(const a of incoming.actions)a.updatedAt=Date.now();const merged=mergeMotions(project.actions,incoming.actions);if(merged.length>100)throw Error('동작은 최대 100개까지 보관할 수 있습니다.');checkpoint();if(incoming.movementSettings)project.movementSettings=normalizeMovement(incoming.movementSettings);project.actions=merged;index=Math.max(0,project.actions.indexOf(incoming.actions[0]));frame=0;stop();save();sync();}catch(e){$('status').textContent='불러오지 못했습니다. '+e.message;}};
 function defaultRest(){const {root}=demoMotion();root.updateMatrixWorld(true);return Object.fromEntries(JOINTS.map(n=>[n,root.getObjectByName(n).getWorldPosition(new T.Vector3()).toArray()]));}
 function setBusy(value){loading=value;$('motionControls').disabled=value;for(const id of ['export','import','saveMotion','play','previous','next','frames','fps','scrub','character','loopMotion'])$(id).disabled=value;}
 async function selectCharacter(id){

@@ -1,21 +1,23 @@
+import {readMovement,writeMovement} from './character-movement.mjs?v=movement-settings-1';
+import {BodyFollow} from './body-follow.mjs?v=movement-settings-1';
 import {attackCooldown} from './attack-cooldown.mjs';
-import {wardTouches,setCombatCamera} from './combat-hit.mjs?v=pose-speed-1';
-import {HitboxView} from './hitbox-view.mjs?v=pose-speed-1';
+import {wardTouches,setCombatCamera} from './combat-hit.mjs?v=movement-settings-1';
+import {HitboxView} from './hitbox-view.mjs?v=movement-settings-1';
 import {LevelUpVfx} from './level-up-vfx.mjs?v=screenhit10';
 import {FrostVisuals} from './frost-visuals.mjs?v=screenhit10';
 import {ICE_BASIC} from './ice-basic.mjs?v=click-timing-1';
-import {SpaceSkill,SPACE_SKILLS,interceptSpaceShots} from './space-skills.mjs?v=pose-speed-1';
-import {SpaceVisuals} from './space-visuals.mjs?v=pose-speed-1';
+import {SpaceSkill,SPACE_SKILLS,interceptSpaceShots} from './space-skills.mjs?v=movement-settings-1';
+import {SpaceVisuals} from './space-visuals.mjs?v=movement-settings-1';
 import {CHARACTERS,characterFor,chooseCharacter,chooseSupport} from './character-loadout.mjs';
 import {GameAudio} from './game-audio.mjs?v=sync5';
 import {damageSummary} from './damage-display.mjs?v=damage18';
-import {Duel,STEP} from './duel.mjs?v=pose-speed-1';
-import {mountPvpUI} from './pvp-ui.mjs?v=pose-speed-1';
+import {Duel,STEP} from './duel.mjs?v=movement-settings-1';
+import {mountPvpUI} from './pvp-ui.mjs?v=movement-settings-1';
 import {OBSTACLES} from './arena-rules.mjs';
 let onlineCore=null,pvp=null,onlineResultShown=false,lastOnlineAim=0,onlineRenderAt=0,onlinePrevious=null;
 import {redLightningPlacement} from './red-lightning-spec.mjs?v=bolt17';
 import {steamPlacement} from './steam-spec.mjs?v=bolt17';
-import {BurnVisuals,applyBurnVisual} from './burn-visuals.mjs?v=pose-speed-1';
+import {BurnVisuals,applyBurnVisual} from './burn-visuals.mjs?v=movement-settings-1';
 import {castWithPresentation,renderCastPresentation} from './cast-presentation.mjs?v=charge-step-1';
 import {CastRecoil,HitScreen,chargeSetback} from './combat-response.mjs?v=rim9';
 import {VisionShade} from './vision-shade.mjs';
@@ -25,16 +27,14 @@ import {canSee} from './vision.mjs';
 import {fireSpec,hasFireRecipe} from './fire-spec.mjs?v=bolt17';
 import {bindDuelControls,mouseRecipe} from './duel-controls.mjs?v=continue3';
 let walkDirection={x:0,z:0},icePressHand='left',moveSpeedScale=1;
-try{const value=Number(localStorage.getItem('mage-move-speed-v1'));if(value>=.5&&value<=2)moveSpeedScale=value;}catch{}
 const moveSpeedControl=document.getElementById('moveSpeed'),moveSpeedValue=document.getElementById('moveSpeedValue');
-moveSpeedControl.value=moveSpeedScale;moveSpeedValue.textContent=moveSpeedScale.toFixed(1)+'배';
 moveSpeedControl.onpointerup=()=>moveSpeedControl.blur();
-moveSpeedControl.oninput=()=>{const value=Number(moveSpeedControl.value);if(!Number.isFinite(value))return;moveSpeedScale=Math.max(.5,Math.min(2,value));moveSpeedValue.textContent=moveSpeedScale.toFixed(1)+'배';try{localStorage.setItem('mage-move-speed-v1',String(moveSpeedScale));}catch{}};
+moveSpeedControl.oninput=()=>{const id=characterFor(loadout).id;try{writeMovement(id,{...readMovement(id),moveSpeed:Number(moveSpeedControl.value)});}catch{flash('이동속도를 저장하지 못했습니다.');}};
 
 const slotLabel=k=>({q:'기본',w:'좌클릭',e:'우클릭'}[k]);
-import {createWizard,animateWizard,projectWizard,setWizardCharacter} from './wizard.mjs?v=pose-speed-1';
+import {createWizard,animateWizard,projectWizard,setWizardCharacter} from './wizard.mjs?v=movement-settings-1';
 import {QueuedCharge} from './queued-charge.mjs?v=click-timing-1';
-import {LiveMagic} from './live-magic.mjs?v=pose-speed-1';
+import {LiveMagic} from './live-magic.mjs?v=movement-settings-1';
 import {spellReach} from './live-spells.mjs?v=bolt17';
 import {describe as describeDesign} from './combo-design.mjs?v=bolt17';
 import {MeshFeedback} from './mesh-feedback.mjs';
@@ -307,7 +307,7 @@ border.geometry.dispose();border.geometry=new T.BufferGeometry().setFromPoints(p
 function renderAttackTell(){attackTell.visible=tellBorder.visible=playerTell.visible=playerBorder.visible=wardGhost.visible=false;if(bot&&running&&!finished&&enemy.g.visible&&enemyCharge.active)drawTell(enemy,mapSequence(enemyCharge.plan,enemyLoadout),attackTell,tellBorder);if(running&&!finished&&charge.active)drawTell(player,mapSequence(charge.parts,loadout),playerTell,playerBorder);}
 
 const iceAttackIcons={left:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m10 4 10 8-10 8-4-8Z M6 12h14 M10 4v16 M2 8h3 M1 16h3"/></svg>',right:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M3 7h11c5 0 5-5 1-5 M5 12h13c5 0 5 5 1 5 M2 17h9 M6 21h9"/></svg>'};
-function ui(){if(onlineCore)syncOnlineActors();for(const hand of ['left','right']){const state=attackCooldown(player,hand,loadout.q==='i'),node=$(hand+'AttackCool');const rune=RUNES[loadout.q],skillName=loadout.q==='i'?ICE_BASIC[hand].name:rune.name,icon=loadout.q==='i'?iceAttackIcons[hand]:rune.icon;if(node.dataset.icon!==icon){node.querySelector('b').innerHTML=icon;node.dataset.icon=icon;}node.style.setProperty('--cool-color',rune.color);node.title=(hand==='left'?'좌클릭':'우클릭')+' · '+skillName;node.style.setProperty('--fill',state.progress*360+'deg');node.classList.toggle('ready',state.ready);node.setAttribute('aria-valuenow',String(Math.round(state.progress*100)));node.setAttribute('aria-label',node.title+(state.ready?' 준비':' · '+state.remaining.toFixed(1)+'초 남음'));}setWizardCharacter(player.g,characterFor(loadout).id);setWizardCharacter(enemy.g,characterFor(enemyLoadout).id);$('iceCooldowns').classList.toggle('hidden',loadout.q!=='i');if(loadout.q==='i')$('iceCooldowns').textContent=['left','right'].map(hand=>{const value=player[hand==='left'?'iceLeftCool':'iceRightCool']||0;return (hand==='left'?'좌 ':'우 ')+ICE_BASIC[hand].name+' · '+(value>0?value.toFixed(1)+'초':'준비');}).join('   |   ');updateCamera();updateVisibility();renderHunt();renderAttackTell();for(const a of[player,enemy]){const burning=a.burn>0,chilled=a.slow>0,tinted=chilled||a.poison>0;const c=new T.Color(a.poison>0&&!burning?0x88c957:burning&&(!chilled||Math.floor(clock*4)%2===0)?0xff543e:0x479eff);for(const entry of a.g.userData.palette){entry.material.color.copy(entry.color);if(tinted)entry.material.color.lerp(new T.Color(a.poison>0?0x88c957:0x479eff),.35);if(a.hitFlash>0)entry.material.color.set(0xffffff);}a.g.position.set(a.x,0,a.z);a.g.rotation.y=Math.atan2(a.dir.x,a.dir.z);const shield=shields.get(a);shield.position.set(a.x,1,a.z);if(a.shield>0&&!shield.userData.active)pixelVfx.play('shield-bubble',a.x,a.z,{width:1.8,duration:a.shieldTime,loop:true,follow:()=>a.shield>0?{x:a.x,z:a.z,y:.12}:null});shield.userData.active=a.shield>0;shield.rotation.y=clock*.6}label($('playerLabel'),player);label($('enemyLabel'),enemy);if(!enemy.g.visible)$('enemyLabel').style.display='none';$('playerHp').style.width=player.hp+'%';$('enemyHp').style.width=enemy.hp+'%';$('manaBar').style.width=player.mana+'%';$('manaText').textContent=Math.floor(player.mana);$('enemyCast').textContent=onlineCore?(enemyCharge.active?'친구 · 충전 중':'친구'):!bot?'연습 상대':enemyCharge.active?spellName(mapSequence(enemyCharge.charge.parts,enemyLoadout),NAMES)+' · 충전':enemy.lastSpellTime>0?enemy.lastSpell+' · 발사':enemy.slow>0?'감속 중':enemy.burn>0?'화상 중':(enemyTarget?.monster?'몬스터 사냥 중':'상대 마법사');updateNameplate('player',progress,loadout);updateNameplate('enemy',enemyProgress,enemyLoadout);$('time').textContent=String(Math.floor(clock/60)).padStart(2,'0')+':'+String(Math.floor(clock%60)).padStart(2,'0');
+function ui(){const movement=readMovement(characterFor(loadout).id);moveSpeedScale=movement.moveSpeed;moveSpeedControl.value=moveSpeedScale;moveSpeedValue.textContent=moveSpeedScale.toFixed(1)+'배';if(onlineCore)syncOnlineActors();for(const hand of ['left','right']){const state=attackCooldown(player,hand,loadout.q==='i'),node=$(hand+'AttackCool');const rune=RUNES[loadout.q],skillName=loadout.q==='i'?ICE_BASIC[hand].name:rune.name,icon=loadout.q==='i'?iceAttackIcons[hand]:rune.icon;if(node.dataset.icon!==icon){node.querySelector('b').innerHTML=icon;node.dataset.icon=icon;}node.style.setProperty('--cool-color',rune.color);node.title=(hand==='left'?'좌클릭':'우클릭')+' · '+skillName;node.style.setProperty('--fill',state.progress*360+'deg');node.classList.toggle('ready',state.ready);node.setAttribute('aria-valuenow',String(Math.round(state.progress*100)));node.setAttribute('aria-label',node.title+(state.ready?' 준비':' · '+state.remaining.toFixed(1)+'초 남음'));}setWizardCharacter(player.g,characterFor(loadout).id);setWizardCharacter(enemy.g,characterFor(enemyLoadout).id);$('iceCooldowns').classList.toggle('hidden',loadout.q!=='i');if(loadout.q==='i')$('iceCooldowns').textContent=['left','right'].map(hand=>{const value=player[hand==='left'?'iceLeftCool':'iceRightCool']||0;return (hand==='left'?'좌 ':'우 ')+ICE_BASIC[hand].name+' · '+(value>0?value.toFixed(1)+'초':'준비');}).join('   |   ');updateCamera();updateVisibility();renderHunt();renderAttackTell();for(const a of[player,enemy]){const burning=a.burn>0,chilled=a.slow>0,tinted=chilled||a.poison>0;const c=new T.Color(a.poison>0&&!burning?0x88c957:burning&&(!chilled||Math.floor(clock*4)%2===0)?0xff543e:0x479eff);for(const entry of a.g.userData.palette){entry.material.color.copy(entry.color);if(tinted)entry.material.color.lerp(new T.Color(a.poison>0?0x88c957:0x479eff),.35);if(a.hitFlash>0)entry.material.color.set(0xffffff);}a.g.position.set(a.x,0,a.z);a.g.rotation.y=Math.atan2(a.dir.x,a.dir.z);const shield=shields.get(a);shield.position.set(a.x,1,a.z);if(a.shield>0&&!shield.userData.active)pixelVfx.play('shield-bubble',a.x,a.z,{width:1.8,duration:a.shieldTime,loop:true,follow:()=>a.shield>0?{x:a.x,z:a.z,y:.12}:null});shield.userData.active=a.shield>0;shield.rotation.y=clock*.6}label($('playerLabel'),player);label($('enemyLabel'),enemy);if(!enemy.g.visible)$('enemyLabel').style.display='none';$('playerHp').style.width=player.hp+'%';$('enemyHp').style.width=enemy.hp+'%';$('manaBar').style.width=player.mana+'%';$('manaText').textContent=Math.floor(player.mana);$('enemyCast').textContent=onlineCore?(enemyCharge.active?'친구 · 충전 중':'친구'):!bot?'연습 상대':enemyCharge.active?spellName(mapSequence(enemyCharge.charge.parts,enemyLoadout),NAMES)+' · 충전':enemy.lastSpellTime>0?enemy.lastSpell+' · 발사':enemy.slow>0?'감속 중':enemy.burn>0?'화상 중':(enemyTarget?.monster?'몬스터 사냥 중':'상대 마법사');updateNameplate('player',progress,loadout);updateNameplate('enemy',enemyProgress,enemyLoadout);$('time').textContent=String(Math.floor(clock/60)).padStart(2,'0')+':'+String(Math.floor(clock%60)).padStart(2,'0');
  const ec=enemyCharge.charge,enemyCharging=bot&&running&&!finished&&enemy.g.visible&&ec.active&&ec.elapsed>=.22;
  $('enemyOrbs').innerHTML=enemyCharging?ec.parts.map((key,i)=>{const rune=RUNES[enemyLoadout[key]];return `<div class="orb" title="${rune.name}" style="--c:${rune.color};--p:${i<ec.parts.length-1?100:ec.progress*100}%"><span>${rune.icon}</span></div>`}).join(''):'';
  $('enemyOrbs').classList.toggle('charging',enemyCharging);
@@ -388,7 +388,8 @@ let prev=performance.now();function frame(now){requestAnimationFrame(frame);if(o
  if(!u.puppet.icePose.length&&charging)u.puppet.icePose=[{hand:stage===1?u.puppet.chargeHand:'right',dir:a.dir.clone(),weight:1,reach:stage===1&&u.puppet.chargeUsesIce?.6:.38,height:stage===1&&u.puppet.chargeUsesIce?1.42:1}];
  const iceFacing=u.puppet.icePose[0]?.dir,displayDir=iceFacing||a.dir;
  if(iceFacing){a.g.rotation.y=Math.atan2(displayDir.x,displayDir.z);u.body.rotation.set(0,0,0);}
- u.puppet.bodyFollow=null;
+ const movementSettings=readMovement(characterFor(a===player?loadout:enemyLoadout).id);
+ if(movementSettings.headSpeed||movementSettings.chestSpeed||movementSettings.pelvisSpeed){u.puppet.bodyFollow??=new BodyFollow(movementSettings);u.puppet.bodyFollow.settings=movementSettings;u.puppet.bodyFollow.update(step,{aim:Math.atan2(displayDir.x,displayDir.z)});}else u.puppet.bodyFollow=null;
  u.animationPosition={x:a.x,z:a.z};projectWizard(a.g,camera);iceEngine.syncHands(iceOwner,u.puppet);
  const runes=a===player?loadout:enemyLoadout,parts=a===player?charge.parts:enemyCharge.charge.parts,colors=parts.map(k=>RUNES[runes[k]]?.color||'#ffffff');
  castingFeedback.charge(a,charging,stage||1,colors,u.puppet.lastPositions,camera);
