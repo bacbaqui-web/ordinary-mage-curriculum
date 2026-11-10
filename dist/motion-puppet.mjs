@@ -1,7 +1,7 @@
 import {firstRingClip} from './motion-catalog.mjs?v=hand-clips-1';
 import {PoseTransition} from './pose-transition.mjs?v=smooth-motion-1';
 import {magicClipName} from './magic-clips.mjs?v=smooth-motion-1';
-import {savedMotion,savedPose,createMotionReader} from './live-motions.mjs?v=hand-clips-1';
+import {savedMotion,savedPose,createMotionReader} from './live-motions.mjs?v=loop-playback-2';
 import * as T from './three.module.js';
 import {MagicMotion} from './magic-motion.mjs';
 import {actionClips} from './action-clips.mjs';
@@ -75,7 +75,7 @@ export class MotionPuppet{
   if(this.icePose?.length&&!edited&&!basicEdited){for(const side of ['Left','Right']){const shoulder=positions[side+'Arm'],elbow=positions[side+'ForeArm'],hand=positions[side+'Hand'];elbow.copy(shoulder).add(new T.Vector3(0,-.32,0));hand.copy(shoulder).add(new T.Vector3(0,-.64,0));const pose=this.icePose.find(p=>p.hand===side.toLowerCase());if(pose){const w=Math.max(0,Math.min(1,pose.weight));elbow.lerp(shoulder.clone().addScaledVector(pose.dir,.29).add(new T.Vector3(0,-.08,0)),w);const end=new T.Vector3().setFromMatrixPosition(this.group.matrixWorld).setY(pose.height??1.42).addScaledVector(pose.dir,pose.reach??.60);hand.lerp(end,w);}}}
   if(this.blendTransitions){
    const clip=readMotion(motionName),time=this.editorActionTime??(motionName==='대기'?this.idleTime||0:this.time);
-   const cycle=this.magic.mode==='idle'&&clip?Math.floor(time/(clip.frames/clip.fps)):0;
+   const cycle=this.magic.mode==='idle'&&clip&&!clip.loop?Math.floor(time/(clip.frames/clip.fps)):0;
    const state=[motionName,this.magic.mode,this.magic.stage,this.basicAttack?.name||'',this.icePose?.map(p=>p.hand).join(',')||'',cycle].join(':');
    for(const v of Object.values(positions))this.group.worldToLocal(v);
    this.poseTransition??=new PoseTransition();this.poseTransition.duration=this.magic.mode==='hold'?1/12:.18;this.poseTransition.apply(positions,state,this.transitionDt||0);

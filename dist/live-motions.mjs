@@ -1,3 +1,4 @@
+import {loopFrame} from './motion-timing.mjs';
 import {ensureFirstRingClips} from './motion-catalog.mjs?v=hand-clips-1';
 import {validateProject,samplePose} from './pose-data.mjs?v=smooth-motion-1';
 import {motionStorageKey,characterProfile} from './character-profiles.mjs?v=heel-free-1';
@@ -10,7 +11,7 @@ refresh();
 globalThis.addEventListener?.('storage',e=>{if(e.key===storage||e.key===null)refresh();});
 globalThis.addEventListener?.('focus',refresh);
 export function savedMotion(name){return project?.actions.reduce((chosen,a)=>{if((a.binding||a.name)!==name)return chosen;return !chosen||(a.updatedAt||0)>=(chosen.updatedAt||0)?a:chosen;},null);}
-export function savedPose(name,time,{loop=false,hold=false}={}){const a=savedMotion(name);if(!a)return null;let frame=time*a.fps;if(hold)frame=Math.min(frame,1);else if(loop)frame%=a.frames;return samplePose(a,Math.min(a.frames-1,frame));}
+export function savedPose(name,time,{loop=false,hold=false}={}){const a=savedMotion(name);if(!a)return null;let frame=time*a.fps;if(hold)frame=Math.min(frame,1);else if(loop)frame=loopFrame(a,frame);return samplePose(a,Math.min(a.frames-1,frame));}
 
 // Game actors need separate character stores; choosing one must not change another.
 export function createMotionReader(id,{fallback=true}={}){
@@ -29,7 +30,7 @@ export function createMotionReader(id,{fallback=true}={}){
  const motion=name=>{refreshActor();return find(current,name)||find(legacy,name)||null;};
  return {savedMotion:motion,savedPose(name,time,{loop=false,hold=false}={}){
   const a=motion(name);if(!a)return null;let frame=time*a.fps;
-  if(hold)frame=Math.min(frame,1);else if(loop)frame%=a.frames;
+  if(hold)frame=Math.min(frame,1);else if(loop)frame=loopFrame(a,frame);
   return samplePose(a,Math.min(a.frames-1,frame));
  }};
 }
