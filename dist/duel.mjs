@@ -1,13 +1,13 @@
 import {wardTouches} from './combat-hit.mjs?v=bodyhit11';
-import {ICE_BASIC} from './ice-basic.mjs?v=bodyhit11';
+import {ICE_BASIC} from './ice-basic.mjs?v=charge-step-1';
 import * as T from './three.module.js';
-import {LiveMagic} from './live-magic.mjs?v=bodyhit11';
-import {QueuedCharge} from './queued-charge.mjs?v=continue3';
+import {LiveMagic} from './live-magic.mjs?v=charge-step-1';
+import {QueuedCharge} from './queued-charge.mjs?v=charge-step-1';
 import {SpaceSkill,interceptSpaceShots} from './space-skills.mjs?v=bodyhit11';
 import {ForcedMotion} from './motion.mjs';
 import {CastRecoil,chargeSetback} from './combat-response.mjs';
 import {chargeMoveScale} from './magic-motion.mjs';
-import {resolveSpell} from './live-charge-spells.mjs?v=bolt17';
+import {resolveSpell} from './live-charge-spells.mjs?v=charge-step-1';
 import {validLoadout} from './live-loadout.mjs?v=bolt17';
 import {fireSpec,hasFireRecipe} from './fire-spec.mjs?v=bolt17';
 import {advanceMovingWard} from './moving-ward.mjs';
@@ -49,7 +49,7 @@ export class Duel {
    case 'cancel':c.clear();break;
    case 'stop':c.clear();a.target=null;break;
    case 'roll':if(!(a.iceCastLock>0)&&!a.recoil.active&&!a.motion.active&&a.roll.start(a.dir.x,a.dir.z,a,a.loadout.q,a.aim)){a.motion.clear();a.target=null;}break;
-   case 'release':{if(a.roll.active){a.roll.pendingRelease=true;break;}const result=c.release();if(!result||a.cool>0)break;if(a.loadout.q==='i'&&result.parts.length===1){this.input(id,{action:'ice-basic',hand:a.iceHand||'left',point:{x:a.aim.x,z:a.aim.z}});break;}const s=resolveSpell(result,a.loadout);if(a.mana<s.cost)break;a.mana-=s.cost;a.cool=s.tap?.16:.38;a.target=null;a.recoil.start(a.dir,s.sequence.length,hasFireRecipe(s.sequence)&&fireSpec(s.sequence).op==='h'?fireSpec(s.sequence).dashDuration:0);
+   case 'release':{if(a.roll.active){a.roll.pendingRelease=true;break;}const result=c.release();if(!result||a.cool>0)break;if(a.loadout.q==='i'&&result.parts.length===1){const hand=a.iceHand||'left',key=hand==='left'?'iceLeftCool':'iceRightCool',spec=ICE_BASIC[hand];if(a.roll.active||(a[key]||0)>0||a.mana<spec.cost)break;a.mana-=spec.cost;a[key]=spec.cooldown;const spell={...resolveSpell(result,a.loadout),name:spec.name,iceHand:hand,cost:spec.cost};this.magic.cast(spell,a,a.dir.clone(),a.aim.clone());this.onCast(spell,a);break;}const s=resolveSpell(result,a.loadout);if(a.mana<s.cost)break;a.mana-=s.cost;a.cool=s.tap?.16:.38;a.target=null;a.recoil.start(a.dir,s.sequence.length,hasFireRecipe(s.sequence)&&fireSpec(s.sequence).op==='h'?fireSpec(s.sequence).dashDuration:0);
     // A stable emission point prevents skeleton animation from changing hit range.
     const emission=V(a.x,a.z).addScaledVector(a.dir,.5);if(!this.clearPath(a,emission))emission.set(a.x,0,a.z);
     this.magic.cast(s,a,a.dir.clone(),a.aim.clone(),emission);this.onCast(s,a);break;}

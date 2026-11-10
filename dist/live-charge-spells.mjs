@@ -11,6 +11,7 @@ export class Charge {
  next(){return this.held.at(-1)}
 }
 export function resolveSpell(result,loadout=DEFAULT_LOADOUT){
+ if(Number.isInteger(result.completedRings)&&result.parts.length===1){const sequence=mapSequence(result.parts,loadout);return {sequence,name:spellName(sequence,NAMES),power:1,cost:4,parts:result.parts,keys:result.parts.join(''),tap:true,chargedBasic:result.completedRings>=1,rangeScale:result.completedRings>=1?1.25:1};}
  const parts=result.tap?[result.parts[0]]:result.parts;const complete=result.complete?parts:parts.length>1&&result.progress<.99?parts.slice(0,-1):parts;
  const sequence=mapSequence(complete,loadout);const power=1+Math.max(0,complete.length-1)*.48+(result.tap?0:result.progress*.28);
  return {sequence,name:spellName(sequence,NAMES),power,cost:result.tap?4:7+complete.length*4+result.progress*2,parts:complete,keys:complete.join(''),tap:result.tap};

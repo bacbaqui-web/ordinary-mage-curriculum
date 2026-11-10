@@ -13,7 +13,7 @@ export function castWithPresentation({magic,wards,clearPath,collides,wallBlocks}
  else if(effect?.type==='cone')end=new T.Vector3(effect.point.x,.25,effect.point.z).addScaledVector(dir,(effect.radius||1)*.75);
  else if(effect?.point)end=new T.Vector3(effect.point.x,.15,effect.point.z);
  else if(effect?.mesh||effect?.m)end=(effect.mesh||effect.m).position.clone();
- else{end=aimPoint.clone();const delta=end.clone().sub(new T.Vector3(caster.x,0,caster.z));delta.y=0;if(delta.length()>spellReach(s.sequence))delta.setLength(spellReach(s.sequence));end.set(caster.x+delta.x,.15,caster.z+delta.z);}
+ else{end=aimPoint.clone();const delta=end.clone().sub(new T.Vector3(caster.x,0,caster.z));delta.y=0;if(delta.length()>spellReach(s.sequence)*(s.rangeScale||1))delta.setLength(spellReach(s.sequence)*(s.rangeScale||1));end.set(caster.x+delta.x,.15,caster.z+delta.z);}
  if(!moving){const delta=end.clone().sub(hand),distance=delta.length();for(let d=.1;d<distance;d+=.1){const point=hand.clone().addScaledVector(delta,d/distance);if(collides(point.x,point.z,.1)||wallBlocks(caster,point)){end.copy(hand).addScaledVector(delta,Math.max(0,d-.1)/distance);break;}}}
  const beamTarget=moving?()=>({point:moving.mesh.position,active:!!moving.mesh.parent&&moving.life>0}):()=>({point:end,active:false});
  caster.castFlash=.3;caster.pendingCastLight={colors:[...s.sequence].map(k=>RUNES[k].color),tier:s.sequence.length,dir:dir.clone(),origin:hand,beamTarget};

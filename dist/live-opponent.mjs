@@ -1,4 +1,4 @@
-import {Charge,RING_SECONDS,resolveSpell} from './live-charge-spells.mjs?v=bolt17';
+import {Charge,RING_SECONDS,resolveSpell} from './live-charge-spells.mjs?v=charge-step-1';
 import {learn,MAX_RANK} from './progression.mjs?v=zones1';
 import {KEYS,RUNES} from './live-loadout.mjs?v=bolt17';
 export function chooseLoadout(random=Math.random){const pool=Object.keys(RUNES);for(let i=pool.length-1;i>0;i--){const j=Math.floor(random()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]];}return Object.fromEntries(KEYS.map((k,i)=>[k,pool[i]]));}
