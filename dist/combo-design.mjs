@@ -1,3 +1,4 @@
+import {ICE_RECIPES} from './ice-spec.mjs?v=ice2';
 import {FIRE_RECIPES} from './fire-spec.mjs?v=bolt17';
 export const RUNES={
 q:{name:'화염',icon:'✦',color:'#ff9869',body:'화염',action:'확산합니다',effect:'짧은 화상을 남깁니다'},
@@ -19,5 +20,6 @@ export function describe(seq){if(!valid(seq))throw Error('잘못된 조합');con
 function apply(k){operations.push(k);if(k==='l')motion='fall';if(k==='w')motion='forward';if(k==='g')motion='pull';if(k==='q'){shape='spread';}if(k==='i'){shape='condensed';}if(k==='d'){shape='solid';}if(k==='p'){shape='coat';}if(k==='a'){shape='spray';}if(k==='e'){shape='wall';}if(k==='t'){shape='field';}if(k==='s'){shape='slash';}if(k==='h'){shape='strike';}}
 if(seq.length===1){apply(seq[0]);steps[0]=`${object(first.body)} ${first.action}.`;name=names[seq[0]](first.body);}
 for(let j=1;j<seq.length;j++){const k=seq[j],old=name;apply(k);name=names[k](old);const phrase=k==='s'?`${old}로 주변을 베어냅니다.`:k==='h'?`${old}로 한곳에 피해를 줍니다.`:`${object(old)} ${RUNES[k].action}.`;steps.push(phrase);}
+if(ICE_RECIPES[seq]){name=ICE_RECIPES[seq][0];steps.splice(0,steps.length,ICE_RECIPES[seq][1]);}
 if(FIRE_RECIPES[seq]){name=FIRE_RECIPES[seq][0];steps.splice(0,steps.length,FIRE_RECIPES[seq][1]);}
 return {name,steps,shape,motion,operations,balance:'첫 1륜은 대상을 정하고, 뒤의 1륜은 앞 단계의 결과에 동작을 적용합니다. 단독 사용은 자신의 대상과 동작을 함께 씁니다. 게임과 미리보기에 같은 순서로 적용됩니다.',color:first.color};}

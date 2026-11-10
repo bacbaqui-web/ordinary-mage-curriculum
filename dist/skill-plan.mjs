@@ -1,17 +1,17 @@
-import {plannerRange} from './planner-range.mjs?v=range1';
-import {plannerSpell,basicKey} from './planner-spell.mjs?v=mouse-preview1';
-import {mountCharacterCodex} from './character-codex.mjs?v=codex1';
+import {plannerRange} from './planner-range.mjs?v=ice2';
+import {plannerSpell,basicKey} from './planner-spell.mjs?v=ice2';
+import {mountCharacterCodex} from './character-codex.mjs?v=ice2';
 import {RevisionRequests} from './revision-requests.mjs?v=compact2';
 import {mountPlanAudio} from './plan-audio.mjs?v=compact2';
-import {DAMAGE_CATALOG,BASIC_DAMAGE_CATALOG} from './damage-catalog.mjs?v=mouse-preview1';
-import {RUNES,valid,describe} from './combo-design.mjs?v=bolt17';
-import {mountAtlasPreview} from './atlas-preview.mjs?v=mouse-preview1';
+import {DAMAGE_CATALOG,BASIC_DAMAGE_CATALOG} from './damage-catalog.mjs?v=ice2';
+import {RUNES,valid,describe} from './combo-design.mjs?v=ice2';
+import {mountAtlasPreview} from './atlas-preview.mjs?v=ice2';
 const $=id=>document.getElementById(id),ids=Object.keys(RUNES);let seq=valid(location.hash.slice(1))?location.hash.slice(1):'qqw',branch=seq.slice(0,2),dispose=()=>{},disposeSound=()=>{};
 let basicHand='left',chargedBasic=false;
 const requests=new RevisionRequests();let disposeRequest=()=>{};
 const recipe=s=>[...s].map(k=>RUNES[k].name).join(' → ');
 const icons=s=>[...s].map(k=>`<span class="rune-icon" style="--rune:${RUNES[k].color}" title="${RUNES[k].name}">${RUNES[k].icon}</span>`).join('<i>＋</i>');
-function button(s){const d=s.length===1?plannerSpell(s,{hand:basicHand,charged:chargedBasic}):describe(s);return `<button data-seq="${s}" class="node ${seq===s?'selected':''} ${seq.startsWith(s)?'path':''}" aria-pressed="${seq===s}"><span class="icon-formula">${icons(s)}</span><b>${d.name}</b></button>`;}
+function button(s){const d=s.length===1?plannerSpell(s,{hand:basicHand,charged:chargedBasic}):describe(s);return `<button data-seq="${s}" title="${describe(s).steps.join(' ')}" class="node ${seq===s?'selected':''} ${seq.startsWith(s)?'path':''}" aria-pressed="${seq===s}"><span class="icon-formula">${icons(s)}</span><b>${d.name}</b></button>`;}
 function render(){const base=seq[0],d=seq.length===1?plannerSpell(seq,{hand:basicHand,charged:chargedBasic}):describe(seq);if(branch.length!==2||branch[0]!==base)branch=base+base;if(seq.length>1)branch=seq.slice(0,2);document.documentElement.style.setProperty('--accent',d.color);
 $('bases').innerHTML=ids.map(k=>`<button class="base-rune" data-seq="${k}" aria-pressed="${base===k}"><span class="rune-icon" style="--rune:${RUNES[k].color}">${RUNES[k].icon}</span><span><b>${RUNES[k].name}</b></span></button>`).join('');
 const pool=ids;$('root').innerHTML=button(base);$('pairs').innerHTML=pool.map(k=>button(base+k)).join('');$('triples').innerHTML=pool.map(k=>button(branch+k)).join('');

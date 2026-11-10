@@ -1,4 +1,4 @@
-import {DAMAGE_CATALOG} from './damage-catalog.mjs?v=damage18';
+import {DAMAGE_CATALOG} from './damage-catalog.mjs?v=ice2';
 const n=v=>Number(v.toFixed(2)).toLocaleString('ko-KR');
 export const damageSummary=seq=>{const d=DAMAGE_CATALOG[seq];return d?`누적 피해 ${n(d.total)} · 타격 ${n(d.direct)} + 지속 ${n(d.dot)}`:'피해 계산 중';};
 export function damageDetails(seq){const d=DAMAGE_CATALOG[seq];if(!d)return '';const groups=kind=>d.groups.filter(g=>g.kind===kind).map(g=>`${n(g.value)} × ${g.count}회`).join(' + ')||'0';return `<section class="damage-panel"><strong>피해량 비교</strong><p class="damage-total">누적 ${n(d.total)}</p><dl><dt>타격 피해</dt><dd>${n(d.direct)}<small>${groups('direct')}</small></dd><dt>화상·독 등 지속 피해</dt><dd>${n(d.dot)}<small>${groups('dot')}</small></dd></dl><p>피해가 끝날 때까지 약 ${n(d.duration)}초</p><details><summary>계산 기준</summary><p>완충 · 숙련 1 · 방어력 0인 표적 한 명 기준입니다. 표적을 움직이지 않게 두고 다섯 위치에서 비교한 가장 큰 결과입니다. 모든 상황에서 가능한 최대 피해를 뜻하지는 않습니다. 충전량·숙련도·적의 위치와 회피에 따라 실제 피해는 달라집니다. 표시값은 소수 둘째 자리까지 반올림해 합계에 작은 차이가 있을 수 있습니다.</p></details></section>`;}

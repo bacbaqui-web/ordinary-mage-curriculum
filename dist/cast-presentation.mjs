@@ -1,12 +1,12 @@
 import * as T from './three.module.js';
-import {spellReach} from './live-spells.mjs?v=bolt17';
-import {RUNES} from './combo-design.mjs?v=bolt17';
+import {spellReach} from './live-spells.mjs?v=ice2';
+import {RUNES} from './combo-design.mjs?v=ice2';
 export function castWithPresentation({magic,wards,clearPath,collides,wallBlocks},s,caster,dir,aimPoint){
  const hand=new T.Vector3(caster.x,1,caster.z).addScaledVector(dir,.5);
  const origin=clearPath(caster,{x:hand.x,z:hand.z})?hand:null;
- const before=new Set([...magic.effects,...magic.fire.effects,...wards]);caster.castContacts=[];
+ const before=new Set([...magic.effects,...magic.fire.effects,...magic.iceCombos.effects,...wards]);caster.castContacts=[];
  magic.cast(s,caster,dir,aimPoint,origin);
- const created=[...magic.effects,...magic.fire.effects,...wards].filter(e=>!before.has(e)),contacts=caster.castContacts;caster.castContacts=null;
+ const created=[...magic.effects,...magic.fire.effects,...magic.iceCombos.effects,...wards].filter(e=>!before.has(e)),contacts=caster.castContacts;caster.castContacts=null;
  const moving=created.find(e=>['projectile','shot','punch','slash'].includes(e.type)),effect=moving||created[0];
  let end;
  if(contacts.length)end=contacts.sort((a,b)=>a.distanceTo(hand)-b.distanceTo(hand))[0];

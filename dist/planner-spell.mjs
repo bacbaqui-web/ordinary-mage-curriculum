@@ -1,6 +1,6 @@
-import {resolveSpell} from './live-charge-spells.mjs?v=charge-step-1';
+import {resolveSpell} from './live-charge-spells.mjs?v=ice2';
 import {ICE_BASIC} from './ice-basic.mjs?v=pose-speed-1';
-import {describe} from './combo-design.mjs?v=bolt17';
+import {describe} from './combo-design.mjs?v=ice2';
 export const basicKey=(seq,hand='left',charged=false)=>`${seq}:${hand}:${charged?'charged':'tap'}`;
 export function plannerSpell(sequence,{hand='left',charged=false}={}){
  if(sequence.length>1)return {sequence,power:1+(sequence.length-1)*.48+.28,name:describe(sequence).name,color:describe(sequence).color};
