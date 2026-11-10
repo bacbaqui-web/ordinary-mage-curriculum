@@ -1,4 +1,4 @@
-import {iceMovement} from './ice-motion.mjs?v=ice-surface-1';
+import {iceMovement} from './ice-motion.mjs?v=ice-detail-1';
 import {roundDamage} from './damage-number.mjs?v=integer-damage-1';
 import {castControlsLocked,followCastAim} from './cast-lock.mjs?v=charge-move-1';
 import {attackCooldown} from './attack-cooldown.mjs';
@@ -8,7 +8,7 @@ import * as T from './three.module.js';
 import {spellAimHeight} from './cursor-aim.mjs?v=shift-trajectory-1';
 import {LiveMagic} from './live-magic.mjs?v=ice-step-1';
 import {QueuedCharge} from './queued-charge.mjs?v=instant-first-ring-1';
-import {SpaceSkill,interceptSpaceShots} from './space-skills.mjs?v=ice-surface-1';
+import {SpaceSkill,interceptSpaceShots} from './space-skills.mjs?v=ice-detail-1';
 import {ForcedMotion} from './motion.mjs';
 import {CastRecoil,chargeSetback} from './combat-response.mjs';
 import {chargeMoveScale} from './magic-motion.mjs?v=charge-move-1';
@@ -19,7 +19,7 @@ import {advanceMovingWard} from './moving-ward.mjs';
 import {crossesWard,distanceToWard} from './forces.mjs';
 import {arenaCollision} from './arena-rules.mjs';
 
-export const STEP=1/30, PROTOCOL=9;
+export const STEP=1/30, PROTOCOL=10;
 const V=(x,z)=>new T.Vector3(x,0,z);
 const numeric=['iceVX','iceVZ','x','z','hp','mana','shield','shieldTime','cool','iceLeftCool','iceRightCool','iceCastLock','castControlLock','slow','frostSlow','burn','burnTick','burnDamage','poison','poisonTick','poisonDamage','wet','ashTime','greenFireTime','dustTime','knockdown','rooted','slipImmune','greenFrost','frozen'];
 const motionKeys=['elapsed','duration','x','z','distance'];

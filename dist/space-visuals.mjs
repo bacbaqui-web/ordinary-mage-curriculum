@@ -1,6 +1,6 @@
 import * as T from './three.module.js';
-import {IceSurface} from './ice-surface.mjs?v=ice-alpha-1';
-import {SPACE_SKILLS} from './space-skills.mjs?v=ice-surface-1';
+import {IceSurface} from './ice-surface.mjs?v=ice-detail-1';
+import {SPACE_SKILLS} from './space-skills.mjs?v=ice-detail-1';
 export class SpaceVisuals{
  constructor(scene){this.scene=scene;this.iceSurface=new IceSurface(scene);this.pool=[];this.used=0;this.geometries={sphere:new T.IcosahedronGeometry(1,1),cone:new T.ConeGeometry(1,1,7),box:new T.BoxGeometry(1,1,1),ring:new T.TorusGeometry(1,.045,5,36)};}
  mesh(shape,color,x,y,z,sx,sy,sz,opacity=.7,ry=0){const index=this.used++;let m=this.pool[index];if(!m){m=new T.Mesh(this.geometries[shape],new T.MeshBasicMaterial({transparent:true,depthWrite:false}));this.pool.push(m);this.scene.add(m);}m.geometry=this.geometries[shape];m.material.color.setHex(color);m.material.opacity=opacity;m.position.set(x,y,z);m.scale.set(sx,sy,sz);m.rotation.set(shape==='ring'?Math.PI/2:0,ry,0);m.visible=true;return m;}
