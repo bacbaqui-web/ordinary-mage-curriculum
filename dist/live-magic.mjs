@@ -1,9 +1,9 @@
 import {IceSpells} from './ice-spells.mjs?v=ice2';
 import {hasIceRecipe} from './ice-spec.mjs?v=ice2';
-import {areaTouches,shotTouches,shotContact} from './combat-hit.mjs?v=movement-settings-1';
+import {areaTouches,shotTouches,shotContact} from './combat-hit.mjs?v=turn-rates-1';
 import {IceBasic} from './ice-basic.mjs?v=click-timing-1';
 import {hasFireRecipe} from './fire-spec.mjs?v=bolt17';
-import {FireSpells} from './fire-spells.mjs?v=movement-settings-1';
+import {FireSpells} from './fire-spells.mjs?v=turn-rates-1';
 import * as T from './three.module.js';
 import {compileSpell,spellReach,spellPayload} from './live-spells.mjs?v=ice2';
 import {RUNES} from './combo-design.mjs?v=ice2';

@@ -7,10 +7,11 @@ export function normalizeMovement(value={}){
 }
 const cache=new Map();
 export function readMovement(id){
- const key=motionStorageKey(id);let raw=null;try{raw=globalThis.localStorage?.getItem(key)||globalThis.localStorage?.getItem(key+':movement')||null;}catch{}
- if(cache.get(key)?.raw===raw)return cache.get(key).value;
- let value;try{value=normalizeMovement(JSON.parse(raw)?.movementSettings);}catch{value=normalizeMovement();}
- cache.set(key,{raw,value});return value;
+ const key=motionStorageKey(id);let raw=null,standalone=null;try{raw=globalThis.localStorage?.getItem(key)||null;standalone=globalThis.localStorage?.getItem(key+':movement')||null;}catch{}
+ if(cache.get(key)?.raw===raw&&cache.get(key)?.standalone===standalone)return cache.get(key).value;
+ const parse=value=>{try{return JSON.parse(value)?.movementSettings;}catch{return undefined;}};
+ const value=normalizeMovement(parse(raw)??parse(standalone));
+ cache.set(key,{raw,standalone,value});return value;
 }
 export function writeMovement(id,value){
  const key=motionStorageKey(id),raw=globalThis.localStorage?.getItem(key),project=raw?JSON.parse(raw):{};

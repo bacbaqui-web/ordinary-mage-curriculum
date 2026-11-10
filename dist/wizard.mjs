@@ -1,4 +1,4 @@
-import {CharacterRig} from './character-rig.mjs?v=movement-settings-1';
+import {CharacterRig} from './character-rig.mjs?v=turn-rates-1';
 import {characterProfile} from './character-profiles.mjs?v=heel-free-1';
 import * as T from './three.module.js';
 import {MotionPuppet} from './motion-puppet.mjs?v=loop-playback-2';
@@ -59,7 +59,7 @@ export function projectWizard(g,camera){
   const pose=Object.fromEntries(Object.entries(puppet.lastPositions).filter(([n])=>!n.endsWith('Toe')).map(([n,p])=>[n,g.worldToLocal(p.clone()).toArray()]));
   u.modelRoot.matrix.copy(g.matrixWorld).invert();u.modelRoot.updateMatrixWorld(true);
   const worldPosition=g.getWorldPosition(new T.Vector3()),direction=new T.Vector3(0,0,1).transformDirection(g.matrixWorld);
-  rig.apply(pose,u.modelDt||0,{position:worldPosition.toArray(),heading:Math.atan2(direction.x,direction.z),headYaw:puppet.bodyFollow?puppet.bodyFollow.head-puppet.bodyFollow.aim:0});
+  rig.apply(pose,u.modelDt||0,{position:worldPosition.toArray(),heading:Math.atan2(direction.x,direction.z),...puppet.bodyFollow?.orientation()});
   u.modelRoot.matrix.identity();u.modelRoot.updateMatrixWorld(true);
  }
 }

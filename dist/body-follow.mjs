@@ -21,6 +21,7 @@ export class BodyFollow{
   this.chest=follow(this.chest,delayed(.05),dt,.10);this.chest=this.pelvis+clamp(angleDelta(this.chest,this.pelvis),-.7,.7);
   this.head=follow(this.head,aim,dt,.05);this.head=this.chest+clamp(angleDelta(this.head,this.chest),-.9,.9);
  }
+ orientation(){return this.ready?{headYaw:angleDelta(this.head,this.aim),chestYaw:angleDelta(this.chest,this.aim),pelvisYaw:angleDelta(this.pelvis,this.aim)}:{};}
  apply(p){
   if(!this.ready)return;
   const hips=p.Hips.clone();turn(p,Object.keys(p).filter(n=>n!=='Hips'),hips,angleDelta(this.pelvis,this.aim));

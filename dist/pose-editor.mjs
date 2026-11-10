@@ -1,10 +1,10 @@
 import {loopFrame} from './motion-timing.mjs';
-import {normalizeMovement,readMovement} from './character-movement.mjs?v=movement-settings-1';
+import {normalizeMovement,readMovement} from './character-movement.mjs?v=turn-rates-1';
 import {syncLoop,resizeLoop,loopEndpoint} from './pose-loop.mjs';
 import {ensureBasicAttacks,ensureIdle,ensureFirstRingClips,actionGroups} from './motion-catalog.mjs?v=hand-clips-1';
 import {migrateAnklePivot} from './ankle-pivot.mjs?v=heel-free-1';
 import {CHARACTERS,characterProfile,motionStorageKey,projectForCharacter,assertCharacterImport} from './character-profiles.mjs?v=heel-free-1';
-import {CharacterRig,fitProjectToRig} from './character-rig.mjs?v=movement-settings-1';
+import {CharacterRig,fitProjectToRig} from './character-rig.mjs?v=turn-rates-1';
 import {ensureMagicClips} from './magic-clips.mjs?v=smooth-motion-1';
 import {uniqueMotions,mergeMotions} from './pose-library.mjs?v=hand-clips-1';
 import * as T from './three.module.js';

@@ -18,3 +18,9 @@ const instant=new BodyFollow(normalizeMovement());instant.update(0,{aim:3});inst
 for(const key of ['head','chest','pelvis'])assert.ok(Math.abs(angleDelta(instant[key],-3))<1e-9);
 assert.equal(normalizeMovement({moveSpeed:100,headSpeed:-1,chestSpeed:NaN}).moveSpeed,2);
 console.log('PASS: per-character movement settings, safe first save, preserved motions, independent rotation rates, immediate turning');
+
+localStorage.setItem(motionStorageKey('earth')+':movement',JSON.stringify({movementSettings:{headSpeed:90,chestSpeed:60,pelvisSpeed:30}}));
+localStorage.setItem(motionStorageKey('earth'),JSON.stringify({version:1,actions:[]}));
+assert.equal(readMovement('earth').headSpeed,90,'older motion project must not mask saved movement settings');
+localStorage.setItem(motionStorageKey('earth')+':movement',JSON.stringify({movementSettings:{headSpeed:120}}));
+assert.equal(readMovement('earth').headSpeed,120,'standalone changes invalidate the cache');

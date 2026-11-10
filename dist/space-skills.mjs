@@ -1,4 +1,4 @@
-import {areaTouches} from './combat-hit.mjs?v=movement-settings-1';
+import {areaTouches} from './combat-hit.mjs?v=turn-rates-1';
 export const SPACE_SKILLS={
  q:{name:'불길 돌파',duration:.32,distance:2.6,cooldown:4,color:0xff6828,desc:'짧게 돌진하고 출발 지점에 2초간 불길을 남깁니다. 불길은 0.5초마다 피해 2를 줍니다.'},
  i:{name:'빙판 미끄럼',duration:.28,distance:5.5,cooldown:4.5,color:0x8bdcff,desc:'마우스 지점까지 빠르게 미끄러집니다. 최대 5.5m이며 벽을 넘지 못합니다. 얼음길을 밟은 적은 느려집니다.'},

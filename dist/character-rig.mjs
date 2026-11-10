@@ -166,15 +166,15 @@ export class CharacterRig{
    const bone=this.bones[name],r=this.rest.get(bone),link=this.directions.get(name);
    if(link){
     const target=V(pose[link.child]).sub(V(pose[name]));
-    if(target.lengthSq()>1e-10){const q=new T.Quaternion().setFromUnitVectors(link.dir,target.normalize()).multiply(r.world);bone.quaternion.copy(qworld(bone.parent).invert().multiply(q)).normalize();}
+    if(target.lengthSq()>1e-10){const yaw=name==='Hips'?(movement?.pelvisYaw||0):name==='Spine'?(movement?.chestYaw||0):0;const twist=new T.Quaternion().setFromAxisAngle(new T.Vector3(0,1,0),yaw);const q=new T.Quaternion().setFromUnitVectors(link.dir.clone().applyQuaternion(twist),target.normalize()).multiply(twist).multiply(r.world);bone.quaternion.copy(qworld(bone.parent).invert().multiply(q)).normalize();}
    }
    // The bulky scarf follows Neck translation, with an upright frame like the head.
-   if(name==='Head'||name==='Neck'){const desired=name==='Head'?new T.Quaternion().setFromAxisAngle(new T.Vector3(0,1,0),movement?.headYaw||0).multiply(r.world):r.world;bone.quaternion.copy(qworld(bone.parent).invert().multiply(desired)).normalize();}
+   if(name==='Head'||name==='Neck'){const desired=new T.Quaternion().setFromAxisAngle(new T.Vector3(0,1,0),(name==='Head'?movement?.headYaw:movement?.chestYaw)||0).multiply(r.world);bone.quaternion.copy(qworld(bone.parent).invert().multiply(desired)).normalize();}
    if(this.feet[name]){
     // Foot rotation is a world-space ankle hinge, not inherited shin rotation.
     // Use the actual shoe outline and center below the raised cuff.
     const angle=dt>0?this.feet[name].update(pose[name],dt).angle:0;
-    const desired=new T.Quaternion().setFromAxisAngle(new T.Vector3(1,0,0),-angle).multiply(r.world);
+    const desired=new T.Quaternion().setFromAxisAngle(new T.Vector3(0,1,0),movement?.pelvisYaw||0).multiply(new T.Quaternion().setFromAxisAngle(new T.Vector3(1,0,0),-angle)).multiply(r.world);
     bone.quaternion.copy(qworld(bone.parent).invert().multiply(desired)).normalize();
    }
    // Editor coordinates keep handles and visible skeleton in the same place.
