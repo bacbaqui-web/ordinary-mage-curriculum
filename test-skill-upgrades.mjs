@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import {renderSkillUpgrades} from './dist/skill-upgrades.mjs';
+import {createProgress,awardKill,learn} from './dist/progression.mjs';
+const loadout={q:'i',w:'w',e:'e'},runes={i:{name:'빙결'},w:{name:'밀기'},e:{name:'장벽'}};
+const nodes=Object.fromEntries(['q','w','e'].map(k=>{const classes=new Set(),small={};return ['key-'+k,{classes,small,classList:{toggle:(key,on)=>on?classes.add(key):classes.delete(key)},setAttribute(key,value){this[key]=value;},querySelector(){return small;}}];}));
+const root={getElementById:id=>nodes[id]},state=createProgress(loadout),render=()=>renderSkillUpgrades(root,state,loadout,runes);
+render();assert.ok(Object.values(nodes).every(n=>n.disabled&&!n.classes.has('upgrade-ready')));
+awardKill(state,40);render();assert.equal(state.points,1);assert.ok(Object.values(nodes).every(n=>!n.disabled&&n.classes.has('upgrade-ready')));
+assert.ok(learn(state,'w'));render();assert.equal(state.ranks.w,1);assert.equal(state.points,0);assert.ok(Object.values(nodes).every(n=>n.disabled));
+awardKill(state,1000);assert.ok(learn(state,'q'));assert.ok(learn(state,'q'));render();assert.equal(state.ranks.q,3);assert.ok(nodes['key-q'].disabled);assert.ok(!nodes['key-q'].classes.has('upgrade-ready'));assert.equal(learn(state,'q'),false);assert.ok(!nodes['key-e'].disabled);
+console.log('PASS: level-up unlocks gold skill cards, learning spends one point, zero points and maximum rank disable upgrades');
