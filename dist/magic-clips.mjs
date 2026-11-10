@@ -1,4 +1,4 @@
-import {samplePose} from './pose-data.mjs?v=bag-translate-1';
+import {samplePose} from './pose-data.mjs?v=bag-side-1';
 export const magicClipName=(stage,mode)=>`${Math.max(1,Math.min(3,stage||1))}륜 ${mode==='hold'?'충전':'발사'}`;
 export const MAGIC_CLIPS=[1,2,3].flatMap(n=>[magicClipName(n,'hold'),magicClipName(n,'release')]);
 const displayName=name=>name.replace(/^3륜 (충전|발사)$/, '2륜 복합 $1');

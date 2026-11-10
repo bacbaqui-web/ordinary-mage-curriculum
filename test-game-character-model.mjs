@@ -14,13 +14,13 @@ const stores=new Map();globalThis.localStorage={getItem:k=>stores.get(k)||null};
 const actor=createWizard(new T.Scene(),0,0),camera=new T.PerspectiveCamera();camera.position.set(4,4,4);camera.lookAt(0,1,0);
 const rig=await setWizardCharacter(actor,'ice',{load});assert.ok(rig.accessories.has('ice-bag'));assert.equal(actor.userData.puppet.visual.visible,false);
 await setWizardCharacter(actor,'ice',{load});assert.equal(loads,1);
-const pose=structuredClone(rig.restPose);pose.LeftHand[2]+=.2;rig.apply(pose);Object.assign(pose,rig.bagControls());pose.BagCenter[0]-=.2;pose.BagDirection=new T.Vector3(.2,.34,0).normalize().multiplyScalar(.4).add(new T.Vector3(...pose.BagCenter)).toArray();
+const pose=structuredClone(rig.restPose);pose.LeftHand[2]+=.2;rig.apply(pose);Object.assign(pose,rig.bagControls());pose.BagCenter[0]-=.2;delete pose.BagSide;pose.BagDirection=new T.Vector3(.2,.34,0).normalize().multiplyScalar(.4).add(new T.Vector3(...pose.BagCenter)).toArray();
 const project={version:1,rigVersion:7,characterId:'ice',actions:[{name:'기본 걷기',frames:2,fps:12,keys:[{frame:0,ease:'hold',pose}]}]};
 stores.set(motionStorageKey('ice'),JSON.stringify(project));
 for(const angle of [0,.7,Math.PI,-2]){
  actor.position.set(5,0,-3);actor.rotation.y=angle;animateWizard(actor,1/60,{speed:2});projectWizard(actor,camera);
  for(const n of ['Head','LeftHand','RightFoot'])assert.ok(rig.bones[n].getWorldPosition(new T.Vector3()).distanceTo(actor.userData.puppet.lastPositions[n])<1e-5,'model follows saved joints under actor translation/rotation');
- for(const [name,point] of Object.entries(rig.bagControls()))assert.ok(new T.Vector3(...point).distanceTo(actor.userData.puppet.lastPositions[name])<1e-5,'saved bag controls follow actor transforms');
+ for(const [name,point] of Object.entries(rig.bagControls()).filter(([name])=>name!=='BagSide'))assert.ok(new T.Vector3(...point).distanceTo(actor.userData.puppet.lastPositions[name])<1e-5,'saved bag controls follow actor transforms');
  const bag=rig.accessories.get('ice-bag');assert.equal(bag.parent,rig.bones.Hips);assert.ok(bag.userData.strap.mesh.geometry.attributes.position.count>0);
 }
 pose.Head[1]+=.1;stores.set(motionStorageKey('ice'),JSON.stringify(project));projectWizard(actor,camera);

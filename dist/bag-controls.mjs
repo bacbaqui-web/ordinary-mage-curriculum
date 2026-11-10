@@ -1,9 +1,11 @@
+import {Vector3,Quaternion} from './three.module.js';
 export const BAG_POINTS=['BagCenter','BagDirection'];
-export const BAG_LABELS={BagCenter:'가방 아래점',BagDirection:'가방 위점'};
+export const BAG_LABELS={BagCenter:'가방 왼쪽 점',BagDirection:'가방 오른쪽 점'};
 // Keep the saved center/direction format so existing bag poses retain their angle.
 export function bagHandles(pose){
  if(!pose.BagCenter||!pose.BagDirection)return {};
- const axis=pose.BagDirection.map((v,i)=>v-pose.BagCenter[i]);
+ const up=new Vector3(...pose.BagDirection).sub(new Vector3(...pose.BagCenter));
+ const axis=pose.BagSide?pose.BagSide.map((v,i)=>v-pose.BagCenter[i]):new Vector3(.4,0,0).applyQuaternion(new Quaternion().setFromUnitVectors(new Vector3(0,1,0),up.normalize())).toArray();
  return Object.fromEntries(BAG_POINTS.map((n,index)=>[n,pose.BagCenter.map((v,i)=>v+axis[i]*(index===0?-.5:.5))]));
 }
 export function moveBag(pose,joint,target){
@@ -18,6 +20,11 @@ export function moveBag(pose,joint,target){
  if(distance<1e-8){axis=oldAxis;distance=length;}
  handles[joint]=[...target];handles[other]=target.map((v,i)=>v+axis[i]*length/distance);
  p.BagCenter=handles.BagCenter.map((v,i)=>(v+handles.BagDirection[i])/2);
- p.BagDirection=p.BagCenter.map((v,i)=>v+handles.BagDirection[i]-handles.BagCenter[i]);
+ const before=new Vector3(...bagHandles(pose).BagDirection).sub(new Vector3(...bagHandles(pose).BagCenter)).normalize();
+ const after=new Vector3(...handles.BagDirection).sub(new Vector3(...handles.BagCenter));
+ const turn=new Quaternion().setFromUnitVectors(before,after.clone().normalize());
+ const up=new Vector3(...pose.BagDirection).sub(new Vector3(...pose.BagCenter)).applyQuaternion(turn);
+ p.BagDirection=new Vector3(...p.BagCenter).add(up).toArray();
+ p.BagSide=new Vector3(...p.BagCenter).add(after).toArray();
  return p;
 }

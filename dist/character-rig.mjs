@@ -1,12 +1,12 @@
-import {bagHandles} from './bag-controls.mjs?v=bag-translate-1';
+import {bagHandles} from './bag-controls.mjs?v=bag-side-1';
 import {BagSwing} from './bag-swing.mjs';
 import {raisedAnkle} from './ankle-pivot.mjs?v=heel-free-1';
 import {GarmentCollision} from './garment-collision.mjs';
 import * as T from './three.module.js';
 import {GLTFLoader} from './vendor/GLTFLoader.js';
-import {JOINTS,withNeck} from './pose-data.mjs?v=bag-translate-1';
+import {JOINTS,withNeck} from './pose-data.mjs?v=bag-side-1';
 import {ModelFoot} from './model-foot.mjs?v=heel-free-1';
-import {BONES} from './pose-constraints.mjs?v=bag-translate-1';
+import {BONES} from './pose-constraints.mjs?v=bag-side-1';
 const V=a=>new T.Vector3(...a);
 const world=o=>o.getWorldPosition(new T.Vector3());
 const qworld=o=>o.getWorldQuaternion(new T.Quaternion());
@@ -155,7 +155,7 @@ export class CharacterRig{
  positions(){this.group.updateMatrixWorld(true);return Object.fromEntries(JOINTS.map(n=>[n,world(this.bones[n]).toArray()]));}
  bagControls(){
   const carrier=this.accessories?.get('ice-bag')?.userData.bagMotion.carrier;if(!carrier)return {};
-  return {BagCenter:carrier.localToWorld(new T.Vector3()).toArray(),BagDirection:carrier.localToWorld(new T.Vector3(0,.4,0)).toArray()};
+  return {BagCenter:carrier.localToWorld(new T.Vector3()).toArray(),BagDirection:carrier.localToWorld(new T.Vector3(0,.4,0)).toArray(),BagSide:carrier.localToWorld(new T.Vector3(.4,0,0)).toArray()};
  }
  controlPose(pose){
   const controls={...withNeck(pose),...bagHandles(this.bagControls())};
@@ -193,7 +193,11 @@ export class CharacterRig{
     pivot.updateWorldMatrix(true,false);
     const center=pivot.worldToLocal(V(pose.BagCenter)),tip=pivot.worldToLocal(V(pose.BagDirection));
     motion.carrier.position.copy(center);const direction=tip.sub(center);
-    if(direction.lengthSq()>1e-10)motion.carrier.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),direction.normalize());
+    if(pose.BagSide&&direction.lengthSq()>1e-10){
+     const x=pivot.worldToLocal(V(pose.BagSide)).sub(center).normalize(),y=direction.clone().normalize();
+     const z=x.clone().cross(y).normalize();y.copy(z).cross(x).normalize();
+     if(z.lengthSq()>1e-10)motion.carrier.quaternion.setFromRotationMatrix(new T.Matrix4().makeBasis(x,y,z));
+    }else if(direction.lengthSq()>1e-10)motion.carrier.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),direction.normalize());
     motion.swing.reset();continue;
    }
    if(dt<=0&&!movement)motion.swing.reset();

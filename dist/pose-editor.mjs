@@ -1,11 +1,11 @@
-import {BAG_POINTS,BAG_LABELS,bagHandles,moveBag} from './bag-controls.mjs?v=bag-follow-1';
+import {BAG_POINTS,BAG_LABELS,bagHandles,moveBag} from './bag-controls.mjs?v=bag-side-1';
 import {loopFrame} from './motion-timing.mjs';
 import {normalizeMovement,readMovement} from './character-movement.mjs?v=turn-rates-1';
-import {syncLoop,resizeLoop,loopEndpoint} from './pose-loop.mjs?v=bag-drag-fix-1';
+import {syncLoop,resizeLoop,loopEndpoint} from './pose-loop.mjs?v=bag-side-1';
 import {ensureLocomotion,ensureBasicAttacks,ensureIdle,ensureFirstRingClips,actionGroups} from './motion-catalog.mjs?v=run-walk-1';
 import {migrateAnklePivot} from './ankle-pivot.mjs?v=heel-free-1';
 import {CHARACTERS,characterProfile,motionStorageKey,projectForCharacter,assertCharacterImport} from './character-profiles.mjs?v=heel-free-1';
-import {CharacterRig,fitProjectToRig} from './character-rig.mjs?v=bag-translate-1';
+import {CharacterRig,fitProjectToRig} from './character-rig.mjs?v=bag-side-1';
 import {ensureMagicClips} from './magic-clips.mjs?v=bag-translate-1';
 import {uniqueMotions,mergeMotions} from './pose-library.mjs?v=run-walk-1';
 import * as T from './three.module.js';
@@ -13,9 +13,9 @@ import {footFaces} from './foot-shape.mjs';
 import {PassiveFoot} from './passive-foot.mjs';
 const feet={LeftFoot:new PassiveFoot(),RightFoot:new PassiveFoot()};
 let footShapes={};
-import {moveJoint as movePoseJoint,applyFootLocks} from './pose-constraints.mjs?v=bag-translate-1';
-import {demoMotion} from './motion-puppet.mjs?v=bag-translate-1';
-import {JOINTS,LABELS,samplePose,validateProject} from './pose-data.mjs?v=bag-drag-fix-1';
+import {moveJoint as movePoseJoint,applyFootLocks} from './pose-constraints.mjs?v=bag-side-1';
+import {demoMotion} from './motion-puppet.mjs?v=bag-side-1';
+import {JOINTS,LABELS,samplePose,validateProject} from './pose-data.mjs?v=bag-side-1';
 const $=id=>document.getElementById(id);
 const jointLabel=n=>BAG_LABELS[n]||LABELS[JOINTS.indexOf(n)];
 const editableJoints=JOINTS.filter(n=>n!=='Neck');
@@ -46,7 +46,7 @@ function prepare(p){
 prepare(project);
 const current=()=>project.actions[index],pose=()=>samplePose(current(),frame);
 const editPoint=(p,n)=>bagHandles(p)[n]||p[n];
-function seedBag(){if(!rig?.accessories?.has('ice-bag'))return;for(const a of project.actions)for(const k of a.keys)if(!k.pose.BagCenter||!k.pose.BagDirection){rig.apply(k.pose);Object.assign(k.pose,rig.bagControls());}}
+function seedBag(){if(!rig?.accessories?.has('ice-bag'))return;for(const a of project.actions)for(const k of a.keys)if(!k.pose.BagCenter||!k.pose.BagDirection||!k.pose.BagSide){rig.apply(k.pose);Object.assign(k.pose,rig.bagControls());}}
 function save(message='브라우저에 저장됨'){seedBag();syncLoop(current(),frame);for(const action of project.actions)for(const key of action.keys)key.ease='smooth';current().updatedAt=Date.now();project.characterId=characterId;try{localStorage.setItem(storage,JSON.stringify(project));$('status').textContent=`${characterProfile(characterId).label} · ${message}`;unsaved=false;return true;}catch{unsaved=true;$('status').textContent='자동 저장 공간이 부족합니다. 파일 저장으로 보관하세요.';return false;}}
 function checkpoint(){history.push(JSON.stringify({project,index,frame}));if(history.length>60)history.shift();future=[];}
 function restore(s){const v=JSON.parse(s);project=v.project;index=v.index;frame=v.frame;playing=false;save();sync();}

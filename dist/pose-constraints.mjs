@@ -1,4 +1,4 @@
-import {withNeck} from './pose-data.mjs?v=bag-translate-1';
+import {withNeck} from './pose-data.mjs?v=bag-side-1';
 import {Vector3} from './three.module.js';
 export const BONES=[['Hips','Spine'],['Spine','Neck'],['Neck','Head'],['Spine','LeftArm'],['Spine','RightArm'],['LeftArm','LeftForeArm'],['LeftForeArm','LeftHand'],['RightArm','RightForeArm'],['RightForeArm','RightHand'],['Hips','LeftUpLeg'],['Hips','RightUpLeg'],['LeftUpLeg','LeftLeg'],['LeftLeg','LeftFoot'],['RightUpLeg','RightLeg'],['RightLeg','RightFoot']];
 const v=a=>new Vector3(...a);
@@ -13,7 +13,7 @@ function solveJoint(base,joint,target,preferredBend=null,footClearance=.10){
   p.Head=end.toArray();p.Neck=neck.add(end.clone().sub(head).multiplyScalar(ratio)).toArray();return p;
  }
  if(joint==='Hips'){
-  const d=end.clone().sub(old);p[joint]=end.toArray();shiftChildren(p,joint,d);for(const n of ['BagCenter','BagDirection'])if(p[n])p[n]=v(p[n]).add(d).toArray();
+  const d=end.clone().sub(old);p[joint]=end.toArray();shiftChildren(p,joint,d);for(const n of ['BagCenter','BagDirection','BagSide'])if(p[n])p[n]=v(p[n]).add(d).toArray();
   // The pelvis carries the body. Ground contact consumes downward travel
   // through leg bending instead of stopping the entire hierarchy.
   for(const side of ['Left','Right']){
