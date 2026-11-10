@@ -5,6 +5,13 @@ const v=a=>new Vector3(...a);
 function shiftChildren(p,n,delta){for(const [a,b] of BONES)if(a===n){p[b]=v(p[b]).add(delta).toArray();shiftChildren(p,b,delta);}}
 function solveJoint(base,joint,target,preferredBend=null,footClearance=.10){
  let p=structuredClone(base);const end=v(target),old=v(base[joint]);
+ if(joint==='Head'){
+  // Move the head freely; the hidden neck follows between chest and head.
+  const chest=v(base.Spine),neck=v(base.Neck),head=v(base.Head);
+  const length=chest.distanceTo(neck)+neck.distanceTo(head);
+  const ratio=length>1e-8?chest.distanceTo(neck)/length:.57;
+  p.Head=end.toArray();p.Neck=chest.lerp(end,ratio).toArray();return p;
+ }
  if(joint==='Hips'){
   const d=end.clone().sub(old);p[joint]=end.toArray();shiftChildren(p,joint,d);
   // The pelvis carries the body. Ground contact consumes downward travel

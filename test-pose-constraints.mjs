@@ -8,17 +8,17 @@ const base=Object.fromEntries(JOINTS.map(n=>[n,root.getObjectByName(n).getWorldP
 const dist=(p,a,b)=>new Vector3(...p[a]).distanceTo(new Vector3(...p[b]));
 for(const joint of JOINTS)for(const target of [[1,1,1],[0,0,0],[20,20,20],base[BONES.find(([,b])=>b===joint)?.[0]||'Hips']]){
  const p=moveJoint(base,joint,target);
- for(const [a,b] of BONES)assert.ok(Math.abs(dist(p,a,b)-dist(base,a,b))<1e-6,`${joint}: ${a} ${b}`);
+ for(const [a,b] of BONES)if(!(joint==='Head'&&['Neck','Head'].includes(b)))assert.ok(Math.abs(dist(p,a,b)-dist(base,a,b))<1e-6,`${joint}: ${a} ${b}`);
  assert.deepEqual(base.Hips,[0,1,0]);
 }
 const target=[-.4,1.3,.3],p=moveJoint(base,'LeftHand',target);
 assert.ok(new Vector3(...p.LeftHand).distanceTo(new Vector3(...target))<1e-6);
 assert.deepEqual(p.LeftArm,base.LeftArm);
-console.log('관절 이동: 모든 부위 길이 유지, 손 목표 도달, 어깨 고정 확인');
+console.log('관절 이동: 머리 외 부위 길이 유지, 손 목표 도달, 어깨 고정 확인');
 for(const joint of JOINTS){
  const p=moveJoint(base,joint,[base[joint][0],-5,base[joint][2]]);
  for(const a of Object.values(p))assert.ok(a[1]>=-1e-8,'바닥 아래로 내려가면 안 됩니다.');
- for(const [a,b] of BONES)assert.ok(Math.abs(dist(p,a,b)-dist(base,a,b))<1e-6);
+ for(const [a,b] of BONES)if(!(joint==='Head'&&['Neck','Head'].includes(b)))assert.ok(Math.abs(dist(p,a,b)-dist(base,a,b))<1e-6);
 }
 console.log('바닥 충돌과 부위 길이 유지 확인');
 const crouch=moveJoint(base,'Hips',[0,.5,0]);
@@ -61,3 +61,11 @@ const aligned=applyFootLocks(lifted,{RightFoot:base.RightFoot},{align:true});ass
 console.log('PASS: planted foot, free opposite foot, bent knee, unreachable drag limit, clip alignment');
 
 }
+
+for(const height of [base.Head[1]-.15,base.Head[1]+.4]){
+ const target=[base.Head[0]+.1,height,base.Head[2]+.2],moved=moveJoint(base,'Head',target);
+ assert.deepEqual(moved.Head,target);assert.deepEqual(moved.Spine,base.Spine);
+ assert.notEqual(dist(moved,'Spine','Head'),dist(base,'Spine','Head'));
+ for(const n of JOINTS.filter(n=>!['Head','Neck'].includes(n)))assert.deepEqual(moved[n],base[n]);
+}
+console.log('PASS: adjustable chest-head distance, neck follows, other joints unchanged');
