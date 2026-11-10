@@ -402,7 +402,7 @@ function updateHunt(dt){spawnTimer-=dt;if(spawnTimer<=0){spawnTimer=5;if(!monste
  }monsters=monsters.filter(m=>!m.dead);
 }
 function renderProgress(){renderSkillUpgrades(document,progress,loadout,RUNES,MAX_RANK);}
-function updateCamera(){positionTownCamera(camera,{x:mapOverview?0:player.x,z:mapOverview?0:player.z,aspect:innerWidth/innerHeight,span:mapOverview?128:29*chargeView.distance});const kick=onlineCore?hitScreen.shake(reducedShake):{x:0,y:0};if(!mapOverview){camera.position.x+=kick.x+chargeView.x*(reducedShake?.15:1);camera.position.y+=kick.y+chargeView.y*(reducedShake?.15:1);if(!onlineCore)impact.camera(camera,reducedShake);}castOverlay.style.opacity=String((chargeView.flash||0)*(reducedShake?.35:1));camera.updateMatrixWorld();hitOverlay.style.opacity=String(hitScreen.opacity);}
+function updateCamera(){positionTownCamera(camera,{x:mapOverview?0:player.x,z:mapOverview?0:player.z,aspect:innerWidth/innerHeight,span:mapOverview?128:24*chargeView.distance});const kick=onlineCore?hitScreen.shake(reducedShake):{x:0,y:0};if(!mapOverview){camera.position.x+=kick.x+chargeView.x*(reducedShake?.15:1);camera.position.y+=kick.y+chargeView.y*(reducedShake?.15:1);if(!onlineCore)impact.camera(camera,reducedShake);}castOverlay.style.opacity=String((chargeView.flash||0)*(reducedShake?.35:1));camera.updateMatrixWorld();hitOverlay.style.opacity=String(hitScreen.opacity);}
 const mapButton=document.createElement('button');mapButton.textContent='전체 지도';mapButton.setAttribute('aria-pressed','false');document.querySelector('header .actions').prepend(mapButton);mapButton.onclick=()=>{mapOverview=!mapOverview;mapButton.textContent=mapOverview?'전투 시점':'전체 지도';mapButton.setAttribute('aria-pressed',String(mapOverview));updateCamera();};
 
 function renderHunt(){
