@@ -1,5 +1,11 @@
 export const STORAGE_KEY='ordinary-mage-impact-lab-v1';
 export const GROUPS=[
+ {title:'륜과 추가 이펙트',description:'충전과 발사에 보이는 빛과 입자',fields:[
+ ['runeSize','륜 크기',0,3,.05,1,'배','충전·발사 때 손 앞에 나타나는 륜의 크기입니다.'],
+ ['runeBrightness','륜 밝기',0,3,.05,1,'배','륜 선과 테두리 빛의 밝기입니다. 0이면 숨깁니다.'],
+ ['castGlow','주변 빛',0,3,.05,1,'배','손 주변의 빛과 주변을 비추는 조명 강도입니다.'],
+ ['castFlash','발사 섬광',0,3,.05,1,'배','발사 순간 번쩍이는 추가 빛의 강도입니다.'],
+ ['chargeParticles','충전 입자 수',0,1,.05,1,'배','륜에서 흩어지는 작은 입자 수입니다. 0이면 끕니다.'] ]},
  {title:'공격 시 모션',description:'모으기 → 발사 → 제자리로 돌아오기',fields:[
  ['anticipation','준비 시간',0,800,10,260,'ms','충전 자세에서 발사 자세로 전환하는 시간입니다. 전환이 끝나면 공격이 나갑니다.'],
  ['windup','몸 젖히기',0,35,1,16,'°','발사 전에 상체를 뒤로 기울입니다.'],
@@ -23,7 +29,7 @@ export const GROUPS=[
 ];
 export const FIELDS=GROUPS.flatMap(g=>g.fields);
 export const DEFAULTS=Object.fromEntries(FIELDS.map(([k,,,,,v])=>[k,v]));
-export const NONE={...DEFAULTS,anticipation:0,windup:0,recoil:0,follow:0,stretch:1,trail:0,arc:0,flash:0,squash:0,knockback:0,particles:0,shake:0,freeze:0,volume:0,numberArc:0};
+export const NONE={...DEFAULTS,runeSize:0,runeBrightness:0,castGlow:0,castFlash:0,chargeParticles:0,anticipation:0,windup:0,recoil:0,follow:0,stretch:1,trail:0,arc:0,flash:0,squash:0,knockback:0,particles:0,shake:0,freeze:0,volume:0,numberArc:0};
 export function normalize(input){return Object.fromEntries(FIELDS.map(([key,,min,max,step,value])=>{const n=input?.[key];return [key,typeof n==='number'&&Number.isFinite(n)?Math.min(max,Math.max(min,Number((Math.round(n/step)*step).toFixed(4)))):value];}));}
 export function timing(s,flight=.55){const release=s.anticipation/1000,hit=release+flight,end=hit+s.freeze/1000+Math.max(1.2,s.recovery/1000,s.follow/1000);return {release,hit,end};}
 

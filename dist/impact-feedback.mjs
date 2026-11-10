@@ -27,7 +27,18 @@ export class ImpactFeedback{
  if(a&&this.time-a.born>(a.s.anticipation+a.s.follow)/1000+.01)this.attacks.delete(actor);if(h&&this.time-h.born>Math.max(h.s.recovery/1000,h.s.flash/1000))this.hits.delete(actor);
  }
  camera(camera,reduced=false){const age=this.time-this.shakeAt,strength=age<.25?this.shakeStrength*(1-age/.25)*(reduced?.15:1):0;camera.position.x+=Math.sin(this.time*127)*strength;camera.position.y+=Math.cos(this.time*101)*strength;camera.updateMatrixWorld();}
- draw(effects=[]){for(let i=this.bursts.length-1;i>=0;i--){const b=this.bursts[i],age=this.time-b.born;if(age>=.65){this.disposeGroup(b.group);this.bursts.splice(i,1);continue;}b.group.children.forEach((p,n)=>{const o=particleOffset(b.s,n,age);p.position.set(o.side,o.up,o.forward);p.rotation.set(age*6+n,age*3,0);p.material.opacity=1-age/.65;});}
+ tuneCasting(){
+  const s=this.settings;
+  const visibility=(o,value)=>{const before=o.visible;this.restores.push(()=>{o.visible=before;});o.visible=before&&value;};
+  const light=(o,factor)=>{if(o.isPointLight){const value=o.intensity;this.restores.push(()=>{o.intensity=value;});o.intensity*=factor;}if(o.material){for(const m of [o.material].flat()){const opacity=m.opacity;this.restores.push(()=>{m.opacity=opacity;});m.opacity*=factor;}}};
+  this.scene.traverse(o=>{
+   const kind=o.userData.impactVisual;if(!kind)return;
+   if(kind==='rune'){this.remember(o);o.scale.multiplyScalar(s.runeSize);o.updateMatrixWorld(true);for(const child of o.children)if(!child.userData.impactVisual)light(child,s.runeBrightness);}
+   if(kind==='aura'||kind==='flash'){const strength=kind==='aura'?s.castGlow:s.castFlash;visibility(o,strength>0);o.traverse(child=>light(child,strength));}
+   if(kind==='chargeParticle')visibility(o,o.userData.impactIndex<Math.round(48*s.chargeParticles));
+  });
+ }
+ draw(effects=[]){this.tuneCasting();for(let i=this.bursts.length-1;i>=0;i--){const b=this.bursts[i],age=this.time-b.born;if(age>=.65){this.disposeGroup(b.group);this.bursts.splice(i,1);continue;}b.group.children.forEach((p,n)=>{const o=particleOffset(b.s,n,age);p.position.set(o.side,o.up,o.forward);p.rotation.set(age*6+n,age*3,0);p.material.opacity=1-age/.65;});}
  const live=new Set();for(const e of effects){if(!['shot','projectile'].includes(e.type)||!e.mesh?.parent)continue;live.add(e);let p=this.projectiles.get(e);if(!p){const tail=new T.Group();this.scene.add(tail);for(let i=0;i<12;i++)tail.add(new T.Mesh(new T.SphereGeometry(.06,6,4),new T.MeshBasicMaterial({color:0xb3eaff,transparent:true,depthWrite:false})));p={origin:e.mesh.position.clone(),tail,range:e.s?.range||e.ctx?.range||e.speed*e.life||7};this.projectiles.set(e,p);}const s=this.settings,dir=e.dir||FORWARD,distance=e.mesh.position.distanceTo(p.origin),progress=Math.min(1,distance/p.range),raise=Math.sin(progress*Math.PI)*s.arc;
  this.remember(e.mesh);e.mesh.position.y+=raise;
  // Stretch along the mesh's actual flight direction, without changing its collider.

@@ -26,9 +26,9 @@ for(let y=0;y<glowSize;y++)for(let x=0;x<glowSize;x++){
  glowPixels[i+3]=r<.68||r>1.30?0:Math.round(255*Math.exp(-(((r-1)/.145)**2)));
 }
 const rimGlow=new T.DataTexture(glowPixels,glowSize,glowSize);rimGlow.magFilter=T.LinearFilter;rimGlow.minFilter=T.LinearFilter;rimGlow.needsUpdate=true;
-export function runeRing(){const g=new T.Group();for(const [geo,alpha] of [[glowGeometry,.85],[glowGeometry,1],[ringGeometry,1]]){const mat=material('#ffffff',alpha);if(geo===glowGeometry)mat.map=rimGlow;g.add(new T.Mesh(geo.clone(),mat));}return g;}
+export function runeRing(){const g=new T.Group();g.userData.impactVisual='rune';for(const [geo,alpha] of [[glowGeometry,.85],[glowGeometry,1],[ringGeometry,1]]){const mat=material('#ffffff',alpha);if(geo===glowGeometry)mat.map=rimGlow;g.add(new T.Mesh(geo.clone(),mat));}return g;}
 export function castFlash(color='#8fe2ff',tier=1){
- const group=new T.Group(),size=.48+tier*.20;
+ const group=new T.Group(),size=.48+tier*.20;group.userData.impactVisual='flash';
  for(const [radius,opacity,tint] of [[size*.5,1,'#ffffff'],[size,.65,color],[size*1.55,.16,color]]){const mat=new T.ShaderMaterial({uniforms:{tint:{value:new T.Color(tint)},alpha:{value:opacity}},vertexShader:'varying vec3 n; varying vec3 p; void main(){vec4 v=modelViewMatrix*vec4(position,1.0);p=v.xyz;n=normalMatrix*normal;gl_Position=projectionMatrix*v;}',fragmentShader:'uniform vec3 tint; uniform float alpha; varying vec3 n; varying vec3 p; void main(){float rim=pow(max(0.0,dot(normalize(n),normalize(-p))),2.0);gl_FragColor=vec4(tint,alpha*rim);}',transparent:true,blending:T.AdditiveBlending,depthWrite:false});mat.opacity=opacity;mat.userData.opacity=opacity;const m=new T.Mesh(new T.SphereGeometry(radius,24,16),mat);m.onBeforeRender=()=>{mat.uniforms.alpha.value=mat.opacity;};m.scale.z=.55;group.add(m);}
  const light=new T.PointLight(color,8+tier*3,4+tier,2);light.userData.intensity=light.intensity;group.add(light);return group;
 }
@@ -50,7 +50,7 @@ function arrange(s,stage,colors,time=0){const layout=runeLayout(stage,colors),pu
 const noise=n=>{const x=Math.sin(n*127.1+311.7)*43758.5453;return x-Math.floor(x);};
 export class CastingFeedback{
  constructor(scene){this.scene=scene;this.actors=new Map();this.bursts=[];this.beams=[];this.time=0;}
- actor(key){if(this.actors.has(key))return this.actors.get(key);const state=diagram();this.scene.add(state.group);state.aura=castFlash('#ffffff',1);state.aura.children[0].visible=false;state.aura.children[1].visible=false;state.group.add(state.aura);state.dots=[];for(let i=0;i<48;i++){const dot=new T.Mesh(new T.CircleGeometry(.014,6),material('#ffffff',.8));state.group.add(dot);state.dots.push(dot);}this.actors.set(key,state);return state;}
+ actor(key){if(this.actors.has(key))return this.actors.get(key);const state=diagram();this.scene.add(state.group);state.aura=castFlash('#ffffff',1);state.aura.userData.impactVisual='aura';state.aura.children[0].visible=false;state.aura.children[1].visible=false;state.group.add(state.aura);state.dots=[];for(let i=0;i<48;i++){const dot=new T.Mesh(new T.CircleGeometry(.014,6),material('#ffffff',.8));dot.userData.impactVisual='chargeParticle';dot.userData.impactIndex=i;state.group.add(dot);state.dots.push(dot);}this.actors.set(key,state);return state;}
  charge(key,active,stage,colors,positions,camera){const s=this.actor(key);s.group.visible=active&&!!positions&&key.g.visible;if(!s.group.visible)return;
  const pose=key.g.userData.puppet?.icePose?.[0];if(pose){if(stage===1&&key.g.userData.puppet.chargeUsesIce&&key.g.userData.puppet.chargeHand==='right')s.group.position.copy(positions.LeftHand).add(positions.RightHand).multiplyScalar(.5).addScaledVector(pose.dir,RUNE_FORWARD);else s.group.position.copy(positions[pose.hand==='left'?'LeftHand':'RightHand']).addScaledVector(pose.dir,RUNE_FORWARD);s.group.quaternion.setFromUnitVectors(new T.Vector3(0,0,1),pose.dir);}else{s.group.position.copy(positions.LeftHand).add(positions.RightHand).multiplyScalar(.5);s.group.quaternion.copy(camera.quaternion);}
  const layout=arrange(s,stage,colors,this.time);
