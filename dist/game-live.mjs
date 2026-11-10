@@ -5,37 +5,38 @@ import {renderSkillUpgrades} from './skill-upgrades.mjs?v=ice2';
 import {readMovement} from './character-movement.mjs?v=turn-rates-1';
 import {BodyFollow} from './body-follow.mjs?v=turn-rates-1';
 import {attackCooldown} from './attack-cooldown.mjs';
-import {wardTouches,setCombatCamera} from './combat-hit.mjs?v=turn-rates-1';
-import {HitboxView} from './hitbox-view.mjs?v=turn-rates-1';
+import {wardTouches,setCombatCamera} from './combat-hit.mjs?v=cast-lock-1';
+import {HitboxView} from './hitbox-view.mjs?v=cast-lock-1';
 import {LevelUpVfx} from './level-up-vfx.mjs?v=screenhit10';
 import {FrostVisuals} from './frost-visuals.mjs?v=ice2';
 import {ICE_BASIC} from './ice-basic.mjs?v=ring-origin-2';
-import {SpaceSkill,SPACE_SKILLS,interceptSpaceShots} from './space-skills.mjs?v=turn-rates-1';
-import {SpaceVisuals} from './space-visuals.mjs?v=turn-rates-1';
+import {SpaceSkill,SPACE_SKILLS,interceptSpaceShots} from './space-skills.mjs?v=cast-lock-1';
+import {SpaceVisuals} from './space-visuals.mjs?v=cast-lock-1';
 import {CHARACTERS,characterFor,chooseCharacter,chooseSupport} from './character-loadout.mjs?v=ice-charge-2';
 import {GameAudio} from './game-audio.mjs?v=sync5';
 import {damageSummary} from './damage-display.mjs?v=ice2';
-import {Duel,STEP} from './duel.mjs?v=cooldown-denial-1';
-import {mountPvpUI} from './pvp-ui.mjs?v=cooldown-denial-1';
+import {Duel,STEP} from './duel.mjs?v=cast-lock-1';
+import {mountPvpUI} from './pvp-ui.mjs?v=cast-lock-1';
 import {OBSTACLES} from './arena-rules.mjs';
 let onlineCore=null,pvp=null,onlineResultShown=false,lastOnlineAim=0,onlineRenderAt=0,onlinePrevious=null;
 import {redLightningPlacement} from './red-lightning-spec.mjs?v=bolt17';
 import {steamPlacement} from './steam-spec.mjs?v=bolt17';
-import {BurnVisuals,applyBurnVisual} from './burn-visuals.mjs?v=ring-origin-2';
+import {BurnVisuals,applyBurnVisual} from './burn-visuals.mjs?v=cast-lock-1';
 import {castWithPresentation,renderCastPresentation} from './cast-presentation.mjs?v=ring-origin-2';
 import {CastRecoil,HitScreen,chargeSetback} from './combat-response.mjs?v=rim9';
 import {VisionShade} from './vision-shade.mjs';
 import {CastingFeedback,ChargeCamera,impactFeedback} from './casting-feedback.mjs?v=screenhit10';
-import {chargeMoveScale} from './magic-motion.mjs';
+import {castControlsLocked} from './cast-lock.mjs?v=cast-lock-1';
+import {chargeMoveScale} from './magic-motion.mjs?v=cast-lock-1';
 import {canSee} from './vision.mjs';
 import {fireSpec,hasFireRecipe} from './fire-spec.mjs?v=bolt17';
 import {bindDuelControls,mouseRecipe} from './duel-controls.mjs?v=cooldown-denial-1';
 let walkDirection={x:0,z:0},icePressHand='left',moveSpeedScale=1;
 
 const slotLabel=k=>({q:'기본',w:'좌클릭',e:'우클릭'}[k]);
-import {createWizard,animateWizard,projectWizard,setWizardCharacter} from './wizard.mjs?v=turn-rates-1';
+import {createWizard,animateWizard,projectWizard,setWizardCharacter} from './wizard.mjs?v=cast-lock-1';
 import {QueuedCharge} from './queued-charge.mjs?v=ice-charge-2';
-import {LiveMagic} from './live-magic.mjs?v=ring-origin-2';
+import {LiveMagic} from './live-magic.mjs?v=cast-lock-1';
 import {spellReach} from './live-spells.mjs?v=ice-charge-2';
 import {describe as describeDesign} from './combo-design.mjs?v=ice-charge-2';
 import {MeshFeedback} from './mesh-feedback.mjs';
@@ -221,17 +222,19 @@ function dispatchSpell(s,caster,dir,aimPoint){if(!s.timed&&(s.iceHand||s.tap))ca
  if(caster===player){chargeCamera.fire(s.sequence.length);castOverlay.style.setProperty('--cast-color',RUNES[s.sequence[0]].color);}if(!s.timed){caster.g.userData.puppet.magic.release(s.sequence?.length||1);caster.g.userData.puppet.magic.elapsed=2/12;}
 }
 
-function cast(result,iceHand=null){if(loadout.q==='i'&&result.parts.length===1&&!iceHand)iceHand=icePressHand;if(!running||paused||finished||player.knockdown>0)return;let s={...resolveSpell(result,loadout),timed:result.timed};if(s.sequence==='ii'){s.upgradedIce=true;iceHand=null;if(player.iceLeftCool>0)return;}if(iceHand){s.iceHand=iceHand;s.cost=ICE_BASIC[iceHand].cost;s.name=ICE_BASIC[iceHand].name;}if(s.parts.some(k=>!progress.ranks[k]))return;refreshAim(s.sequence);if(spellAimHeight(s.sequence)>0){const shown=castingFeedback.actors.get(player),hand=player.g.userData.puppet?.lastPositions?.[iceHand==='left'?'LeftHand':'RightHand'];const origin=shown?.group.visible?shown.group.position.clone():hand?.clone().addScaledVector(player.dir,.12);if(origin&&clearPath(player,origin)){s.emission=origin;const target=hasCursor?cursorAim(pointer,camera,origin.y):null;if(target){aim.copy(target);const direction=target.clone().sub(origin);direction.y=0;if(direction.lengthSq()>.0001)player.dir.copy(direction.normalize());}}}s.mastery=mastery(progress,s.parts[0]);s.power*=s.mastery;if(iceHand&&(player[iceHand==='left'?'iceLeftCool':'iceRightCool']||0)>0){flash(ICE_BASIC[iceHand].name+' 재사용 '+player[iceHand==='left'?'iceLeftCool':'iceRightCool'].toFixed(1)+'초');return;}if(player.cool>0){flash('잠깐 기다려 주세요');return}if(bot&&player.mana<s.cost){flash('마력이 부족합니다. 잠시 쉬면 회복됩니다.');return}if(bot)player.mana-=s.cost;if(s.upgradedIce)player.iceLeftCool=1.8;if(iceHand)player[iceHand==='left'?'iceLeftCool':'iceRightCool']=ICE_BASIC[iceHand].cooldown;else player.cool=player.coolMax=s.tap?.16:.38;const seq=s.sequence,base=seq.slice(0,2),p=s.power,dir=player.dir.clone(),target=aim.clone();target.sub(new T.Vector3(player.x,0,player.z));if(!iceHand&&!hasIceRecipe(s.sequence)&&target.length()>6*(s.rangeScale||1))target.setLength(6*(s.rangeScale||1));target.add(new T.Vector3(player.x,0,player.z));const third=seq[2];
+function cast(result,iceHand=null){if(loadout.q==='i'&&result.parts.length===1&&!iceHand)iceHand=icePressHand;if(!running||paused||finished||player.knockdown>0)return;let s={...resolveSpell(result,loadout),timed:result.timed};if(s.sequence==='ii'){s.upgradedIce=true;iceHand=null;if(player.iceLeftCool>0)return;}if(iceHand){s.iceHand=iceHand;s.cost=ICE_BASIC[iceHand].cost;s.name=ICE_BASIC[iceHand].name;}if(s.parts.some(k=>!progress.ranks[k]))return;if(spellAimHeight(s.sequence)>0){const shown=castingFeedback.actors.get(player),hand=player.g.userData.puppet?.lastPositions?.[iceHand==='left'?'LeftHand':'RightHand'];const origin=shown?.group.visible?shown.group.position.clone():hand?.clone().addScaledVector(player.dir,.12);if(origin&&clearPath(player,origin)){s.emission=origin;const target=hasCursor?cursorAim(castPointer,camera,origin.y):null;if(target){aim.copy(target);const direction=target.clone().sub(origin);direction.y=0;if(direction.lengthSq()>.0001)s.fireDir=direction.normalize();}}}s.mastery=mastery(progress,s.parts[0]);s.power*=s.mastery;if(iceHand&&(player[iceHand==='left'?'iceLeftCool':'iceRightCool']||0)>0){flash(ICE_BASIC[iceHand].name+' 재사용 '+player[iceHand==='left'?'iceLeftCool':'iceRightCool'].toFixed(1)+'초');return;}if(player.cool>0){flash('잠깐 기다려 주세요');return}if(bot&&player.mana<s.cost){flash('마력이 부족합니다. 잠시 쉬면 회복됩니다.');return}if(bot)player.mana-=s.cost;if(s.upgradedIce)player.iceLeftCool=1.8;if(iceHand)player[iceHand==='left'?'iceLeftCool':'iceRightCool']=ICE_BASIC[iceHand].cooldown;else player.cool=player.coolMax=s.tap?.16:.38;const seq=s.sequence,base=seq.slice(0,2),p=s.power,dir=s.fireDir||player.dir.clone(),target=aim.clone();target.sub(new T.Vector3(player.x,0,player.z));if(!iceHand&&!hasIceRecipe(s.sequence)&&target.length()>6*(s.rangeScale||1))target.setLength(6*(s.rangeScale||1));target.add(new T.Vector3(player.x,0,player.z));const third=seq[2];
  dispatchSpell(s,player,dir,aim);
  history.unshift({name:s.name,seq:s.keys.toUpperCase(),tier:seq.length===1?'1륜':seq.length===2?'2륜':'2륜 복합'});history=history.slice(0,4);$('spellName').textContent=s.name;
 }
 function endRound(win){if(!bot){const a=win?enemy:player;a.hp=100;a.shield=0;a.burn=0;a.slow=0;a.echo=null;flash(win?'연습 상대의 체력을 회복했습니다':'연습 모드 · 체력을 회복했습니다');return}finished=true;charge.clear();enemyCharge.clear();moveTarget=null;if(win)wins++;else losses++;$('resultTitle').textContent=win?'승리':'패배';$('resultText').textContent=win?'주문을 조합해 상대 마법사를 제압했습니다.':'몬스터의 공격을 피하며 사냥하세요. 새 대결은 레벨 1부터 시작합니다.';$('result').classList.remove('hidden')}
-function reset(){healthHUD.reset();walkDirection={x:0,z:0};gameAudio.stopAll();levelUpVfx.clear();frostVisuals.clear();burnVisuals.clear();for(const a of[player,enemy]){a.ashTime=0;a.greenFireTime=0;}hitScreen.clear();for(const a of[player,enemy])a.recoil?.clear();castingFeedback.clear();chargeCamera.clear();liveMagic.clear();resetHunt();spellVfx.clear();pixelVfx.clear();enemy.strikePoint=null;enemy.strikeLocked=false;enemyCharge.clear();enemyLoadout=chooseLoadout();enemyProgress=createProgress(enemyLoadout);enemyTarget=null;enemy.retaliate=0;fallingStrikes=[];enemy.lastSpell="";enemy.lastSpellTime=0;for(const a of[player,enemy]){a.motion.clear();a.hitFlash=0;a.pendingCastLight=null;a.poison=0;a.wet=0;a.frostSlow=0;a.slow=0;a.burn=0;a.echo=null;a.burnTick=0;a.shieldHeat=false;}roll.reset();roll.kind=loadout.q;player.roll=roll;player.velocity=new T.Vector3();enemy.dodge=0;enemy.dodgeCool=0;enemy.defendCool=0;enemy.attackCount=0;enemy.sidestep=1;for(const s of shots)remove(s.m);for(const f of fields)remove(f.m);for(const f of fx)remove(f.m);for(const w of [...waves,...wards])remove(w.m);waves=[];wards=[];shots=[];fields=[];fx=[];Object.assign(player,{iceLeftCool:0,iceRightCool:0,iceCastLock:0,x:-5,z:4,hp:100,mana:100,shield:0,shieldTime:0,cool:0});Object.assign(enemy,{x:16,z:-14,hp:100,mana:100,shield:0,shieldTime:0,cool:2,wind:0});charge.clear();moveTarget=null;finished=false;paused=false;clock=0;history=[];$('result').classList.add('hidden');$('paused').classList.add('hidden');$('pause').textContent='일시정지';$('spellName').textContent=RUNES[loadout.q].name;resetHealthHUD();}
+function reset(){healthHUD.reset();walkDirection={x:0,z:0};gameAudio.stopAll();levelUpVfx.clear();frostVisuals.clear();burnVisuals.clear();for(const a of[player,enemy]){a.ashTime=0;a.greenFireTime=0;}hitScreen.clear();for(const a of[player,enemy])a.recoil?.clear();castingFeedback.clear();chargeCamera.clear();liveMagic.clear();resetHunt();spellVfx.clear();pixelVfx.clear();enemy.strikePoint=null;enemy.strikeLocked=false;enemyCharge.clear();enemyLoadout=chooseLoadout();enemyProgress=createProgress(enemyLoadout);enemyTarget=null;enemy.retaliate=0;fallingStrikes=[];enemy.lastSpell="";enemy.lastSpellTime=0;for(const a of[player,enemy]){a.castControlLock=0;a.motion.clear();a.hitFlash=0;a.pendingCastLight=null;a.poison=0;a.wet=0;a.frostSlow=0;a.slow=0;a.burn=0;a.echo=null;a.burnTick=0;a.shieldHeat=false;}roll.reset();roll.kind=loadout.q;player.roll=roll;player.velocity=new T.Vector3();enemy.dodge=0;enemy.dodgeCool=0;enemy.defendCool=0;enemy.attackCount=0;enemy.sidestep=1;for(const s of shots)remove(s.m);for(const f of fields)remove(f.m);for(const f of fx)remove(f.m);for(const w of [...waves,...wards])remove(w.m);waves=[];wards=[];shots=[];fields=[];fx=[];Object.assign(player,{iceLeftCool:0,iceRightCool:0,iceCastLock:0,x:-5,z:4,hp:100,mana:100,shield:0,shieldTime:0,cool:0});Object.assign(enemy,{x:16,z:-14,hp:100,mana:100,shield:0,shieldTime:0,cool:2,wind:0});charge.clear();moveTarget=null;finished=false;paused=false;clock=0;history=[];$('result').classList.add('hidden');$('paused').classList.add('hidden');$('pause').textContent='일시정지';$('spellName').textContent=RUNES[loadout.q].name;resetHealthHUD();}
 function pause(value=!paused){controls.reset();if(onlineCore){pvp?.input({action:"stop"});return;}if(!running||finished)return;paused=value;charge.clear();moveTarget=null;$('paused').classList.toggle('hidden',!paused);$('pause').textContent=paused?'계속하기':'일시정지'}
 let hasCursor=false;
 function aimingSequence(){const parts=charge.parts.length?charge.parts:['q'],count=charge.active?Math.max(1,Math.min(parts.length,Math.floor((charge.elapsed+1e-8)/1.2))):1;return mapSequence(parts.slice(0,count),loadout);}
+function playerCastLocked(){return onlineCore?castControlsLocked(onlineCore.actors[pvp.index]):castControlsLocked(player,charge)||player.g.userData.puppet?.magic.mode==='release';}
+const castPointer=new T.Vector2();
 function refreshAim(sequence=aimingSequence(),height=spellAimHeight(sequence)){
- if(!hasCursor)return aim;const pos=cursorAim(pointer,camera,height);if(!pos)return aim;aim.copy(pos);const d=pos.clone().sub(new T.Vector3(player.x,0,player.z));if(d.lengthSq()>.0001)player.dir.copy(d.normalize());return aim;
+ if(!hasCursor||playerCastLocked())return aim;const pos=cursorAim(pointer,camera,height);if(!pos)return aim;aim.copy(pos);const d=pos.clone().sub(new T.Vector3(player.x,0,player.z));if(d.lengthSq()>.0001)player.dir.copy(d.normalize());return aim;
 }
 function point(e){const rect=canvas.getBoundingClientRect();pointer.set((e.clientX-rect.left)/rect.width*2-1,-(e.clientY-rect.top)/rect.height*2+1);hasCursor=true;return refreshAim();}
 canvas.addEventListener('pointermove',e=>point(e));
@@ -242,7 +245,7 @@ window.addEventListener('keydown',e=>{
  if(e.code==='Escape'){controls.reset();return;}
  if(e.code!=='Space'||e.repeat)return;e.preventDefault();
  const spaceAim=hasCursor?cursorAim(pointer,camera,0)||aim:aim;if(onlineCore){pvp.input({action:'roll',point:{x:spaceAim.x,z:spaceAim.z}});return;}
- if(!running||paused||finished||player.knockdown>0||player.rooted>0||player.recoil?.active||player.motion.active)return;
+ if(!running||paused||finished||playerCastLocked()||player.knockdown>0||player.rooted>0||player.recoil?.active||player.motion.active)return;
   const d=spaceAim.clone().sub(new T.Vector3(player.x,0,player.z));if(d.length()<.1)d.copy(player.dir);
  if(!(player.iceCastLock>0)&&roll.start(d.x,d.z,player,loadout.q,spaceAim)){player.motion.clear();moveTarget=null;marker.visible=false;ring(player.x,player.z,0xe6d5a2,.9,.3);}else flash(roll.spec.name+' 재사용 '+roll.cooldown.toFixed(1)+'초');
 });
@@ -251,11 +254,11 @@ const deniedAttacks={left:0,right:0};
 const controls=bindDuelControls(canvas,window,{
  enabled:()=>running&&!paused&&!finished&&!(player.knockdown>0)&&$('selection').classList.contains('hidden')&&$('intro').classList.contains('hidden'),
  walk:d=>{walkDirection=d;sendWalk();},
- begin:(buttons,e,extending)=>{const pressedHand=e.button===2?'right':'left',actor=onlineCore?onlineCore.actors[pvp.index]:player;if(charge.pending||!attackCooldown(actor,pressedHand,loadout.q==='i').ready){deniedAttacks[pressedHand]=performance.now()+450;return false;}point(e);const recipe=mouseRecipe(buttons,progress.ranks,onlineCore?null:loadout);
+ begin:(buttons,e,extending)=>{const pressedHand=e.button===2?'right':'left',actor=onlineCore?onlineCore.actors[pvp.index]:player;if((onlineCore?actor.roll.active:roll.active)||charge.pending||(!extending&&playerCastLocked())||!attackCooldown(actor,pressedHand,loadout.q==='i').ready){deniedAttacks[pressedHand]=performance.now()+450;return false;}point(e);const recipe=mouseRecipe(buttons,progress.ranks,onlineCore?null:loadout);
   if(extending){if(onlineCore)pvp.input({action:'extend',keys:recipe});else if(charge.queue.join('')==='qq'&&loadout.q==='i')charge.retarget(recipe);else charge.extend(recipe);return;}
   icePressHand=buttons===2?'right':'left';
   if(onlineCore){pvp.input({action:'cancel'});for(const key of recipe)pvp.input({action:'queue',key});pvp.input({action:'begin',hand:icePressHand,point:{x:aim.x,z:aim.z}});return;}
-  charge.clear();for(const key of recipe)charge.enqueue(key);charge.begin();
+  charge.clear();for(const key of recipe)charge.enqueue(key);charge.begin();castPointer.copy(pointer);
  },
  release:e=>{point(e);if(onlineCore){pvp.input({action:'release',point:{x:aim.x,z:aim.z}});return;}if(roll.active){roll.pendingRelease=true;return;}const result=charge.requestRelease();if(result)cast(result);},
  cancel:()=>{if(onlineCore)pvp.input({action:'cancel'});else charge.clear();}
@@ -265,14 +268,14 @@ $('start').onclick=()=>{$('intro').classList.add('hidden');pause(false)};$('help
 function ai(dt){
  if(!bot||enemy.knockdown>0)return;enemy.retaliate=Math.max(0,(enemy.retaliate||0)-dt);enemy.cool=Math.max(0,enemy.cool-dt);enemy.mana=Math.min(100,enemy.mana+dt*(enemyCharge.active?3:10));enemy.lastSpellTime=Math.max(0,(enemy.lastSpellTime||0)-dt);
  if(!enemyCharge.active){const pd=Math.hypot(player.x-enemy.x,player.z-enemy.z);const prey=monsters.filter(m=>!m.dead&&visibleTo(enemy,m)).sort((a,b)=>Math.hypot(a.x-enemy.x,a.z-enemy.z)-Math.hypot(b.x-enemy.x,b.z-enemy.z));enemyTarget=(pd<3.5||enemy.retaliate>0&&pd<12)&&visibleTo(enemy,player)?player:prey[0]||(visibleTo(enemy,player)?player:null);}
- if(!enemyTarget||enemyTarget.dead||!visibleTo(enemy,enemyTarget)){enemyCharge.clear();enemyTarget=null;if(!enemy.patrol||Math.hypot(enemy.patrol.x-enemy.x,enemy.patrol.z-enemy.z)<1||collides(enemy.patrol.x,enemy.patrol.z))enemy.patrol={x:(rand()-.5)*36,z:(rand()-.5)*32};const d=new T.Vector3(enemy.patrol.x-enemy.x,0,enemy.patrol.z-enemy.z).normalize();if(!(enemy.rooted>0)&&!enemy.motion.active&&!enemy.recoil?.active)move(enemy,d.x*dt*2.5,d.z*dt*2.5);return;}
+ if(!enemyTarget||enemyTarget.dead||!visibleTo(enemy,enemyTarget)){enemyCharge.clear();enemyTarget=null;if(!enemy.patrol||Math.hypot(enemy.patrol.x-enemy.x,enemy.patrol.z-enemy.z)<1||collides(enemy.patrol.x,enemy.patrol.z))enemy.patrol={x:(rand()-.5)*36,z:(rand()-.5)*32};const d=new T.Vector3(enemy.patrol.x-enemy.x,0,enemy.patrol.z-enemy.z).normalize();if(!castControlsLocked(enemy,enemyCharge)&&!(enemy.rooted>0)&&!enemy.motion.active&&!enemy.recoil?.active)move(enemy,d.x*dt*2.5,d.z*dt*2.5);return;}
  const target=enemyTarget,delta=new T.Vector3(target.x-enemy.x,0,target.z-enemy.z),dist=delta.length();delta.normalize();
- if(!enemyCharge.active||enemyCharge.remaining>.35)enemy.dir.copy(delta);
+ if(!castControlsLocked(enemy,enemyCharge))enemy.dir.copy(delta);
  if(!enemyCharge.active&&enemy.cool<=0&&dist<7&&enemy.mana>=25){enemyCharge.start(chooseLearnedPlan(enemyLoadout,enemyProgress,enemy.attackCount||0,enemy.hp,dist));enemy.attackCount=(enemy.attackCount||0)+1;}
  const seq=enemyCharge.active?mapSequence(enemyCharge.plan,enemyLoadout):enemyLoadout[KEYS.find(k=>enemyProgress.ranks[k]>0&&enemyLoadout[k]!=='e')];
  const reach=spellReach(seq);
  let v=delta.clone();if(dist<1.3)v.set(0,0,0);if(dist<.8)v.copy(delta).multiplyScalar(-1);
- const speed=((enemy.rooted>0||enemy.motion.active||enemy.recoil?.active)?0:enemyCharge.active&&enemyCharge.remaining<=.35?0:4.4*chargeMoveScale(enemyCharge.active,enemyCharge.charge.parts.length))*(enemy.frostSlow>0?.35:enemy.slow>0?.55:1),ox=enemy.x,oz=enemy.z;
+ const speed=((castControlsLocked(enemy,enemyCharge)||enemy.rooted>0||enemy.motion.active||enemy.recoil?.active)?0:enemyCharge.active&&enemyCharge.remaining<=.35?0:4.4*chargeMoveScale(enemyCharge.active,enemyCharge.charge.parts.length))*(enemy.frostSlow>0?.35:enemy.slow>0?.55:1),ox=enemy.x,oz=enemy.z;
  move(enemy,v.x*speed*dt,v.z*speed*dt);
  if(v.lengthSq()>0&&Math.hypot(enemy.x-ox,enemy.z-oz)<dt*.2){const side=new T.Vector3(-delta.z,0,delta.x).multiplyScalar(enemy.sidestep||1);if(collides(enemy.x+side.x*.5,enemy.z+side.z*.5)||wallBlocks(enemy,{x:enemy.x+side.x*.5,z:enemy.z+side.z*.5}))enemy.sidestep=-(enemy.sidestep||1);move(enemy,side.x*speed*dt,side.z*speed*dt);}
  if(enemyCharge.active){const spell=enemyCharge.tick(dt,enemyLoadout);if(spell){if(enemy.mana>=spell.cost){enemy.mana-=spell.cost;spell.mastery=mastery(enemyProgress,spell.parts[0]);spell.power*=spell.mastery;dispatchSpell(spell,enemy,enemy.dir.clone(),new T.Vector3(target.x,0,target.z));enemy.lastSpell=spell.name;enemy.lastSpellTime=.8;}enemy.cool=.65+rand()*.4;}}
@@ -280,12 +283,12 @@ function ai(dt){
 function update(dt){clock+=dt;updateHunt(dt);
  for(const a of[player,enemy,...monsters.filter(m=>!m.dead)]){if(a.motion.active){const step=a.motion.tick(dt),count=Math.max(1,Math.ceil(Math.hypot(step.x,step.z)/.08));for(let i=0;i<count;i++){const dx=step.x/count,dz=step.z/count;if(collides(a.x+dx,a.z+dz)||wallBlocks(a,{x:a.x+dx,z:a.z+dz})){a.motion.clear();break;}a.x+=dx;a.z+=dz;}}}
 const spaceStep=roll.tick(dt,player,{targets:()=>[enemy,...monsters.filter(m=>!m.dead)],clearPath:(a,b)=>clearPath(a,b),hit:(a,d,v,f,o)=>hit(a,d,new T.Vector3(v.x,0,v.z),f,o)});charge.tick(spaceStep.chargeDt);const queuedBasic=charge.takeRelease();if(queuedBasic)cast(queuedBasic);const chargeSpeed=chargeMoveScale(charge.active,charge.parts.length);const rolling=spaceStep.chargeDt<dt;const beforeX=player.x,beforeZ=player.z;if(rolling){for(let i=0;i<8;i++)move(player,spaceStep.x/8,spaceStep.z/8);}if(!roll.active&&roll.pendingRelease){roll.pendingRelease=false;const result=charge.requestRelease();if(result)cast(result);}
-player.cool=Math.max(0,player.cool-dt);player.iceCastLock=Math.max(0,(player.iceCastLock||0)-dt);player.iceLeftCool=Math.max(0,(player.iceLeftCool||0)-dt);player.iceRightCool=Math.max(0,(player.iceRightCool||0)-dt);player.mana=bot?Math.min(100,player.mana+dt*(charge.active?3:10)):100;
- if(!(player.knockdown>0)&&!(player.rooted>0)&&!(player.iceCastLock>0)&&!rolling&&!player.motion.active&&!player.recoil?.active&&chargeSpeed>0){const speed=4.4*moveSpeedScale*(roll.speedBoost?1.35:1)*chargeSpeed*(player.frostSlow>0?.35:player.slow>0?.55:1);move(player,walkDirection.x*dt*speed,walkDirection.z*dt*speed);}
+player.castControlLock=Math.max(0,(player.castControlLock||0)-dt);enemy.castControlLock=Math.max(0,(enemy.castControlLock||0)-dt);player.cool=Math.max(0,player.cool-dt);player.iceCastLock=Math.max(0,(player.iceCastLock||0)-dt);player.iceLeftCool=Math.max(0,(player.iceLeftCool||0)-dt);player.iceRightCool=Math.max(0,(player.iceRightCool||0)-dt);player.mana=bot?Math.min(100,player.mana+dt*(charge.active?3:10)):100;
+ if(!playerCastLocked()&&!(player.knockdown>0)&&!(player.rooted>0)&&!(player.iceCastLock>0)&&!rolling&&!player.motion.active&&!player.recoil?.active&&chargeSpeed>0){const speed=4.4*moveSpeedScale*(roll.speedBoost?1.35:1)*chargeSpeed*(player.frostSlow>0?.35:player.slow>0?.55:1);move(player,walkDirection.x*dt*speed,walkDirection.z*dt*speed);}
 
  player.velocity=new T.Vector3((player.x-beforeX)/dt,0,(player.z-beforeZ)/dt);
  const facing=aim.clone().sub(new T.Vector3(player.x,0,player.z));if(facing.length()>.1)player.dir.copy(facing.normalize());
- interceptSpaceShots([player],liveMagic,dt,remove);liveMagic.update(dt);for(const a of[player,enemy])if(a.recoil?.active){const step=a.recoil.tick(dt),count=Math.max(1,Math.ceil(Math.hypot(step.x,step.z)/.06));for(let j=0;j<count;j++){const next={x:a.x+step.x/count,z:a.z+step.z/count};if(collides(next.x,next.z)||wallBlocks(a,next)){break;}a.x=next.x;a.z=next.z;}}for(const a of[player,enemy,...monsters.filter(m=>!m.dead)]){a.wet=Math.max(0,(a.wet||0)-dt);if(a.poison>0){a.poison-=dt;a.poisonTick-=dt;if(a.poisonTick<=0){a.poisonTick=.5;hit(a,a.poisonDamage||2,new T.Vector3(),0,a.poisonOwner);}}}updateStatuses(dt);if(finished)return;
+ interceptSpaceShots([player],liveMagic,dt,remove);liveMagic.update(dt);for(const a of[player,enemy])if(a.recoil?.active){const step=a.recoil.tick(dt);if(castControlsLocked(a,a===player?charge:enemyCharge))continue;const count=Math.max(1,Math.ceil(Math.hypot(step.x,step.z)/.06));for(let j=0;j<count;j++){const next={x:a.x+step.x/count,z:a.z+step.z/count};if(collides(next.x,next.z)||wallBlocks(a,next)){break;}a.x=next.x;a.z=next.z;}}for(const a of[player,enemy,...monsters.filter(m=>!m.dead)]){a.wet=Math.max(0,(a.wet||0)-dt);if(a.poison>0){a.poison-=dt;a.poisonTick-=dt;if(a.poisonTick<=0){a.poisonTick=.5;hit(a,a.poisonDamage||2,new T.Vector3(),0,a.poisonOwner);}}}updateStatuses(dt);if(finished)return;
  updateForces(dt);updateFalling(dt);if(finished)return;ai(dt);
  for(const a of[player,enemy]){a.shieldTime=Math.max(0,a.shieldTime-dt);if(a.shieldTime<=0)a.shield=0}
  updateOrbs(dt);
@@ -399,7 +402,7 @@ let prev=performance.now();function frame(now){requestAnimationFrame(frame);if(o
  const iceEngine=onlineCore?onlineCore.magic.ice:liveMagic.ice,iceOwner=onlineCore?onlineCore.actors[a===player?pvp.index:1-pvp.index]:a;
  u.puppet.icePose=(onlineCore?onlineCore.magic:liveMagic).pose(iceOwner);
  if(!u.puppet.icePose.length&&charging)u.puppet.icePose=[{hand:stage===1?u.puppet.chargeHand:'right',dir:a.dir.clone(),weight:1,reach:stage===1&&u.puppet.chargeUsesIce?.6:.38,height:stage===1&&u.puppet.chargeUsesIce?1.42:1}];
- const iceFacing=u.puppet.icePose[0]?.dir,displayDir=iceFacing||a.dir;
+ const iceFacing=u.puppet.icePose[0]?.dir,displayDir=castControlsLocked(a,actorCharge)?a.dir:iceFacing||a.dir;
  if(iceFacing){a.g.rotation.y=Math.atan2(displayDir.x,displayDir.z);u.body.rotation.set(0,0,0);}
  const movementSettings=readMovement(characterFor(a===player?loadout:enemyLoadout).id);
  if(movementSettings.headSpeed||movementSettings.chestSpeed||movementSettings.pelvisSpeed){u.puppet.bodyFollow??=new BodyFollow(movementSettings);u.puppet.bodyFollow.settings=movementSettings;u.puppet.bodyFollow.update(step,{aim:Math.atan2(displayDir.x,displayDir.z)});}else u.puppet.bodyFollow=null;
@@ -417,7 +420,7 @@ let lastOnlineMove=0;
 function syncOnlineActors(){
  if(!onlineCore)return;
  const own=onlineCore.actors[pvp.index],other=onlineCore.actors[1-pvp.index];
- const blend=Math.min(1,(performance.now()-onlineRenderAt)/(STEP*1000));for(const [from,to] of [[own,player],[other,enemy]]){for(const key of ['x','z','hp','mana','iceLeftCool','iceRightCool','iceCastLock','shield','shieldTime','slow','frostSlow','burn','poison','wet','ashTime','greenFireTime','dustTime','knockdown','rooted','slipImmune','greenFrost'])to[key]=from[key]||0;const previous=onlinePrevious?.[from.id];if(previous){to.x=previous.x+(from.x-previous.x)*blend;to.z=previous.z+(from.z-previous.z)*blend;}to.dir.copy(from.dir);Object.assign(to.motion,from.motion);}
+ const blend=Math.min(1,(performance.now()-onlineRenderAt)/(STEP*1000));for(const [from,to] of [[own,player],[other,enemy]]){for(const key of ['x','z','hp','mana','iceLeftCool','iceRightCool','iceCastLock','castControlLock','shield','shieldTime','slow','frostSlow','burn','poison','wet','ashTime','greenFireTime','dustTime','knockdown','rooted','slipImmune','greenFrost'])to[key]=from[key]||0;const previous=onlinePrevious?.[from.id];if(previous){to.x=previous.x+(from.x-previous.x)*blend;to.z=previous.z+(from.z-previous.z)*blend;}to.dir.copy(from.dir);Object.assign(to.motion,from.motion);}
  Object.assign(charge,own.charge);Object.assign(roll,own.roll);Object.assign(enemyCharge.charge,other.charge);enemyCharge.plan=[...other.charge.queue];enemyCharge.elapsed=other.charge.elapsed;enemyTarget=other.aim;clock=onlineCore.time;
 }
 function stopOnline(){

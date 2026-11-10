@@ -3,7 +3,7 @@ import {PoseTransition} from './pose-transition.mjs?v=smooth-motion-1';
 import {magicClipName} from './magic-clips.mjs?v=smooth-motion-1';
 import {savedMotion,savedPose,createMotionReader} from './live-motions.mjs?v=loop-playback-2';
 import * as T from './three.module.js';
-import {MagicMotion} from './magic-motion.mjs';
+import {MagicMotion} from './magic-motion.mjs?v=cast-lock-1';
 import {actionClips} from './action-clips.mjs';
 import {BVHLoader} from './vendor/BVHLoader.js';
 import {GLTFLoader} from './vendor/GLTFLoader.js';

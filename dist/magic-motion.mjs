@@ -1,6 +1,6 @@
 import * as T from './three.module.js';
 const V=(x,y,z)=>new T.Vector3(x,y,z);
-export function chargeMoveScale(active,count){return !active?1:count>=2?0:.5;}
+export function chargeMoveScale(active,count){return active?0:1;}
 export class MagicMotion{
  constructor(){this.reset();}
  reset(){this.stepTravel=0;this.pendingStep=0;this.mode='idle';this.elapsed=0;this.phaseElapsed=0;this.stage=1;this.callback=null;this.fired=false;}
