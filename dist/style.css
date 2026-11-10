@@ -71,3 +71,6 @@ header{z-index:5}.minimap-panel,.hud{z-index:4}
 
 /* Header utility icons */
 header{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:20px;align-items:start}.actions{justify-content:center}.utility-actions{display:flex;gap:7px;align-items:center;pointer-events:auto}.utility-actions button{display:grid;place-items:center;width:38px;height:38px;padding:8px;border-radius:9px}.utility-actions svg{width:20px;height:20px;pointer-events:none}.utility-actions #hitboxToggle[aria-pressed="true"]{color:#e9ca8a;border-color:#e9ca8a;background:#3e382c}.utility-actions #soundToggle[aria-pressed="false"]{color:#97a6af}@media(max-width:650px){header{gap:10px;grid-template-columns:1fr}header .utility-actions{justify-self:end;grid-row:1}header .actions{grid-row:2;justify-content:center}.utility-actions button{width:34px;height:34px;padding:6px}}
+
+/* Match the battlefield projection; leave space outside the diamond transparent. */
+.minimap-panel{border:0;background:transparent;overflow:visible}.minimap-panel canvas{height:auto;filter:drop-shadow(0 2px 4px #0008)}.minimap-panel small{border-radius:5px;background:#152128df}
