@@ -1,6 +1,6 @@
 import {roundDamage} from './damage-number.mjs?v=integer-damage-1';
 import {CAST_RELEASE_SECONDS} from './cast-lock.mjs?v=charge-move-1';
-import {IceSpells} from './ice-spells.mjs?v=integer-damage-1';
+import {IceSpells} from './ice-spells.mjs?v=ice-trail-fall-1';
 import {hasIceRecipe} from './ice-spec.mjs?v=shift-trajectory-1';
 import {areaTouches,shotTouches,shotContact} from './combat-hit.mjs?v=no-floor-rings-1';
 import {IceBasic} from './ice-basic.mjs?v=forward-glow-1';
@@ -11,7 +11,7 @@ import {compileSpell,spellReach,spellPayload} from './live-spells.mjs?v=integer-
 import {RUNES} from './combo-design.mjs?v=shift-trajectory-1';
 import {crossesWard,distanceToWard} from './forces.mjs';
 export class LiveMagic {
- constructor(api){api.areaHit=areaTouches;api.screenHit=(e,a,b,t)=>api.clearPath(e.owner,t)&&shotTouches(e,a,b,t);this.a=api;this.castPoses=new Map();this.ice=new IceBasic(api);this.iceCombos=new IceSpells(api);const interrupt=api.interrupt;api.interrupt=v=>{interrupt?.(v);this.castPoses.delete(v);v.hitPose=null;v.castFlash=0;v.g?.userData.puppet?.magic.reset();this.fire.effects=this.fire.effects.filter(e=>{if(e.owner!==v||e.type!=='punch')return true;api.remove(e.mesh);return false;});this.ice.effects=this.ice.effects.filter(e=>{if(e.owner!==v||!['iceWindup','iceMist','iceHandRing'].includes(e.type))return true;api.remove(e.mesh);return false;});for(const e of this.iceCombos.effects)if(e.owner===v&&['punch','beam'].includes(e.type))e.life=0;};this.effects=[];this.fire=new FireSpells(api);}
+ constructor(api){api.areaHit=areaTouches;api.screenHit=(e,a,b,t)=>api.clearPath(e.owner,t)&&shotTouches(e,a,b,t);this.a=api;this.castPoses=new Map();this.ice=new IceBasic(api);this.iceCombos=new IceSpells(api);const interrupt=api.interrupt;api.interrupt=v=>{interrupt?.(v);this.castPoses.delete(v);v.hitPose=null;v.castFlash=0;v.g?.userData.puppet?.magic.reset();this.fire.effects=this.fire.effects.filter(e=>{if(e.owner!==v||e.type!=='punch')return true;api.remove(e.mesh);return false;});this.ice.effects=this.ice.effects.filter(e=>{if(e.owner!==v||!['iceWindup','iceMist','iceHandRing','castFlash'].includes(e.type))return true;api.remove(e.mesh);return false;});for(const e of this.iceCombos.effects)if(e.owner===v&&['punch','beam'].includes(e.type))e.life=0;};this.effects=[];this.fire=new FireSpells(api);}
  pose(owner){const ice=this.ice.pose(owner);if(ice.length)return ice;const p=this.castPoses.get(owner);return p?[{hand:'right',dir:p.dir,reach:.38,height:1,weight:1}]:[];}
  clear(){for(const owner of this.castPoses.keys())owner.hitPose=null;this.castPoses.clear();this.ice.clear();this.iceCombos.clear();this.fire.clear();for(const e of this.effects)this.a.remove(e.mesh);this.effects=[];}
  shape(kind,r=.35,form='orb'){const color=RUNES[kind].color,g=form==='wall'?new T.BoxGeometry(.2,2.4,r*2):form==='field'?new T.CylinderGeometry(r,r,.07,40):form==='blade'?new T.BoxGeometry(.12,.15,r*2):kind==='i'?new T.OctahedronGeometry(r):new T.IcosahedronGeometry(r,kind==='d'?0:1);const mesh=new T.Mesh(g,new T.MeshStandardMaterial({color,emissive:color,emissiveIntensity:.45,flatShading:true,transparent:form==='field',opacity:form==='field'?.25:1}));mesh.castShadow=true;this.a.scene.add(mesh);return mesh;}

@@ -1,11 +1,12 @@
+import {IceSurface} from './ice-surface.mjs';
 import {roundDamage} from './damage-number.mjs?v=integer-damage-1';
 import * as T from './three.module.js';
 import {iceSpec,hasIceRecipe,ICE_BEAM} from './ice-spec.mjs?v=shift-trajectory-1';
 import {crossesWard} from './forces.mjs';
 const V=(x=0,y=0,z=0)=>new T.Vector3(x,y,z);
 export class IceSpells{
- constructor(api){this.a=api;this.effects=[];this.controlled=new Set();}
- clear(){for(const e of this.effects)this.a.remove(e.mesh);this.effects=[];for(const v of this.controlled){v.knockdown=0;v.rooted=0;v.slipImmune=0;v.greenFrost=0;v.frozen=0;}this.controlled.clear();}
+ constructor(api){this.a=api;this.effects=[];this.controlled=new Set();this.rinkSurface=null;}
+ clear(){if(this.rinkSurface){const m=this.rinkSurface.mesh;m.geometry.dispose();for(const material of m.material)material.dispose();m.removeFromParent();this.rinkSurface=null;}for(const e of this.effects)this.a.remove(e.mesh);this.effects=[];for(const v of this.controlled){v.knockdown=0;v.rooted=0;v.slipImmune=0;v.greenFrost=0;v.frozen=0;}this.controlled.clear();}
  mesh(geometry,color=0x99ddff,opacity=1){const m=new T.Mesh(geometry,new T.MeshStandardMaterial({color,emissive:color,emissiveIntensity:.25,roughness:.35,transparent:opacity<1,opacity,flatShading:true,depthWrite:opacity===1}));return m;}
  add(type,s,owner,p,dir,life=s.life){const mesh=new T.Group();mesh.position.set(p.x,0,p.z);this.a.scene.add(mesh);const e={type,s,owner,point:{x:p.x,z:p.z},dir:dir.clone(),mesh,life,max:life,age:0,tick:0,hit:new Set(),dwell:new Map(),distance:0};this.effects.push(e);return e;}
  shard(parent,x,y,z,size=.15,color=0xb6edff){const m=this.mesh(new T.OctahedronGeometry(size,0),color);m.position.set(x,y,z);m.scale.y=2.5;parent.add(m);return m;}
@@ -18,7 +19,7 @@ export class IceSpells{
  if(s.op==='d'||s.op==='e'){const e=this.add('wall',s,owner,p,dir,s.op==='d'?3:4.5),width=s.op==='d'?2.4:3.6;const wall=this.mesh(new T.BoxGeometry(width,1.9,.45),0x93d9fa,.75);e.mesh.add(wall);wall.position.y=.95;e.mesh.rotation.y=Math.atan2(dir.x,dir.z);for(let i=0;i<7;i++)this.shard(e.mesh,(i-3)*width/7,1.75,0,.2);const ward={owner,m:e.mesh,x:p.x,z:p.z,nx:dir.x,nz:dir.z,width,hp:s.op==='d'?24:48,maxHp:s.op==='d'?24:48,baseY:0,life:e.life,travelled:0,speed:0,effectCooldown:.8,spec:{slow:1,shock:0,moving:false,travel:0}};if(s.op==='d')this.area(e,p,s.radius,{force:2.8,once:true});this.a.wards.push(ward);e.ward=ward;return true;}
  if(s.op==='s'){const e=this.add('cut',s,owner,p,dir,.28);const a=Math.atan2(dir.z,dir.x),pts=Array.from({length:25},(_,i)=>V(Math.cos(a-1.05+i*2.1/24)*s.radius,.9,Math.sin(a-1.05+i*2.1/24)*s.radius));e.mesh.add(this.mesh(new T.TubeGeometry(new T.CatmullRomCurve3(pts),24,.12,5,false),0xc4f4ff));this.area(e,p,s.radius,{cone:true,once:true});return true;}
  if(s.op==='h'){const e=this.add('punch',s,owner,p,dir,s.range/s.speed);e.mesh.add(this.mesh(new T.BoxGeometry(.8,.7,.9),0x94dfff));e.mesh.position.y=1;e.mesh.rotation.y=Math.atan2(dir.x,dir.z);return true;}
- const type=s.op==='t'?'rink':s.op==='g'?'blizzard':s.op==='p'?'frostbite':'fog',e=this.add(type,s,owner,p,dir);if(type==='rink'){const disc=this.mesh(new T.CylinderGeometry(s.radius,s.radius,.035,48),0x9be3ff,.65);disc.position.y=.03;e.mesh.add(disc);for(let i=0;i<12;i++){const a=i*2.4;const line=this.mesh(new T.BoxGeometry(.03,.02,s.radius*.8),0xe2f8ff,.8);line.position.set(Math.cos(a)*s.radius*.5,.06,Math.sin(a)*s.radius*.5);line.rotation.y=a;e.mesh.add(line);}}else{for(let i=0;i<65;i++){const flake=this.shard(e.mesh,0,0,0,.025+(i%4)*.008,s.op==='p'?(i%2?0xa8e6bb:0x71c6a1):0xc9f3ff);flake.userData.flake=i;}if(type==='fog'||type==='frostbite')for(let i=0;i<22;i++){const puff=this.mesh(new T.SphereGeometry(.38,8,5),type==='frostbite'?0x8fcdae:0xd4edf5,.2);puff.userData.fog=i;e.mesh.add(puff);}}
+ const type=s.op==='t'?'rink':s.op==='g'?'blizzard':s.op==='p'?'frostbite':'fog',e=this.add(type,s,owner,p,dir);if(type==='rink'){this.updateRinkSurface();}else{for(let i=0;i<65;i++){const flake=this.shard(e.mesh,0,0,0,.025+(i%4)*.008,s.op==='p'?(i%2?0xa8e6bb:0x71c6a1):0xc9f3ff);flake.userData.flake=i;}if(type==='fog'||type==='frostbite')for(let i=0;i<22;i++){const puff=this.mesh(new T.SphereGeometry(.38,8,5),type==='frostbite'?0x8fcdae:0xd4edf5,.2);puff.userData.fog=i;e.mesh.add(puff);}}
  if(type==='frostbite')this.area(e,p,s.radius,{cone:true,once:true});return true;
  }
  beam(power,owner,dir){
@@ -45,6 +46,8 @@ export class IceSpells{
   if(time+1e-8>=s.freezeAfter&&!e.frozen.has(v)){this.interrupt(v);v.motion?.clear();v.frozen=s.freezeTime;this.controlled.add(v);e.frozen.add(v);this.burst(v,.7,0xe2faff);}
  }
  }
+ updateRinkSurface(){const zones=this.effects.filter(e=>e.type==='rink').map(e=>({kind:'i',x:e.point.x,z:e.point.z,radius:e.s.radius,life:e.life}));if(!zones.length&&!this.rinkSurface)return;this.rinkSurface??=new IceSurface(this.a.scene);this.rinkSurface.update(zones);}
+ trip(v,owner,dir,damage=0){if(v.slipImmune>0||this.a.hit(v,damage,dir,0,owner)===false)return false;this.interrupt(v);v.knockdown=.75;v.slipImmune=2.5;this.controlled.add(v);const d=v.dir||dir;v.motion?.start(d.x,d.z,1.8);this.burst(v,.6);return true;}
  update(dt){for(const v of this.controlled){for(const k of ['knockdown','rooted','slipImmune','greenFrost','frozen'])v[k]=Math.max(0,(v[k]||0)-dt);if(!v.knockdown&&!v.rooted&&!v.slipImmune&&!v.greenFrost&&!v.frozen)this.controlled.delete(v);}
  for(let i=this.effects.length-1;i>=0;i--){const e=this.effects[i],s=e.s;e.life-=dt;e.age+=dt;e.tick-=dt;let done=e.life<=0;if(done){if(e.ward)e.ward.life=0;this.a.remove(e.mesh);this.effects.splice(i,1);continue;}
  if(e.type==='beam')this.updateBeam(e,dt);
@@ -52,8 +55,8 @@ export class IceSpells{
  if(e.type==='fall'){if(e.age>=.55&&!e.struck){e.struck=true;e.ice.visible=true;e.ice.position.y=.65;this.area(e);this.burst(e.point,s.radius);}e.ice.scale.y=e.struck?Math.max(.1,e.life*5):2.5;}
  if(e.type==='wall'){e.mesh.scale.y=Math.min(1,e.age/.15);if(e.ward.hp<=0||e.ward.life<=0)done=true;}
  if(['fog','frostbite','blizzard'].includes(e.type)){for(const m of e.mesh.children){const i=m.userData.flake??m.userData.fog??0,a=i*2.4+e.age*(e.type==='blizzard'?3:.2),r=s.radius*Math.sqrt(((i*.618+e.age*.3)%1));if(e.type==='blizzard')m.position.set(Math.cos(a)*r,.2+(i%9)/9*2.5,Math.sin(a)*r);else{const t=(i*.137+e.age*.55)%1,angle=Math.atan2(e.dir.z,e.dir.x)+(Math.sin(i)*1.02);m.position.set(Math.cos(angle)*s.radius*t,.25+Math.sin(i*2)*.25+t*.6,Math.sin(angle)*s.radius*t);}m.rotation.y+=dt*2;}if(e.tick<=0){e.tick=.3;if(e.type==='fog')this.area(e,e.point,s.radius,{cone:true,damage:0});if(e.type==='blizzard'){this.area(e,e.point,s.radius,{damage:s.damage});for(const v of this.a.targets(e.owner)){if(!this.a.areaHit(v,e.point,s.radius)||!this.a.clearPath(e.point,v)){e.dwell.delete(v);continue;}const time=(e.dwell.get(v)||0)+.3;e.dwell.set(v,time);v.motion?.start(e.point.x-v.x,e.point.z-v.z,.3);if(time>=1.5&&time<1.8){v.rooted=Math.max(v.rooted||0,.6);this.controlled.add(v);}}}}}
- if(e.type==='rink'&&e.tick<=0){e.tick=.1;for(const v of this.a.targets(e.owner)){if(v.slipImmune>0||!this.a.areaHit(v,e.point,s.radius,null,false,false,.12)||!this.a.clearPath(e.point,v))continue;if(this.a.hit(v,s.damage,e.dir,0,e.owner)===false)continue;this.interrupt(v);v.knockdown=.75;v.slipImmune=2.5;this.controlled.add(v);const d=v.dir||e.dir;v.motion?.start(d.x,d.z,1.8);this.burst(v,.6);}}
+ if(e.type==='rink'&&e.tick<=0){e.tick=.1;for(const v of this.a.targets(e.owner)){if(v.slipImmune>0||!this.a.areaHit(v,e.point,s.radius,null,false,false,.12)||!this.a.clearPath(e.point,v))continue;this.trip(v,e.owner,e.dir,s.damage);}}
  if(e.type==='cut')e.mesh.scale.setScalar(1+(1-e.life/e.max)*.15);
  if(done){if(e.ward)e.ward.life=0;this.a.remove(e.mesh);this.effects.splice(i,1);}
- }}
+ }this.updateRinkSurface();}
 }

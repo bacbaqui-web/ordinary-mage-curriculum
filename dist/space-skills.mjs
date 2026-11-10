@@ -1,7 +1,8 @@
+import {iceContains} from './ice-shape.mjs';
 import {areaTouches} from './combat-hit.mjs?v=no-floor-rings-1';
 export const SPACE_SKILLS={
  q:{name:'불길 돌파',duration:.32,distance:2.6,cooldown:4,color:0xff6828,desc:'짧게 돌진하고 출발 지점에 2초간 불길을 남깁니다. 불길은 0.5초마다 피해 2를 줍니다.'},
- i:{name:'얼음걸음',duration:2,distance:0,cooldown:4.5,color:0x8bdcff,desc:'2초 동안 이동 속도가 60% 빨라집니다. 발밑이 빛나고 지나간 자리에 3초간 얼음이 남습니다. 얼음을 밟은 적은 느려집니다.'},
+ i:{name:'얼음걸음',duration:2,distance:0,cooldown:4.5,color:0x8bdcff,desc:'2초 동안 이동 속도가 60% 빨라집니다. 발밑이 빛나고 지나간 자리에 3초간 얼음이 남습니다. 얼음을 밟은 적은 미끄러져 넘어지고 시전 중인 주문이 취소됩니다.'},
  l:{name:'번쩍 스텝',duration:.18,distance:2.3,cooldown:4,color:0xffe86c,desc:'짧고 빠르게 이동합니다. 처음 0.12초 동안 공격을 피합니다.'},
  d:{name:'흙으로 버티기',duration:.65,distance:0,cooldown:5,color:0xb38b63,desc:'제자리에서 피해를 70% 줄이고 밀려나지 않습니다.'},
  p:{name:'긴급 분사',duration:.35,distance:-2.2,cooldown:5,color:0x9bb46b,desc:'뒤로 물러나며 앞에 작은 연막을 남깁니다. 연막은 양쪽의 시야를 가립니다.'},
@@ -35,4 +36,11 @@ export class SpaceSkill{
  snapshot(){return JSON.parse(JSON.stringify(this));}
 }
 // Intercept only moving shots, never ground fields, falling strikes or melee attacks.
-export function interceptSpaceShots(actors,magic,dt,remove){for(const list of [magic.effects,magic.fire.effects,...(magic.iceCombos?[magic.iceCombos.effects]:[]),...(magic.ice?[magic.ice.effects]:[])])for(let i=list.length-1;i>=0;i--){const shot=list[i];if(!['projectile','shot'].includes(shot.type)||!shot.dir||!(shot.speed||shot.s?.speed||(shot.redLightning?15:0)))continue;const from=shot.mesh.position,to={x:from.x+shot.dir.x*(shot.speed||shot.s?.speed||(shot.redLightning?15:0))*dt,z:from.z+shot.dir.z*(shot.speed||shot.s?.speed||(shot.redLightning?15:0))*dt};for(const a of actors){const r=a.roll;if(a===shot.owner||!r?.active||!['e','s'].includes(r.kind)||r.kind==='s'&&r.parrySpent)continue;if(-shot.dir.x*r.faceX-shot.dir.z*r.faceZ<.25)continue;const dx=to.x-from.x,dz=to.z-from.z,n=dx*dx+dz*dz,t=n?Math.max(0,Math.min(1,((a.x-from.x)*dx+(a.z-from.z)*dz)/n)):0;if(Math.hypot(from.x+dx*t-a.x,from.z+dz*t-a.z)>1.4)continue;r.parrySpent=true;remove(shot.mesh);list.splice(i,1);break;}}}
+export function interceptSpaceShots(actors,magic,dt,remove){applyIceTrailFalls(actors,magic);for(const list of [magic.effects,magic.fire.effects,...(magic.iceCombos?[magic.iceCombos.effects]:[]),...(magic.ice?[magic.ice.effects]:[])])for(let i=list.length-1;i>=0;i--){const shot=list[i];if(!['projectile','shot'].includes(shot.type)||!shot.dir||!(shot.speed||shot.s?.speed||(shot.redLightning?15:0)))continue;const from=shot.mesh.position,to={x:from.x+shot.dir.x*(shot.speed||shot.s?.speed||(shot.redLightning?15:0))*dt,z:from.z+shot.dir.z*(shot.speed||shot.s?.speed||(shot.redLightning?15:0))*dt};for(const a of actors){const r=a.roll;if(a===shot.owner||!r?.active||!['e','s'].includes(r.kind)||r.kind==='s'&&r.parrySpent)continue;if(-shot.dir.x*r.faceX-shot.dir.z*r.faceZ<.25)continue;const dx=to.x-from.x,dz=to.z-from.z,n=dx*dx+dz*dz,t=n?Math.max(0,Math.min(1,((a.x-from.x)*dx+(a.z-from.z)*dz)/n)):0;if(Math.hypot(from.x+dx*t-a.x,from.z+dz*t-a.z)>1.4)continue;r.parrySpent=true;remove(shot.mesh);list.splice(i,1);break;}}}
+
+// Use the same footprint as the visible ice and the same fall rules as ice fields.
+export function applyIceTrailFalls(actors,magic){
+ for(const owner of actors){const ice=(owner.roll?.zones||[]).filter(z=>z.kind==='i'&&z.life>0);if(!ice.length)continue;
+ for(const target of magic.a.targets(owner)){if(target===owner||target.dead||target.hp<=0||target.slipImmune>0)continue;const zone=ice.find(z=>iceContains(z,target.x,target.z)&&magic.a.clearPath(z,target));if(zone)magic.iceCombos.trip(target,owner,target.dir||owner.dir,0);}
+ }
+}

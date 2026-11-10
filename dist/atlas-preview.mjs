@@ -14,7 +14,7 @@ import {canSee} from './vision.mjs';
 import * as T from './three.module.js';
 import {createWizard,animateWizard,projectWizard,setWizardCharacter} from './wizard.mjs?v=no-floor-rings-1';
 import {LowPolyVFX} from './lowpoly-vfx.mjs';
-import {LiveMagic} from './live-magic.mjs?v=no-floor-rings-1';
+import {LiveMagic} from './live-magic.mjs?v=ice-trail-fall-1';
 import {RUNES} from './combo-design.mjs?v=shift-trajectory-1';
 import {advanceMovingWard} from './moving-ward.mjs';
 import {ForcedMotion} from './motion.mjs';
