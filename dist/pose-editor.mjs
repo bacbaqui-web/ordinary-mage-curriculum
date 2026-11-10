@@ -48,7 +48,7 @@ prepare(project);
 const current=()=>project.actions[index],pose=()=>samplePose(current(),frame);
 const editPoint=(p,n)=>bagHandles(p)[n]||p[n];
 function seedBag(){if(!rig?.accessories?.has('ice-bag'))return;for(const a of project.actions)for(const k of a.keys)if(!k.pose.BagCenter||!k.pose.BagDirection||!k.pose.BagSide){rig.apply(k.pose);Object.assign(k.pose,rig.bagControls());}}
-function save(message='브라우저에 저장됨'){seedBag();syncLoop(current(),frame);for(const action of project.actions)for(const key of action.keys)key.ease='smooth';current().updatedAt=Date.now();project.characterId=characterId;try{localStorage.setItem(storage,JSON.stringify(project));$('status').textContent=`${characterProfile(characterId).label} · ${message}`;unsaved=false;return true;}catch{unsaved=true;$('status').textContent='자동 저장 공간이 부족합니다. 파일 저장으로 보관하세요.';return false;}}
+function save(message='자동 저장됨 · 게임에 반영됩니다.'){seedBag();syncLoop(current(),frame);for(const action of project.actions)for(const key of action.keys)key.ease='smooth';current().updatedAt=Date.now();project.characterId=characterId;try{localStorage.setItem(storage,JSON.stringify(project));$('status').textContent=`${characterProfile(characterId).label} · ${message}`;unsaved=false;return true;}catch{unsaved=true;$('status').textContent='자동 저장 공간이 부족합니다. 파일 저장으로 보관하세요.';return false;}}
 function checkpoint(){history.push(JSON.stringify({project,index,frame}));if(history.length>60)history.shift();future=[];}
 function restore(s){const v=JSON.parse(s);project=v.project;index=v.index;frame=v.frame;playing=false;save();sync();}
 function syncPlayButton(){const label=playing?'일시정지':'재생';$('play').textContent=playing?'⏸':'▶';$('play').setAttribute('aria-label',label);$('play').title=label;}
@@ -128,7 +128,7 @@ for(const [i,n] of ['x','y','z'].entries()){
   if(!drag)return;const dx=e.clientX-drag.x;
   if(!drag.moved){if(Math.abs(dx)<4)return;stop();frame=Math.floor(frame);checkpoint();drag.moved=true;drag.key=key();drag.base=structuredClone(drag.key.pose);drag.target=[...editPoint(drag.base,selected)];input.setPointerCapture(drag.pointer);input.classList.add('scrubbing');}
   e.preventDefault();const target=[...drag.target];target[i]=T.MathUtils.clamp(target[i]+dx*.005,-10,10);
-  drag.key.pose=moveJoint(BAG_POINTS.includes(selected)?drag.key.pose:drag.base,selected,target);syncLoop(current(),frame);sync();
+  drag.key.pose=moveJoint(BAG_POINTS.includes(selected)?drag.key.pose:drag.base,selected,target);save();sync();
  };
  const finish=()=>{if(!drag)return;const changed=drag.moved,pointer=drag.pointer;if(changed){input.blur();save();}drag=null;input.classList.remove('scrubbing');if(input.hasPointerCapture(pointer))input.releasePointerCapture(pointer);};
  input.onpointerup=finish;input.onpointercancel=finish;input.onlostpointercapture=finish;
@@ -153,13 +153,13 @@ function copyKey(){if(loading)return false;if(selection.size){copiedPoints={char
 function pasteKey(){if(loading)return;if(copiedPoints){if(copiedPoints.characterId!==characterId){$('status').textContent='복사한 캐릭터에서 붙여넣으세요.';return;}stop();frame=Math.floor(frame);checkpoint();const k=key();k.pose=fitPoints(k.pose,copiedPoints.points);save();sync();$('status').textContent='선택한 점의 위치를 관절이 닿는 범위 안에서 붙여넣었습니다.';return;}if(!copiedKey)return;stop();frame=Math.floor(frame);checkpoint();const pasted=structuredClone(copiedKey);pasted.frame=frame;const pinned=applyFootLocks(pasted.pose,footAnchors(),{align:true});if(!pinned){$('status').textContent='고정한 발에 닿지 않는 자세입니다. 발 고정을 풀고 붙여넣으세요.';return;}pasted.pose=pinned;const existing=current().keys.findIndex(k=>k.frame===frame);if(existing>=0)current().keys[existing]=pasted;else current().keys.push(pasted);current().keys.sort((a,b)=>a.frame-b.frame);save();sync();$('status').textContent=`${frame+1}프레임에 붙여넣었습니다.`;}
 document.addEventListener('copy',e=>{if(editingText(e)||!copyKey())return;e.preventDefault();e.clipboardData?.setData('text/plain',JSON.stringify({type:'ordinary-mage-keyframe',key:copiedKey}));});
 document.addEventListener('paste',e=>{if(editingText(e))return;if(copiedKey||copiedPoints){e.preventDefault();pasteKey();}});
-$('saveMotion').onclick=()=>{
- const active=document.activeElement;if(active?.matches('input,textarea'))active.blur();
- save(`${current().name} 동작을 브라우저에 저장했습니다.`);
-};
 document.addEventListener('keydown',e=>{
  if(loading)return;
- if((e.ctrlKey||e.metaKey)&&!e.altKey&&e.key.toLowerCase()==='s'){e.preventDefault();$('saveMotion').click();return;}
+ if((e.ctrlKey||e.metaKey)&&!e.altKey&&e.key.toLowerCase()==='s'){e.preventDefault();document.activeElement?.blur();save();return;}
+ if(!e.ctrlKey&&!e.metaKey&&!e.altKey&&!e.target.closest('textarea,[contenteditable=true],select,input:not([type=range]):not([type=checkbox])')){
+  if(e.code==='Space'){e.preventDefault();if(!e.repeat)$('play').click();return;}
+  if(e.code==='BracketLeft'||e.code==='BracketRight'){e.preventDefault();stop();frame=Math.max(0,Math.min(current().frames-1,Math.floor(frame)+(e.code==='BracketLeft'?-1:1)));sync();return;}
+ }
  if(editingText(e))return;
  if((e.key==='Delete'||e.key==='Backspace')&&!e.ctrlKey&&!e.metaKey&&!e.altKey){e.preventDefault();if(!e.repeat)deleteKey();return;}
  if(!(e.ctrlKey||e.metaKey)||e.altKey)return;
@@ -171,7 +171,7 @@ document.addEventListener('keydown',e=>{
 $('export').onclick=()=>{const url=URL.createObjectURL(new Blob([JSON.stringify(projectForCharacter(project,characterId),null,2)],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download=`ordinary-mage-${characterId}-motions.json`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
 $('import').onchange=async()=>{try{const file=$('import').files[0];if(!file)return;if(file.size>10*1024*1024)throw Error('10MB 이하의 동작 파일을 선택하세요.');const targetId=characterId;const incoming=validateProject(JSON.parse(await file.text()));if(targetId!==characterId)throw Error('캐릭터가 바뀌었습니다. 파일을 다시 선택하세요.');assertCharacterImport(incoming,characterId);compactShoulders(incoming);ensureMagicClips(incoming);ensureBasicAttacks(incoming);ensureFirstRingClips(incoming);ensureLocomotion(incoming);ensureMobility(incoming);if(rig&&!incoming.rigVersion){const fitted=fitProjectToRig(incoming,rig.restPose,defaultRest());incoming.actions=fitted.actions;incoming.rigVersion=7;}if(rig)migrateAnklePivot(incoming,rig.ankleLift,rig.ankleBack);incoming.actions=uniqueMotions(incoming.actions);for(const a of incoming.actions)a.updatedAt=Date.now();const merged=mergeMotions(project.actions,incoming.actions);if(merged.length>100)throw Error('동작은 최대 100개까지 보관할 수 있습니다.');checkpoint();if(incoming.movementSettings)project.movementSettings=normalizeMovement(incoming.movementSettings);project.actions=merged;index=Math.max(0,project.actions.indexOf(incoming.actions[0]));frame=0;stop();save();sync();}catch(e){$('status').textContent='불러오지 못했습니다. '+e.message;}};
 function defaultRest(){const {root}=demoMotion();root.updateMatrixWorld(true);return Object.fromEntries(JOINTS.map(n=>[n,root.getObjectByName(n).getWorldPosition(new T.Vector3()).toArray()]));}
-function setBusy(value){loading=value;$('motionControls').disabled=value;for(const id of ['export','import','saveMotion','play','previous','next','frames','fps','scrub','character','loopMotion'])$(id).disabled=value;}
+function setBusy(value){loading=value;$('motionControls').disabled=value;for(const id of ['export','import','play','previous','next','frames','fps','scrub','character','loopMotion'])$(id).disabled=value;}
 async function selectCharacter(id){
  if(id==='wolf'){if(unsaved&&!save())return;const url=new URL(location.href);url.searchParams.set('character','wolf');location.href=url;return;}
  if(loading)return;
@@ -192,7 +192,6 @@ async function selectCharacter(id){
   try{localStorage.setItem('ordinary-mage-editor-character',characterId);}catch{}
   $('character').value=characterId;$('import').value='';
   $('status').textContent='';
-  $('labLink').href='character-lab.html?v=toolbar-icons-1&character='+characterId;
   const url=new URL(location.href);url.searchParams.set('character',characterId);window.history.replaceState(null,'',url);
   $('status').textContent=`${profile.label} 동작을 열었습니다. 이 캐릭터에만 저장됩니다.`;sync();
  }catch(e){nextRig?.dispose();$('character').value=characterId;$('status').textContent=e.message;}
@@ -228,7 +227,7 @@ const views=[['앞',[0,0,6]],['옆',[6,0,0]],['위',[0,6,0]],['쿼터뷰',[5,4,6
   if(!drag.moved){if(Math.hypot(e.clientX-drag.x,e.clientY-drag.y)<3)return;checkpoint();drag.k=key();drag.moved=true;}
   const delta=right.clone().multiplyScalar((e.clientX-drag.x)/v.scale).addScaledVector(up,-(e.clientY-drag.y)/v.scale);
   const targets=Object.fromEntries(drag.names.map(n=>[n,new T.Vector3(...editPoint(drag.base,n)).add(delta).toArray()]));
-  drag.k.pose=fitPoints(drag.base,targets);syncLoop(current(),frame);sync();
+  drag.k.pose=fitPoints(drag.base,targets);save();sync();
  };
  const finish=()=>{if(!drag)return;const changed=drag.moved;drag=null;v.marquee=null;if(changed)save();};
  canvas.onpointerup=finish;canvas.onpointercancel=finish;canvas.onlostpointercapture=finish;return v;
