@@ -1,4 +1,4 @@
-import {BAG_POINTS} from './bag-controls.mjs';
+import {BAG_POINTS} from './bag-controls.mjs?v=bag-translate-1';
 // Legacy files did not contain Neck. Preserve all authored joints and insert only the missing point.
 export function withNeck(p){if(p?.Neck)return p;if(!p?.Spine||!p?.Head)return p;return {...p,Neck:p.Spine.map((v,i)=>v+(p.Head[i]-v)*.57)};}
 export const JOINTS=['Hips','Spine','Neck','Head','LeftArm','LeftForeArm','LeftHand','RightArm','RightForeArm','RightHand','LeftUpLeg','LeftLeg','LeftFoot','RightUpLeg','RightLeg','RightFoot'];

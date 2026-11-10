@@ -1,21 +1,21 @@
-import {BAG_POINTS,BAG_LABELS,moveBag} from './bag-controls.mjs';
+import {BAG_POINTS,BAG_LABELS,bagHandles,moveBag} from './bag-controls.mjs?v=bag-translate-1';
 import {loopFrame} from './motion-timing.mjs';
 import {normalizeMovement,readMovement} from './character-movement.mjs?v=turn-rates-1';
 import {syncLoop,resizeLoop,loopEndpoint} from './pose-loop.mjs';
 import {ensureLocomotion,ensureBasicAttacks,ensureIdle,ensureFirstRingClips,actionGroups} from './motion-catalog.mjs?v=run-walk-1';
 import {migrateAnklePivot} from './ankle-pivot.mjs?v=heel-free-1';
 import {CHARACTERS,characterProfile,motionStorageKey,projectForCharacter,assertCharacterImport} from './character-profiles.mjs?v=heel-free-1';
-import {CharacterRig,fitProjectToRig} from './character-rig.mjs?v=bag-controls-1';
-import {ensureMagicClips} from './magic-clips.mjs?v=bag-controls-1';
+import {CharacterRig,fitProjectToRig} from './character-rig.mjs?v=bag-translate-1';
+import {ensureMagicClips} from './magic-clips.mjs?v=bag-translate-1';
 import {uniqueMotions,mergeMotions} from './pose-library.mjs?v=run-walk-1';
 import * as T from './three.module.js';
 import {footFaces} from './foot-shape.mjs';
 import {PassiveFoot} from './passive-foot.mjs';
 const feet={LeftFoot:new PassiveFoot(),RightFoot:new PassiveFoot()};
 let footShapes={};
-import {moveJoint as movePoseJoint,applyFootLocks} from './pose-constraints.mjs?v=bag-controls-1';
-import {demoMotion} from './motion-puppet.mjs?v=bag-controls-1';
-import {JOINTS,LABELS,samplePose,validateProject} from './pose-data.mjs?v=bag-controls-1';
+import {moveJoint as movePoseJoint,applyFootLocks} from './pose-constraints.mjs?v=bag-translate-1';
+import {demoMotion} from './motion-puppet.mjs?v=bag-translate-1';
+import {JOINTS,LABELS,samplePose,validateProject} from './pose-data.mjs?v=bag-translate-1';
 const $=id=>document.getElementById(id);
 const jointLabel=n=>BAG_LABELS[n]||LABELS[JOINTS.indexOf(n)];
 const editableJoints=JOINTS.filter(n=>n!=='Neck');
@@ -45,6 +45,7 @@ function prepare(p){
 }
 prepare(project);
 const current=()=>project.actions[index],pose=()=>samplePose(current(),frame);
+const editPoint=(p,n)=>bagHandles(p)[n]||p[n];
 function seedBag(){if(!rig?.accessories?.has('ice-bag'))return;for(const a of project.actions)for(const k of a.keys)if(!k.pose.BagCenter||!k.pose.BagDirection){rig.apply(k.pose);Object.assign(k.pose,rig.bagControls());}}
 function save(message='브라우저에 저장됨'){syncLoop(current(),frame);for(const action of project.actions)for(const key of action.keys)key.ease='smooth';current().updatedAt=Date.now();project.characterId=characterId;try{localStorage.setItem(storage,JSON.stringify(project));$('status').textContent=`${characterProfile(characterId).label} · ${message}`;unsaved=false;return true;}catch{unsaved=true;$('status').textContent='자동 저장 공간이 부족합니다. 파일 저장으로 보관하세요.';return false;}}
 function checkpoint(){history.push(JSON.stringify({project,index,frame}));if(history.length>60)history.shift();future=[];}
@@ -95,7 +96,7 @@ function sync(){
  const visible=actionGroups(project.actions).flatMap(g=>g.entries);if(visible.length&&!visible.some(e=>e.index===index)){index=visible[0].index;frame=0;stop();}
  $('action').replaceChildren(...actionGroups(project.actions).map(group=>{const el=document.createElement('optgroup');el.label=group.label;el.append(...group.entries.map(({action,index})=>new Option(action.name,index)));return el;}));$('action').value=index;$('frames').value=current().frames;$('fps').value=current().fps;$('joint').value=selected;
  $('scrub').max=current().frames-1;$('scrub').value=frame;
- const p=pose()[selected];['x','y','z'].forEach((n,i)=>$(n).value=p[i].toFixed(3));
+ const p=editPoint(pose(),selected);['x','y','z'].forEach((n,i)=>$(n).value=p[i].toFixed(3));
  syncPlayButton();
  $('timeline').replaceChildren(...Array.from({length:current().frames},(_,i)=>{const b=document.createElement('button');const has=current().keys.some(k=>k.frame===i);b.textContent=(has?'◆ ':'')+(i+1);b.className=(has?'key ':'')+(i===Math.floor(frame)?'selected':'');b.setAttribute('aria-label',`${i+1}프레임${has?' 키프레임':''}`);b.dataset.frame=i;b.onclick=()=>{if(loading)return;stop();frame=i;sync();};if(has&&!loopEndpoint(current(),i))bindKeyDrag(b,i);return b;}));alignScrub();
 }
@@ -117,11 +118,11 @@ $('action').onchange=()=>{stop();index=Number($('action').value);frame=0;sync();
 for(const [i,n] of ['x','y','z'].entries()){
  const input=$(n);let drag=null;
  input.title='좌우로 드래그하여 조절';
- input.onchange=()=>{if(drag?.moved)return;const value=Number(input.value);if(value===Number(pose()[selected][i].toFixed(3)))return;if(!Number.isFinite(value)||Math.abs(value)>10){sync();return;}stop();frame=Math.floor(frame);checkpoint();const k=key(),target=[...k.pose[selected]];target[i]=value;k.pose=moveJoint(k.pose,selected,target);save();sync();};
+ input.onchange=()=>{if(drag?.moved)return;const value=Number(input.value);if(value===Number(editPoint(pose(),selected)[i].toFixed(3)))return;if(!Number.isFinite(value)||Math.abs(value)>10){sync();return;}stop();frame=Math.floor(frame);checkpoint();const k=key(),target=[...editPoint(k.pose,selected)];target[i]=value;k.pose=moveJoint(k.pose,selected,target);save();sync();};
  input.onpointerdown=e=>{if(loading||e.button!==0)return;drag={pointer:e.pointerId,x:e.clientX,moved:false};};
  input.onpointermove=e=>{
   if(!drag)return;const dx=e.clientX-drag.x;
-  if(!drag.moved){if(Math.abs(dx)<4)return;stop();frame=Math.floor(frame);checkpoint();drag.moved=true;drag.key=key();drag.base=structuredClone(drag.key.pose);drag.target=[...drag.base[selected]];input.setPointerCapture(drag.pointer);input.classList.add('scrubbing');}
+  if(!drag.moved){if(Math.abs(dx)<4)return;stop();frame=Math.floor(frame);checkpoint();drag.moved=true;drag.key=key();drag.base=structuredClone(drag.key.pose);drag.target=[...editPoint(drag.base,selected)];input.setPointerCapture(drag.pointer);input.classList.add('scrubbing');}
   e.preventDefault();const target=[...drag.target];target[i]=T.MathUtils.clamp(target[i]+dx*.005,-10,10);
   drag.key.pose=moveJoint(drag.base,selected,target);syncLoop(current(),frame);sync();
  };
@@ -204,7 +205,7 @@ const views=[['앞',[0,0,6]],['옆',[6,0,0]],['위',[0,6,0]],['쿼터뷰',[5,4,6
  canvas.style.touchAction='none';
  canvas.addEventListener('wheel',e=>{e.preventDefault();const delta=e.deltaY*(e.deltaMode===1?16:e.deltaMode===2?canvas.clientHeight:1);v.zoom=T.MathUtils.clamp(v.zoom*Math.exp(-delta*.0015),.4,3);},{passive:false});
  if(orbit){title.textContent='쿼터뷰 · 빈 곳을 끌어 회전';const reset=document.createElement('button');reset.textContent='시점 초기화';reset.className='view-reset';reset.onclick=()=>{yaw=initialYaw;pitch=initialPitch;orient();};box.append(reset);canvas.oncontextmenu=e=>e.preventDefault();}
- canvas.onpointerdown=e=>{if(loading)return;const r=canvas.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;const nearest=Object.entries(v.points).filter(([n])=>n!=='Neck').map(([n,p])=>({n,d:Math.hypot(p.x-x,p.y-y)})).sort((a,b)=>a.d-b.d)[0];if(orbit&&(e.button===2||!$('handles').checked||!nearest||nearest.d>18)){drag={orbit:true,x:e.clientX,y:e.clientY,yaw,pitch};canvas.setPointerCapture(e.pointerId);e.preventDefault();return;}if(!$('handles').checked||!nearest||nearest.d>18)return;stop();frame=Math.floor(frame);selected=nearest.n;canvas.focus();checkpoint();const k=key();drag={x:e.clientX,y:e.clientY,start:[...k.pose[selected]],base:structuredClone(k.pose),k};canvas.setPointerCapture(e.pointerId);sync();};
+ canvas.onpointerdown=e=>{if(loading)return;const r=canvas.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;const nearest=Object.entries(v.points).filter(([n])=>n!=='Neck').map(([n,p])=>({n,d:Math.hypot(p.x-x,p.y-y)})).sort((a,b)=>a.d-b.d)[0];if(orbit&&(e.button===2||!$('handles').checked||!nearest||nearest.d>18)){drag={orbit:true,x:e.clientX,y:e.clientY,yaw,pitch};canvas.setPointerCapture(e.pointerId);e.preventDefault();return;}if(!$('handles').checked||!nearest||nearest.d>18)return;stop();frame=Math.floor(frame);selected=nearest.n;canvas.focus();checkpoint();const k=key();drag={x:e.clientX,y:e.clientY,start:[...editPoint(k.pose,selected)],base:structuredClone(k.pose),k};canvas.setPointerCapture(e.pointerId);sync();};
  canvas.onpointermove=e=>{if(!drag)return;if(drag.orbit){yaw=drag.yaw-(e.clientX-drag.x)*.008;pitch=T.MathUtils.clamp(drag.pitch+(e.clientY-drag.y)*.008,-1.35,1.35);orient();return;}const dx=(e.clientX-drag.x)/v.scale,dy=-(e.clientY-drag.y)/v.scale,p=new T.Vector3(...drag.start).addScaledVector(right,dx).addScaledVector(up,dy);drag.k.pose=moveJoint(drag.base,selected,p.toArray());syncLoop(current(),frame);sync();};
  canvas.onpointerup=()=>{if(drag){const changed=!drag.orbit;drag=null;if(changed)save();}};canvas.onpointercancel=()=>{const changed=drag&&!drag.orbit;drag=null;if(changed)save();};return v;
 });
