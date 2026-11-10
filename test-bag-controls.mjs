@@ -1,3 +1,4 @@
+import {syncLoop} from './dist/pose-loop.mjs';
 import assert from 'node:assert/strict';
 import {moveBag,bagHandles} from './dist/bag-controls.mjs';
 import {JOINTS,samplePose,validateProject} from './dist/pose-data.mjs';
@@ -25,3 +26,5 @@ const loaded=validateProject(JSON.parse(JSON.stringify({version:1,actions:[actio
 near(samplePose(loaded.actions[0],1).BagCenter,pose.BagCenter.map((v,i)=>(v+moved.BagCenter[i])/2));
 assert.deepEqual(moveJoint(pose,'Hips',[1,2,0]).BagCenter,[.5,2,0]);
 console.log('PASS: bag translation, rigid spacing with trailing endpoint and rotation, unchanged drag, save/load, interpolation and pelvis following');
+
+const loop=structuredClone(action);loop.loop=true;syncLoop(loop);loop.keys[0].pose=moveBag(loop.keys[0].pose,'BagDirection',[0,1.5,0]);const expected=structuredClone(loop.keys[0].pose);syncLoop(loop);assert.deepEqual(loop.keys[0].pose,expected);assert.deepEqual(loop.keys.at(-1).pose,expected);
