@@ -1,3 +1,4 @@
+import {attackCooldown} from './attack-cooldown.mjs';
 import {wardTouches} from './combat-hit.mjs?v=turn-rates-1';
 import {ICE_BASIC} from './ice-basic.mjs?v=ring-origin-2';
 import * as T from './three.module.js';
@@ -46,7 +47,7 @@ export class Duel {
    case 'move':a.target={x:input.point.x,z:input.point.z};break;
    case 'queue':c.enqueue(input.key);break;
    case 'extend':c.extend(input.keys);break;
-   case 'begin':if(c.begin())a.iceHand=input.hand==='right'?'right':'left';break;
+   case 'begin':{const hand=input.hand==='right'?'right':'left';if(!attackCooldown(a,hand,a.loadout.q==='i').ready){c.clear();break;}if(c.begin())a.iceHand=hand;break;}
    case 'cancel':c.clear();break;
    case 'stop':c.clear();a.target=null;break;
    case 'roll':if(!(a.rooted>0)&&!(a.iceCastLock>0)&&!a.recoil.active&&!a.motion.active&&a.roll.start(a.dir.x,a.dir.z,a,a.loadout.q,a.aim)){a.motion.clear();a.target=null;}break;

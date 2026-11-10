@@ -1,4 +1,4 @@
-import {PvpClient} from './pvp-client.mjs?v=ring-origin-2';
+import {PvpClient} from './pvp-client.mjs?v=cooldown-denial-1';
 import {PVP_SERVER} from './pvp-config.mjs';
 export function mountPvpUI(hooks){
  const $=id=>document.getElementById(id),selection=$('selection'),card=selection.querySelector('.select-card');
