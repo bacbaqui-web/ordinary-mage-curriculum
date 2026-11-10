@@ -18,6 +18,8 @@ for(const [dt,weight] of [[0,0],[.4,.5],[.4,1]]){
  assert.equal(emitted,0);
 }
 f.flush();assert.equal(emitted,1);assert.equal(puppet.castTransition,null);
+puppet.magic.reset();puppet.playBasicAttack('left');animateWizard(g,1/60,{charging:false,cast:.25});projectWizard(g,camera);
+assert.equal(puppet.poseTransition.duration,0,'ice basic attacks must not add the default 180ms blend after preparation');
 f.cast(a,new T.Vector3(0,0,1),()=>emitted++);a.frozen=1;f.flush();assert.equal(puppet.castTransition,null);assert.equal(emitted,1);
 const blend=new PoseTransition(0),pose={Head:new T.Vector3(0,1,0)};blend.apply(pose,'release',0);assert(Number.isFinite(pose.Head.y));
 console.log('PASS: charge-to-release interpolation at 0/400/800ms, emission at completion, interruption cleanup and zero duration');

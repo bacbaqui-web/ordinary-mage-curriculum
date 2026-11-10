@@ -94,7 +94,7 @@ export class MotionPuppet{
    const cycle=this.magic.mode==='idle'&&clip&&!clip.loop?Math.floor(time/(clip.frames/clip.fps)):0;
    const state=[motionName,this.magic.mode,this.magic.stage,this.basicAttack?.name||'',this.icePose?.map(p=>p.hand).join(',')||'',cycle].join(':');
    for(const v of Object.values(positions))this.group.worldToLocal(v);
-   this.poseTransition??=new PoseTransition();this.poseTransition.duration=this.magic.mode==='hold'?1/12:this.magic.mode==='release'?(this.releaseBlendSeconds??.18):.18;this.poseTransition.apply(positions,state,this.transitionDt||0);
+   this.poseTransition??=new PoseTransition();this.poseTransition.duration=this.magic.mode==='hold'?1/12:(this.magic.mode==='release'||this.basicAttack)?(this.releaseBlendSeconds??.18):.18;this.poseTransition.apply(positions,state,this.transitionDt||0);
    for(const v of Object.values(positions))this.group.localToWorld(v);
   }
   this.transitionDt=0;
