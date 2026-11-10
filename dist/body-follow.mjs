@@ -21,6 +21,16 @@ export class BodyFollow{
   this.chest=follow(this.chest,delayed(.05),dt,.10);this.chest=this.pelvis+clamp(angleDelta(this.chest,this.pelvis),-.7,.7);
   this.head=follow(this.head,aim,dt,.05);this.head=this.chest+clamp(angleDelta(this.head,this.chest),-.9,.9);
  }
+ updateLocomotion(dt,{aim,facing,casting=false}){
+  this.aim=casting?aim:facing;
+  if(casting||!this.ready){this.pelvis=this.chest=this.head=this.aim;this.ready=true;}
+  this.pelvis=this.aim;
+  if(casting)return;
+  const delta=angleDelta(aim,facing),chestTarget=facing+clamp(delta,-Math.PI/4,Math.PI/4),headTarget=facing+clamp(delta,-Math.PI/2,Math.PI/2);
+  const step=(angle,target,rate)=>rate<=0?target:angle+clamp(angleDelta(target,angle),-rate*Math.PI/180*Math.max(0,dt),rate*Math.PI/180*Math.max(0,dt));
+  this.chest=facing+clamp(angleDelta(step(this.chest,chestTarget,this.settings?.chestSpeed??360),facing),-Math.PI/4,Math.PI/4);
+  this.head=facing+clamp(angleDelta(step(this.head,headTarget,this.settings?.headSpeed??540),facing),-Math.PI/2,Math.PI/2);
+ }
  orientation(){return this.ready?{headYaw:angleDelta(this.head,this.aim),chestYaw:angleDelta(this.chest,this.aim),pelvisYaw:angleDelta(this.pelvis,this.aim)}:{};}
  apply(p){
   if(!this.ready)return;

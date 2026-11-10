@@ -10,7 +10,7 @@ import {hasIceRecipe,iceSpec} from './ice-spec.mjs?v=shift-trajectory-1';
 import {HealthHUD} from './health-hud.mjs?v=game-impact-1';
 import {renderSkillUpgrades} from './skill-upgrades.mjs?v=shift-trajectory-1';
 import {readMovement} from './character-movement.mjs?v=turn-rates-1';
-import {BodyFollow} from './body-follow.mjs?v=turn-rates-1';
+import {BodyFollow} from './body-follow.mjs?v=wasd-facing-1';
 import {attackCooldown} from './attack-cooldown.mjs';
 import {wardTouches,setCombatCamera} from './combat-hit.mjs?v=monsters-half-1';
 import {HitboxView} from './hitbox-view.mjs?v=no-floor-rings-1';
@@ -438,7 +438,16 @@ let prev=performance.now();function frame(now){requestAnimationFrame(frame);if(o
  const iceFacing=u.puppet.icePose[0]?.dir,displayDir=castControlsLocked(a,actorCharge)?a.dir:iceFacing||a.dir;
  if(iceFacing){a.g.rotation.y=Math.atan2(displayDir.x,displayDir.z);u.body.rotation.set(0,0,0);}
  const movementSettings=readMovement(characterFor(a===player?loadout:enemyLoadout).id);
- if(movementSettings.headSpeed||movementSettings.chestSpeed||movementSettings.pelvisSpeed){u.puppet.bodyFollow??=new BodyFollow(movementSettings);const turnScale=chargeTurnScale(actorCharge);u.puppet.bodyFollow.settings={...movementSettings,headSpeed:movementSettings.headSpeed*turnScale,chestSpeed:movementSettings.chestSpeed*turnScale,pelvisSpeed:movementSettings.pelvisSpeed*turnScale};u.puppet.bodyFollow.update(step,{aim:Math.atan2(displayDir.x,displayDir.z)});}else u.puppet.bodyFollow=null;
+ if(a===player||onlineCore){
+  const aimYaw=Math.atan2(displayDir.x,displayDir.z),casting=charging||castControlsLocked(a,actorCharge)||u.puppet.magic.mode==='release'||!!u.puppet.basicAttack||a.castFlash>0||!!activeSpace?.active;
+  u.moveFacing??=aimYaw;
+  if(casting)u.moveFacing=aimYaw;
+  else if(active){const direction=a===player?walkDirection:{x:a.x-previous.x,z:a.z-previous.z};if(Math.hypot(direction.x,direction.z)>1e-5)u.moveFacing=Math.atan2(direction.x,direction.z);}
+  a.g.rotation.y=u.moveFacing;
+  u.puppet.bodyFollow??=new BodyFollow(movementSettings);u.puppet.bodyFollow.settings=movementSettings;
+  u.puppet.bodyFollow.updateLocomotion(step,{aim:aimYaw,facing:u.moveFacing,casting});
+  if(casting&&!u.wasCasting)u.puppet.poseTransition=null;u.wasCasting=casting;
+ }else if(movementSettings.headSpeed||movementSettings.chestSpeed||movementSettings.pelvisSpeed){u.puppet.bodyFollow??=new BodyFollow(movementSettings);const turnScale=chargeTurnScale(actorCharge);u.puppet.bodyFollow.settings={...movementSettings,headSpeed:movementSettings.headSpeed*turnScale,chestSpeed:movementSettings.chestSpeed*turnScale,pelvisSpeed:movementSettings.pelvisSpeed*turnScale};u.puppet.bodyFollow.update(step,{aim:Math.atan2(displayDir.x,displayDir.z)});}else u.puppet.bodyFollow=null;
  u.animationPosition={x:a.x,z:a.z};projectWizard(a.g,camera);iceEngine.syncHands(iceOwner,u.puppet);
  const runes=a===player?loadout:enemyLoadout,parts=a===player?charge.parts:enemyCharge.charge.parts,colors=parts.map(k=>RUNES[runes[k]]?.color||'#ffffff');
  castingFeedback.charge(a,charging,stage||1,colors,u.puppet.lastPositions,camera);
