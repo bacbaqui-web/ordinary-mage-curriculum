@@ -1,8 +1,9 @@
+import {mountCharacterCodex} from './character-codex.mjs?v=codex1';
 import {RevisionRequests} from './revision-requests.mjs?v=requests1';
 import {mountPlanAudio} from './plan-audio.mjs?v=sync5';
 import {damageSummary,damageDetails} from './damage-display.mjs?v=damage18';
 import {RUNES,valid,describe} from './combo-design.mjs?v=bolt17';
-import {mountAtlasPreview} from './atlas-preview.mjs?v=pose-speed-1';
+import {mountAtlasPreview} from './atlas-preview.mjs?v=movement-settings-1';
 const $=id=>document.getElementById(id),ids=Object.keys(RUNES);let seq=valid(location.hash.slice(1))?location.hash.slice(1):'qqw',branch=seq.slice(0,2),dispose=()=>{},disposeSound=()=>{};
 const requests=new RevisionRequests();let disposeRequest=()=>{};
 const recipe=s=>[...s].map(k=>RUNES[k].name).join(' → ');
@@ -26,3 +27,5 @@ function renderRequests(){
  const info=document.getElementById('requestNotebook');info.textContent=requests.notebook?'보관함 번호: '+requests.notebook:'';
 }
 requests.listeners.add(renderRequests);void requests.load();
+
+mountCharacterCodex(document.getElementById('characterCodex'));
