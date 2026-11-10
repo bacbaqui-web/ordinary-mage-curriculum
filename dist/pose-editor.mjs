@@ -13,7 +13,7 @@ import {PassiveFoot} from './passive-foot.mjs';
 const feet={LeftFoot:new PassiveFoot(),RightFoot:new PassiveFoot()};
 let footShapes={};
 import {moveJoint as movePoseJoint,applyFootLocks} from './pose-constraints.mjs?v=head-free-2';
-import {demoMotion} from './motion-puppet.mjs?v=integer-damage-1';
+import {demoMotion} from './motion-puppet.mjs?v=charge-move-1';
 import {JOINTS,LABELS,samplePose,validateProject} from './pose-data.mjs?v=smooth-motion-1';
 const $=id=>document.getElementById(id);
 const editableJoints=JOINTS.filter(n=>n!=='Neck');
@@ -181,7 +181,7 @@ async function selectCharacter(id){
   try{localStorage.setItem('ordinary-mage-editor-character',characterId);}catch{}
   $('character').value=characterId;$('import').value='';
   $('status').textContent='';
-  $('labLink').href='character-lab.html?v=cast-lock-1'+characterId;
+  $('labLink').href='character-lab.html?v=charge-move-1'+characterId;
   const url=new URL(location.href);url.searchParams.set('character',characterId);window.history.replaceState(null,'',url);
   $('status').textContent=`${profile.label} 동작을 열었습니다. 이 캐릭터에만 저장됩니다.`;sync();
  }catch(e){nextRig?.dispose();$('character').value=characterId;$('status').textContent=e.message;}

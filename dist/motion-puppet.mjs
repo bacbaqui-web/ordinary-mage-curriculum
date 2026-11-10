@@ -3,7 +3,7 @@ import {PoseTransition} from './pose-transition.mjs?v=smooth-motion-1';
 import {magicClipName} from './magic-clips.mjs?v=smooth-motion-1';
 import {savedMotion,savedPose,createMotionReader} from './live-motions.mjs?v=loop-playback-2';
 import * as T from './three.module.js';
-import {MagicMotion} from './magic-motion.mjs?v=integer-damage-1';
+import {MagicMotion} from './magic-motion.mjs?v=charge-move-1';
 import {actionClips} from './action-clips.mjs';
 import {BVHLoader} from './vendor/BVHLoader.js';
 import {GLTFLoader} from './vendor/GLTFLoader.js';
@@ -45,7 +45,7 @@ export class MotionPuppet{
   this.mixer=new T.AnimationMixer(root);this.select(0);this.time=0;
  }
  select(i){this.selectedClip=i;this.mixer.stopAllAction();this.action=this.mixer.clipAction(this.clips[i]);this.action.play();this.time=0;}
- update(dt,{speed=1,charging=false,cast=0}={}){this.transitionDt=(this.transitionDt||0)+dt;if(this.basicAttack)this.basicAttack.time+=dt;this.time+=dt*speed;this.mixer.setTime(this.time);this.source.updateMatrixWorld(true);this.charging=charging;this.cast=cast;}
+ update(dt,{speed=1,charging=false,cast=0}={}){this.transitionDt=(this.transitionDt||0)+dt;if(this.basicAttack)this.basicAttack.time+=dt;this.time+=dt*speed;this.mixer.setTime(this.time);this.source.updateMatrixWorld(true);this.charging=charging;this.moveSpeed=speed;this.cast=cast;}
  render(camera){
   const {savedMotion:readMotion,savedPose:readPose}=this.motionReader||{savedMotion,savedPose};
   this.group.updateWorldMatrix(true,false);camera.updateWorldMatrix(true,false);
@@ -53,6 +53,7 @@ export class MotionPuppet{
   for(const n of names)positions[n]=this.bones[n].getWorldPosition(new T.Vector3()).sub(hip).multiplyScalar(this.scale).add(new T.Vector3(0,1,0));
   positions.LeftToe=positions.LeftFoot.clone().add(new T.Vector3(0,0,.22));positions.RightToe=positions.RightFoot.clone().add(new T.Vector3(0,0,.22));
   if(this.magic.mode==='idle'&&(this.charging||this.cast>0)){positions.RightForeArm.copy(positions.RightArm).add(new T.Vector3(0,-.08,.31));positions.RightHand.copy(positions.RightForeArm).add(new T.Vector3(0,this.charging?.2:0,.3));}
+  const walkingLegs=Object.fromEntries(Object.entries(positions).filter(([n])=>/^(Hips|(?:Left|Right)(?:UpLeg|Leg|Foot|Toe))$/.test(n)).map(([n,p])=>[n,p.clone()]));
   this.magic.apply(positions);
   const handClip=this.chargeHand&&this.magic.stage===1?firstRingClip(this.chargeHand,this.magic.mode):null;
   const specific=this.magic.mode!=='idle'?(handClip&&readMotion(handClip)?handClip:magicClipName(this.magic.stage,this.magic.mode)):null;
@@ -69,6 +70,7 @@ export class MotionPuppet{
    else if(clip){const basic=readPose(this.basicAttack.name,this.basicAttack.time);for(const [n,a] of Object.entries(basic))positions[n]=new T.Vector3(...a);positions.LeftToe=positions.LeftFoot.clone().add(new T.Vector3(0,0,.22));positions.RightToe=positions.RightFoot.clone().add(new T.Vector3(0,0,.22));basicEdited=true;}
   }
   const releaseName=this.chargeHand&&this.magic.stage===1?firstRingClip(this.chargeHand,'release'):magicClipName(this.magic.stage,'release');const magicClip=readMotion(releaseName)||readMotion('마법 시전');this.magic.splitRelease=!!readMotion(releaseName);this.magic.releaseDuration=magicClip?Math.max(10/12,magicClip.frames/magicClip.fps):10/12;
+  if(this.magic.mode==='hold'&&this.magic.stage===1&&this.moveSpeed>0){const walk=readPose('기본 걷기',this.time,{loop:true});for(const [n,p] of Object.entries(walkingLegs))positions[n]=walk?.[n]?new T.Vector3(...walk[n]):p;for(const side of ['Left','Right'])positions[side+'Toe']=positions[side+'Foot'].clone().add(new T.Vector3(0,0,.22));}
   this.bodyFollow?.apply(positions,this.group);
   for(const n of Object.keys(positions))this.group.localToWorld(positions[n]);
   // Basic ice casts own the arm pose, after saved clips and body turning.

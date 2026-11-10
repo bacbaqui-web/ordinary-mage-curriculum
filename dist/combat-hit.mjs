@@ -1,6 +1,6 @@
 import * as T from './three.module.js';
 import {hull,meshOutline,overlaps} from './screen-hit.mjs?v=bodyhit11';
-import {createWizard,animateWizard,projectWizard} from './wizard.mjs?v=integer-damage-1';
+import {createWizard,animateWizard,projectWizard} from './wizard.mjs?v=charge-move-1';
 // Headless server fallback. The live game and preview supply their rendered camera.
 export let combatCamera=new T.OrthographicCamera(-30,30,30,-30,.01,1000);combatCamera.position.set(120,170,150);combatCamera.lookAt(0,0,0);combatCamera.updateMatrixWorld(true);
 export function setCombatCamera(camera){combatCamera=camera;}

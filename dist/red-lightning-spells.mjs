@@ -1,5 +1,5 @@
 import {roundDamage} from './damage-number.mjs?v=integer-damage-1';
-import {wardTouches} from './combat-hit.mjs?v=integer-damage-1';
+import {wardTouches} from './combat-hit.mjs?v=charge-move-1';
 import * as T from './three.module.js';
 import {redLightningSpec,redLightningPlacement} from './red-lightning-spec.mjs?v=bolt17';
 import {crossesWard,distanceToWard} from './forces.mjs';
