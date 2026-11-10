@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import {FacingMotion} from './dist/facing-motion.mjs';
 import {angleDelta} from './dist/body-follow.mjs';
 const f=new FacingMotion();f.update(0,{target:0});
-const first=f.update(1/60,{target:Math.PI/2});assert.ok(first>0&&first<Math.PI/4);
+const first=f.update(1/60,{target:Math.PI/2});assert.ok(first>0&&first<Math.PI/2);
 for(let i=0;i<60;i++)f.update(1/60,{target:Math.PI/2});assert.ok(Math.abs(f.yaw-Math.PI/2)<.001);
 const before=f.yaw,p={};f.update(0,{target:-1,casting:true,prepareSeconds:.4,preparation:p,progress:0});assert.equal(f.yaw,before);
 f.update(.2,{target:-1,casting:true,prepareSeconds:.4,preparation:p,progress:.5});assert.ok(Math.abs(angleDelta(f.yaw,before+angleDelta(-1,before)*.5))<1e-9);

@@ -1,4 +1,4 @@
-import {FacingMotion} from './facing-motion.mjs';
+import {FacingMotion} from './facing-motion.mjs?v=fast-turn-1';
 import {wheelZoomSpan} from './camera-zoom.mjs';
 import {MONSTERS,createMonster,animateMonster,tickMonster,cancelMonsterAttack} from './monsters.mjs?v=wolf-1';
 import {toolbarIcon} from './toolbar-icons.mjs?v=toolbar-icons-1';

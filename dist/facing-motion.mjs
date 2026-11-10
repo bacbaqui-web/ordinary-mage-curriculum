@@ -10,7 +10,7 @@ export class FacingMotion{
    const ended=this.preparation&&!preparation;if(ended)this.duration=0;
    const t=ended||this.duration===0?1:Math.min(1,progress??this.elapsed/this.duration);
    const weight=t*t*(3-2*t);this.yaw=this.from+angleDelta(target,this.from)*weight;
-  }else this.yaw+=angleDelta(target,this.yaw)*(1-Math.exp(-dt/.12));
+  }else this.yaw+=angleDelta(target,this.yaw)*(1-Math.exp(-dt/.035));
   this.casting=casting;this.preparation=preparation;return this.yaw;
  }
 }
