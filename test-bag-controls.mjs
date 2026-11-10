@@ -4,7 +4,7 @@ import {moveBag,bagHandles} from './dist/bag-controls.mjs';
 import {JOINTS,samplePose,validateProject} from './dist/pose-data.mjs';
 import {moveJoint} from './dist/pose-constraints.mjs';
 const pose={...Object.fromEntries(JOINTS.map(n=>[n,[0,1,0]])),BagCenter:[-.5,1,0],BagDirection:[-.5,1.4,0]};
-assert.deepEqual(bagHandles(pose),{BagCenter:[-.7,1,0],BagDirection:[-.3,1,0]});
+assert.deepEqual(bagHandles(pose),{BagCenter:[-.5,1,-.2],BagDirection:[-.5,1,.2]});
 const moved=moveBag(pose,'BagCenter',[-1,1.8,1]);
 const near=(a,b)=>a.forEach((v,i)=>assert.ok(Math.abs(v-b[i])<1e-9));
 for(const joint of ['BagCenter','BagDirection']){
@@ -14,7 +14,7 @@ for(const joint of ['BagCenter','BagDirection']){
   const before=bagHandles(current),target=[-.5+i*.02,before[joint][1],i*.005];
   current=moveBag(current,joint,target);const after=bagHandles(current);
   near(after[joint],target);
-  assert.ok(Math.abs(Math.hypot(...after[other].map((v,j)=>v-after[joint][j]))-.4)<1e-9);
+  near(after[other],before[other]);
   assert.ok(after[other].every(Number.isFinite));
   assert.deepEqual(current.Hips,pose.Hips);
  }
@@ -26,6 +26,6 @@ const action={name:'대기',frames:3,fps:12,keys:[{frame:0,ease:'smooth',pose},{
 const loaded=validateProject(JSON.parse(JSON.stringify({version:1,actions:[action]})));
 near(samplePose(loaded.actions[0],1).BagCenter,pose.BagCenter.map((v,i)=>(v+moved.BagCenter[i])/2));
 assert.deepEqual(moveJoint(pose,'Hips',[1,2,0]).BagCenter,[.5,2,0]);
-console.log('PASS: bag translation, rigid spacing with trailing endpoint and rotation, unchanged drag, save/load, interpolation and pelvis following');
+console.log('PASS: bag translation, 90-degree handle placement, independently movable endpoints and variable spacing, unchanged drag, save/load, interpolation and pelvis following');
 
 const loop=structuredClone(action);loop.loop=true;syncLoop(loop);loop.keys[0].pose=moveBag(loop.keys[0].pose,'BagDirection',[0,1.5,0]);const expected=structuredClone(loop.keys[0].pose);syncLoop(loop);assert.deepEqual(loop.keys[0].pose,expected);assert.deepEqual(loop.keys.at(-1).pose,expected);

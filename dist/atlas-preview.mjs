@@ -12,7 +12,7 @@ import {CastRecoil} from './combat-response.mjs?v=rim9';
 import {BodyFollow} from './body-follow.mjs?v=turn-rates-1';
 import {canSee} from './vision.mjs';
 import * as T from './three.module.js';
-import {createWizard,animateWizard,projectWizard,setWizardCharacter} from './wizard.mjs?v=bag-side-1';
+import {createWizard,animateWizard,projectWizard,setWizardCharacter} from './wizard.mjs?v=bag-free-length-1';
 import {LowPolyVFX} from './lowpoly-vfx.mjs';
 import {LiveMagic} from './live-magic.mjs?v=forward-glow-1';
 import {RUNES} from './combo-design.mjs?v=shift-trajectory-1';

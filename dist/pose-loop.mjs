@@ -1,4 +1,4 @@
-import {samplePose} from './pose-data.mjs?v=bag-side-1';
+import {samplePose} from './pose-data.mjs?v=bag-free-length-1';
 export const loopEndpoint=(action,frame)=>!!action.loop&&(frame===0||frame===action.frames-1);
 export function syncLoop(action,editedFrame=0){
  if(!action.loop)return;

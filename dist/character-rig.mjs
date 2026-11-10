@@ -1,12 +1,12 @@
-import {bagHandles} from './bag-controls.mjs?v=bag-side-1';
+import {bagHandles} from './bag-controls.mjs?v=bag-free-length-1';
 import {BagSwing} from './bag-swing.mjs';
 import {raisedAnkle} from './ankle-pivot.mjs?v=heel-free-1';
 import {GarmentCollision} from './garment-collision.mjs';
 import * as T from './three.module.js';
 import {GLTFLoader} from './vendor/GLTFLoader.js';
-import {JOINTS,withNeck} from './pose-data.mjs?v=bag-side-1';
+import {JOINTS,withNeck} from './pose-data.mjs?v=bag-free-length-1';
 import {ModelFoot} from './model-foot.mjs?v=heel-free-1';
-import {BONES} from './pose-constraints.mjs?v=bag-side-1';
+import {BONES} from './pose-constraints.mjs?v=bag-free-length-1';
 const V=a=>new T.Vector3(...a);
 const world=o=>o.getWorldPosition(new T.Vector3());
 const qworld=o=>o.getWorldQuaternion(new T.Quaternion());
@@ -158,7 +158,7 @@ export class CharacterRig{
   return {BagCenter:carrier.localToWorld(new T.Vector3()).toArray(),BagDirection:carrier.localToWorld(new T.Vector3(0,.4,0)).toArray(),BagSide:carrier.localToWorld(new T.Vector3(.4,0,0)).toArray()};
  }
  controlPose(pose){
-  const controls={...withNeck(pose),...bagHandles(this.bagControls())};
+  const controls={...withNeck(pose),...bagHandles(pose.BagCenter&&pose.BagDirection?pose:this.bagControls())};
   for(const name of ['LeftFoot','RightFoot'])controls[name]=world(this.bones[name]).toArray();
   for(const [name,center] of Object.entries(this.handCenters))controls[name]=this.bones[name].localToWorld(center.clone()).toArray();
   return controls;
