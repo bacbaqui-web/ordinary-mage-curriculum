@@ -1,5 +1,5 @@
 import {roundDamage} from './damage-number.mjs?v=integer-damage-1';
-import {projectileGuideSpec,projectileGuidePoints} from './projectile-guide.mjs?v=mist-ring-1';
+import {projectileGuideSpec,projectileGuidePoints} from './projectile-guide.mjs?v=forward-glow-1';
 import {cursorAim,spellAimHeight} from './cursor-aim.mjs?v=shift-trajectory-1';
 import {hasIceRecipe,iceSpec} from './ice-spec.mjs?v=shift-trajectory-1';
 import {HealthHUD} from './health-hud.mjs?v=integer-damage-1';
@@ -11,23 +11,23 @@ import {wardTouches,setCombatCamera} from './combat-hit.mjs?v=run-walk-1';
 import {HitboxView} from './hitbox-view.mjs?v=run-walk-1';
 import {LevelUpVfx} from './level-up-vfx.mjs?v=screenhit10';
 import {FrostVisuals} from './frost-visuals.mjs?v=shift-trajectory-1';
-import {ICE_BASIC} from './ice-basic.mjs?v=mist-ring-1';
+import {ICE_BASIC} from './ice-basic.mjs?v=forward-glow-1';
 import {SpaceSkill,SPACE_SKILLS,interceptSpaceShots} from './space-skills.mjs?v=run-walk-1';
 import {SpaceVisuals} from './space-visuals.mjs?v=run-walk-1';
 import {CHARACTERS,characterFor,chooseCharacter,chooseSupport} from './character-loadout.mjs?v=integer-damage-1';
 import {GameAudio} from './game-audio.mjs?v=sync5';
 import {damageSummary} from './damage-display.mjs?v=integer-damage-1';
-import {Duel,STEP} from './duel.mjs?v=mist-ring-1';
-import {mountPvpUI} from './pvp-ui.mjs?v=mist-ring-1';
+import {Duel,STEP} from './duel.mjs?v=forward-glow-1';
+import {mountPvpUI} from './pvp-ui.mjs?v=forward-glow-1';
 import {OBSTACLES} from './arena-rules.mjs';
 let onlineCore=null,pvp=null,onlineResultShown=false,lastOnlineAim=0,onlineRenderAt=0,onlinePrevious=null;
 import {redLightningPlacement} from './red-lightning-spec.mjs?v=bolt17';
 import {steamPlacement} from './steam-spec.mjs?v=bolt17';
 import {BurnVisuals,applyBurnVisual} from './burn-visuals.mjs?v=run-walk-1';
-import {castWithPresentation,renderCastPresentation} from './cast-presentation.mjs?v=hand-flash-1';
+import {castWithPresentation,renderCastPresentation} from './cast-presentation.mjs?v=forward-glow-1';
 import {CastRecoil,HitScreen,chargeSetback} from './combat-response.mjs?v=rim9';
 import {VisionShade} from './vision-shade.mjs';
-import {CastingFeedback,ChargeCamera,impactFeedback} from './casting-feedback.mjs?v=mist-ring-1';
+import {CastingFeedback,ChargeCamera,impactFeedback,RUNE_FORWARD} from './casting-feedback.mjs?v=forward-glow-1';
 import {castControlsLocked,followCastAim,chargeTurnScale} from './cast-lock.mjs?v=charge-move-1';
 import {chargeMoveScale} from './magic-motion.mjs?v=charge-move-1';
 import {canSee} from './vision.mjs';
@@ -38,7 +38,7 @@ let walkDirection={x:0,z:0},icePressHand='left',moveSpeedScale=1;
 const slotLabel=k=>({q:'기본',w:'좌클릭',e:'우클릭'}[k]);
 import {createWizard,animateWizard,projectWizard,setWizardCharacter} from './wizard.mjs?v=bag-translate-1';
 import {QueuedCharge} from './queued-charge.mjs?v=instant-first-ring-1';
-import {LiveMagic} from './live-magic.mjs?v=mist-ring-1';
+import {LiveMagic} from './live-magic.mjs?v=forward-glow-1';
 import {spellReach} from './live-spells.mjs?v=integer-damage-1';
 import {describe as describeDesign} from './combo-design.mjs?v=shift-trajectory-1';
 import {MeshFeedback} from './mesh-feedback.mjs';
@@ -310,7 +310,7 @@ function label(el,a){const pos=new T.Vector3(a.x,2.65,a.z).project(camera);el.st
 function castTrajectory(caster,seq,hand='left'){
  let origin;
  if(onlineCore||caster!==player)origin=new T.Vector3(caster.x,spellAimHeight(seq)||1,caster.z).addScaledVector(caster.dir,.5);
- else {const shown=castingFeedback.actors.get(caster),joint=caster.g.userData.puppet?.lastPositions?.[seq==='i'&&hand==='left'?'LeftHand':'RightHand'];origin=shown?.group.visible?shown.group.position.clone():joint?.clone().addScaledVector(caster.dir,.12);origin??=new T.Vector3(caster.x,spellAimHeight(seq)||1,caster.z).addScaledVector(caster.dir,.5);}
+ else {const shown=castingFeedback.actors.get(caster),joint=caster.g.userData.puppet?.lastPositions?.[seq==='i'&&hand==='left'?'LeftHand':'RightHand'];origin=shown?.group.visible?shown.group.position.clone():(seq==='i'&&hand==='right'&&caster.g.userData.puppet?.lastPositions?.LeftHand?joint?.clone().add(caster.g.userData.puppet.lastPositions.LeftHand).multiplyScalar(.5):joint?.clone())?.addScaledVector(caster.dir,RUNE_FORWARD);origin??=new T.Vector3(caster.x,spellAimHeight(seq)||1,caster.z).addScaledVector(caster.dir,.5);}
  if(!clearPath(caster,origin))origin.set(caster.x,spellAimHeight(seq)||1,caster.z);
  let dir=caster.dir.clone();
  if(caster===player&&!onlineCore&&hasCursor){const target=cursorAim(charge.active&&!charge.pending?pointer:castPointer,camera,origin.y);if(target){dir=target.sub(origin);dir.y=0;if(dir.lengthSq()>.0001)dir.normalize();else dir.copy(caster.dir);}}

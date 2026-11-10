@@ -1,12 +1,12 @@
 import {damageNumber} from './damage-number.mjs?v=integer-damage-1';
-import {plannerRange} from './planner-range.mjs?v=mist-ring-1';
-import {plannerSpell,basicKey} from './planner-spell.mjs?v=mist-ring-1';
-import {mountCharacterCodex} from './character-codex.mjs?v=mist-ring-1';
+import {plannerRange} from './planner-range.mjs?v=forward-glow-1';
+import {plannerSpell,basicKey} from './planner-spell.mjs?v=forward-glow-1';
+import {mountCharacterCodex} from './character-codex.mjs?v=forward-glow-1';
 import {RevisionRequests} from './revision-requests.mjs?v=compact2';
 import {mountPlanAudio} from './plan-audio.mjs?v=compact2';
 import {DAMAGE_CATALOG,BASIC_DAMAGE_CATALOG,ICE_PAIR_DAMAGE_CATALOG} from './damage-catalog.mjs?v=integer-damage-1';
 import {RUNES,valid,describe} from './combo-design.mjs?v=shift-trajectory-1';
-import {mountAtlasPreview} from './atlas-preview.mjs?v=mist-ring-1';
+import {mountAtlasPreview} from './atlas-preview.mjs?v=forward-glow-1';
 const $=id=>document.getElementById(id),ids=Object.keys(RUNES);let seq=valid(location.hash.slice(1))?location.hash.slice(1):'qqw',branch=seq.slice(0,2),dispose=()=>{},disposeSound=()=>{};
 let basicHand='left',chargedBasic=false;
 const requests=new RevisionRequests();let disposeRequest=()=>{};

@@ -1,3 +1,4 @@
+import {RUNE_FORWARD} from './casting-feedback.mjs?v=forward-glow-1';
 import * as T from './three.module.js';
 import {spellAimHeight} from './cursor-aim.mjs?v=shift-trajectory-1';
 import {spellReach} from './live-spells.mjs?v=integer-damage-1';
@@ -23,6 +24,6 @@ export function castWithPresentation({magic,wards,clearPath,collides,wallBlocks}
 export function castHandPoint(actor,event){
  const puppet=actor.g?.userData?.puppet,hand=event.hand||puppet?.icePose?.[0]?.hand||'right';
  const bone=puppet?.lastPositions?.[hand==='left'?'LeftHand':'RightHand'];
- return bone?bone.clone().addScaledVector(event.dir,.12):event.origin?.clone()||new T.Vector3(actor.x,1,actor.z).addScaledVector(event.dir,.5);
+ return bone?bone.clone().addScaledVector(event.dir,RUNE_FORWARD):event.origin?.clone()||new T.Vector3(actor.x,1,actor.z).addScaledVector(event.dir,.5);
 }
 export function renderCastPresentation(actor,feedback){if(!actor.pendingCastLight)return;const event=actor.pendingCastLight,hand=()=>castHandPoint(actor,event);feedback.fire(hand,event.dir,event.colors,event.tier);if(event.beamTarget)feedback.beam(hand,event.beamTarget,event.colors,()=>actor.g.visible,event.tier);actor.pendingCastLight=null;}

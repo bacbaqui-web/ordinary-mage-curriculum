@@ -14,6 +14,7 @@ export class ChargeCamera{
    y:(Math.sin(this.time*57+.7)+Math.cos(this.time*83)*.25)*shake*.7,flash:this.flash};
  }
 }
+export const RUNE_FORWARD=.4;
 export const RUNE_STROKE=.0816;
 const ringGeometry=new T.TorusGeometry(1,.12,10,96),glowGeometry=new T.PlaneGeometry(2.6,2.6),lineGeometry=new T.PlaneGeometry(1,1);
 function material(color,opacity){const m=new T.MeshBasicMaterial({color,transparent:true,opacity,blending:T.AdditiveBlending,depthWrite:false,side:T.DoubleSide});m.userData.opacity=opacity;return m;}
@@ -51,7 +52,7 @@ export class CastingFeedback{
  constructor(scene){this.scene=scene;this.actors=new Map();this.bursts=[];this.beams=[];this.time=0;}
  actor(key){if(this.actors.has(key))return this.actors.get(key);const state=diagram();this.scene.add(state.group);state.aura=castFlash('#ffffff',1);state.aura.children[0].visible=false;state.aura.children[1].visible=false;state.group.add(state.aura);state.dots=[];for(let i=0;i<48;i++){const dot=new T.Mesh(new T.CircleGeometry(.014,6),material('#ffffff',.8));state.group.add(dot);state.dots.push(dot);}this.actors.set(key,state);return state;}
  charge(key,active,stage,colors,positions,camera){const s=this.actor(key);s.group.visible=active&&!!positions&&key.g.visible;if(!s.group.visible)return;
- const pose=key.g.userData.puppet?.icePose?.[0];if(pose){if(stage===1&&key.g.userData.puppet.chargeUsesIce&&key.g.userData.puppet.chargeHand==='right')s.group.position.copy(positions.LeftHand).add(positions.RightHand).multiplyScalar(.5);else s.group.position.copy(positions[pose.hand==='left'?'LeftHand':'RightHand']).addScaledVector(pose.dir,.12);s.group.quaternion.setFromUnitVectors(new T.Vector3(0,0,1),pose.dir);}else{s.group.position.copy(positions.LeftHand).add(positions.RightHand).multiplyScalar(.5);s.group.quaternion.copy(camera.quaternion);}
+ const pose=key.g.userData.puppet?.icePose?.[0];if(pose){if(stage===1&&key.g.userData.puppet.chargeUsesIce&&key.g.userData.puppet.chargeHand==='right')s.group.position.copy(positions.LeftHand).add(positions.RightHand).multiplyScalar(.5).addScaledVector(pose.dir,RUNE_FORWARD);else s.group.position.copy(positions[pose.hand==='left'?'LeftHand':'RightHand']).addScaledVector(pose.dir,RUNE_FORWARD);s.group.quaternion.setFromUnitVectors(new T.Vector3(0,0,1),pose.dir);}else{s.group.position.copy(positions.LeftHand).add(positions.RightHand).multiplyScalar(.5);s.group.quaternion.copy(camera.quaternion);}
  const layout=arrange(s,stage,colors,this.time);
  const tint=Array.isArray(colors)?colors[0]:colors,pulse=.85+Math.sin(this.time*7)*.10+Math.min(3,stage)*.12;
  s.aura.scale.setScalar(pulse);s.aura.children[2].material.uniforms.tint.value.set(tint);s.aura.children[2].material.opacity=.24+Math.sin(this.time*7)*.04;
