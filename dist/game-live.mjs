@@ -1,4 +1,4 @@
-import {mountSettingsWindow} from './settings-window.mjs?v=settings-window-1';
+import {mountSettingsWindow} from './settings-window.mjs?v=impact-dock-1';
 import {drawMinimapLandmarks} from './minimap-landmarks.mjs';
 import {FacingMotion} from './facing-motion.mjs?v=prepare-turn-1';
 import {wheelZoomSpan} from './camera-zoom.mjs';

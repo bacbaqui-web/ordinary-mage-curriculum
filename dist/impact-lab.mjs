@@ -6,12 +6,13 @@ const display=(v,unit)=>`${Number(v.toFixed(2))}${unit?' '+unit:''}`;
 for(const group of GROUPS){const box=document.createElement('details');box.className='group';box.open=true;const summary=document.createElement('summary');summary.textContent=group.title;const desc=document.createElement('p');desc.textContent=group.description;summary.append(desc);box.append(summary);const fields=document.createElement('div');fields.className='fields';for(const [key,label,min,max,step,,unit,hint] of group.fields){const wrap=document.createElement('label');wrap.className='field';wrap.htmlFor=key;const heading=document.createElement('span');heading.className='field-head';const title=document.createElement('span');title.textContent=label;const output=document.createElement('output');output.id=key+'Value';output.htmlFor=key;heading.append(title,output);const input=document.createElement('input');Object.assign(input,{type:'range',id:key,min,max,step,value:settings[key]});const small=document.createElement('small');small.id=key+'Hint';small.textContent=hint;input.setAttribute('aria-describedby',small.id);input.addEventListener('input',()=>{settings[key]=Number(input.value);$('preset').value='custom';sync();save();});wrap.append(heading,input,small);fields.append(wrap);}box.append(fields);$('controls').append(box);}
 
 function sync(){for(const [key,,,,,,unit] of FIELDS){$(key).value=settings[key];$(key+'Value').textContent=display(settings[key],unit);}}
-function save(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(settings));$('saveStatus').textContent='저장됨 · 게임 반영 확인 중';}catch{$('saveStatus').textContent='저장하지 못했습니다. 설정 파일로 보관하세요.';}}
+function save(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(settings));$('saveStatus').textContent=$('game')?'저장됨 · 게임 반영 확인 중':'저장됨 · 게임에 바로 반영';}catch{$('saveStatus').textContent='저장하지 못했습니다. 설정 파일로 보관하세요.';}}
 $('preset').onchange=()=>{const p=$('preset').value;if(p==='custom')return;settings=normalize(p==='none'?NONE:p==='heavy'?{...DEFAULTS,anticipation:420,windup:28,recoil:.4,stretch:2.3,trail:1,flash:110,squash:.4,knockback:.85,particles:36,shake:.12,freeze:110,volume:55}:DEFAULTS);sync();save();};
 $('reset').onclick=()=>{settings={...DEFAULTS};$('preset').value='default';sync();save();};
 $('export').onclick=()=>{const url=URL.createObjectURL(new Blob([JSON.stringify({version:1,settings},null,2)],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download='타격감-설정.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
 watchImpactSettings(s=>{settings=s;sync();});
 const game=$('game');
+if(game){
 // Embed the actual entry point. Physics, models, timing, audio, camera and all
 // feedback are owned by game-live, with no second implementation here.
 function gameState(){try{return game.contentWindow.mageDebug?.();}catch{return null;}}
@@ -34,4 +35,5 @@ setInterval(()=>{
  $('pauseGame').textContent=state.paused?'계속하기':'일시정지';
  $('runtimeStatus').textContent=state.running?`실제 전투 · 공격 ${state.impact?.casts||0}회 · 피격 ${state.impact?.hits||0}회`:'빙결로 시작을 누른 뒤 게임 화면에서 공격하세요.';
 },250);
+}
 sync();
