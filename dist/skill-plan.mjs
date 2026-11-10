@@ -1,11 +1,11 @@
-import {plannerRange} from './planner-range.mjs?v=ice-charge-2';
-import {plannerSpell,basicKey} from './planner-spell.mjs?v=ice-charge-2';
-import {mountCharacterCodex} from './character-codex.mjs?v=ice-charge-2';
+import {plannerRange} from './planner-range.mjs?v=ring-origin-1';
+import {plannerSpell,basicKey} from './planner-spell.mjs?v=ring-origin-1';
+import {mountCharacterCodex} from './character-codex.mjs?v=ring-origin-1';
 import {RevisionRequests} from './revision-requests.mjs?v=compact2';
 import {mountPlanAudio} from './plan-audio.mjs?v=compact2';
 import {DAMAGE_CATALOG,BASIC_DAMAGE_CATALOG} from './damage-catalog.mjs?v=ice2';
 import {RUNES,valid,describe} from './combo-design.mjs?v=ice-charge-2';
-import {mountAtlasPreview} from './atlas-preview.mjs?v=ice-charge-2';
+import {mountAtlasPreview} from './atlas-preview.mjs?v=ring-origin-1';
 const $=id=>document.getElementById(id),ids=Object.keys(RUNES);let seq=valid(location.hash.slice(1))?location.hash.slice(1):'qqw',branch=seq.slice(0,2),dispose=()=>{},disposeSound=()=>{};
 let basicHand='left',chargedBasic=false;
 const requests=new RevisionRequests();let disposeRequest=()=>{};

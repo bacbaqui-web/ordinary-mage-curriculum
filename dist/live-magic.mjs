@@ -1,9 +1,9 @@
-import {IceSpells} from './ice-spells.mjs?v=ice-charge-2';
+import {IceSpells} from './ice-spells.mjs?v=ring-origin-1';
 import {hasIceRecipe} from './ice-spec.mjs?v=ice-charge-2';
 import {areaTouches,shotTouches,shotContact} from './combat-hit.mjs?v=turn-rates-1';
-import {IceBasic} from './ice-basic.mjs?v=click-timing-1';
+import {IceBasic} from './ice-basic.mjs?v=ring-origin-1';
 import {hasFireRecipe} from './fire-spec.mjs?v=bolt17';
-import {FireSpells} from './fire-spells.mjs?v=turn-rates-1';
+import {FireSpells} from './fire-spells.mjs?v=ring-origin-1';
 import * as T from './three.module.js';
 import {compileSpell,spellReach,spellPayload} from './live-spells.mjs?v=ice-charge-2';
 import {RUNES} from './combo-design.mjs?v=ice-charge-2';
@@ -13,7 +13,7 @@ export class LiveMagic {
  pose(owner){const ice=this.ice.pose(owner);if(ice.length)return ice;const p=this.castPoses.get(owner);return p?[{hand:'right',dir:p.dir,reach:.38,height:1,weight:1}]:[];}
  clear(){for(const owner of this.castPoses.keys())owner.hitPose=null;this.castPoses.clear();this.ice.clear();this.iceCombos.clear();this.fire.clear();for(const e of this.effects)this.a.remove(e.mesh);this.effects=[];}
  shape(kind,r=.35,form='orb'){const color=RUNES[kind].color,g=form==='wall'?new T.BoxGeometry(.2,2.4,r*2):form==='field'?new T.CylinderGeometry(r,r,.07,40):form==='blade'?new T.BoxGeometry(.12,.15,r*2):kind==='i'?new T.OctahedronGeometry(r):new T.IcosahedronGeometry(r,kind==='d'?0:1);const mesh=new T.Mesh(g,new T.MeshStandardMaterial({color,emissive:color,emissiveIntensity:.45,flatShading:true,transparent:form==='field',opacity:form==='field'?.25:1}));mesh.castShadow=true;this.a.scene.add(mesh);return mesh;}
- cast(spell,caster,dir,target,emission=null){dir=new T.Vector3(dir.x,0,dir.z).normalize();caster.hitPose={hand:spell.iceHand||'right',dir:dir.clone(),reach:spell.iceHand ? .6 : .38,height:spell.iceHand?1.42:1,weight:1};this.castPoses.set(caster,{dir:dir.clone(),life:spell.iceHand==='right'?1.2:.65});if(spell.iceHand){this.ice.cast(caster,dir,spell.iceHand,target,spell.rangeScale||1,!!spell.timed);return;}if(hasIceRecipe(spell.sequence)){this.iceCombos.cast(spell.sequence,spell.power,caster,dir,target);return;}if(hasFireRecipe(spell.sequence)){this.fire.cast(spell.sequence,spell.power,caster,dir,target,emission,spell.rangeScale||1);return;}const node=compileSpell(spell.sequence,spell.power);if(this.effects.length>90)return;this.execute(node,caster,emission?{x:emission.x,z:emission.z}:{x:caster.x,z:caster.z},dir.clone(),{x:target.x,z:target.z},{range:spellReach(spell.sequence)*(spell.rangeScale||1),radius:(1.2+spell.sequence.length*.25)*(spell.rangeScale||1),mult:1,cone:true});}
+ cast(spell,caster,dir,target,emission=null){dir=new T.Vector3(dir.x,0,dir.z).normalize();caster.hitPose={hand:spell.iceHand||'right',dir:dir.clone(),reach:spell.iceHand ? .6 : .38,height:spell.iceHand?1.42:1,weight:1};this.castPoses.set(caster,{dir:dir.clone(),life:spell.iceHand==='right'?1.2:.65});if(spell.iceHand){this.ice.cast(caster,dir,spell.iceHand,target,spell.rangeScale||1,!!spell.timed,emission);return;}if(hasIceRecipe(spell.sequence)){this.iceCombos.cast(spell.sequence,spell.power,caster,dir,target,emission);return;}if(hasFireRecipe(spell.sequence)){this.fire.cast(spell.sequence,spell.power,caster,dir,target,emission,spell.rangeScale||1);return;}const node=compileSpell(spell.sequence,spell.power);if(this.effects.length>90)return;this.execute(node,caster,emission?{x:emission.x,z:emission.z,y:emission.y}:{x:caster.x,z:caster.z},dir.clone(),{x:target.x,z:target.z},{range:spellReach(spell.sequence)*(spell.rangeScale||1),radius:(1.2+spell.sequence.length*.25)*(spell.rangeScale||1),mult:1,cone:true});}
  payload(node){let p=spellPayload(node.kind,node.power);for(let n=node;n;n=n.inner){if(n.op==='i'){p.damage*=1.35;}if(n.op==='d')p.damage*=1.2;}return p;}
  apply(node,owner,point,radius,dir=null,cone=false,mult=1){const p=this.payload(node);for(const v of this.a.targets(owner)){const dx=v.x-point.x,dz=v.z-point.z,len=Math.hypot(dx,dz);if(!this.a.areaHit(v,point,radius,dir,cone)||!this.a.clearPath(point,v))continue;const d=new T.Vector3(dx,0,dz).normalize();if(this.a.hit(v,p.damage*mult*(node.kind==='l'&&v.wet>0?1.35:1),d,p.force,owner)){this.a.applyPayload(v,p,owner);if(p.poison){v.poison=p.poison;v.poisonTick=.5;v.poisonOwner=owner;v.poisonDamage=2*node.power;}if(p.wet)v.wet=p.wet;}}
  }
@@ -23,7 +23,7 @@ export class LiveMagic {
  if(n.op==='q'||n.op==='i'||n.op==='d'){const next={...c};if(n.op==='q'){next.radius*=1.6;next.range*=1.2;}if(n.op==='i'){next.radius*=.6;next.mult*=1.4;}if(n.op==='d'){next.mult*=1.25;}this.execute(inner,owner,origin,dir,target,next);return;}
  if(n.op==='w'){
   const moving=inner.op==='t'||inner.op==='e';if(moving&&!n.deliver){this.install(inner,owner,origin,dir,c,dir.clone().multiplyScalar(3.8));return;}
-  const repeated=inner.op==='w',expanded=inner.op==='q';const mesh=this.shape(n.kind,repeated?.25:expanded?.72:.4);mesh.position.set(origin.x,1,origin.z);this.effects.push({type:'projectile',mesh,owner,node:repeated?inner.inner:inner,dir,target,ctx:{...c,cone:false},distance:0,life:4,speed:repeated?18:expanded?6:9});return;
+  const repeated=inner.op==='w',expanded=inner.op==='q';const mesh=this.shape(n.kind,repeated?.25:expanded?.72:.4);mesh.position.set(origin.x,origin.y??1,origin.z);this.effects.push({type:'projectile',mesh,owner,node:repeated?inner.inner:inner,dir,target,ctx:{...c,cone:false},distance:0,life:4,speed:repeated?18:expanded?6:9});return;
  }
  if(n.op==='l'){const mesh=this.shape(n.kind,.35);mesh.position.set(point.x,5,point.z);this.a.vfx.pulse(point.x,point.z,c.radius,RUNES[n.kind].color,.65);this.effects.push({type:'drop',mesh,owner,node:inner,dir,point,ctx:{...c,cone:false},life:.65,max:.65});return;}
  if((n.op==='e'||n.op==='t')&&inner.op==='w'){this.execute({...inner,deliver:true,inner:{...n,inner:inner.inner}},owner,origin,dir,target,c);return;}

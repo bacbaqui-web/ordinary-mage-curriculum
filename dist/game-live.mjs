@@ -9,20 +9,20 @@ import {wardTouches,setCombatCamera} from './combat-hit.mjs?v=turn-rates-1';
 import {HitboxView} from './hitbox-view.mjs?v=turn-rates-1';
 import {LevelUpVfx} from './level-up-vfx.mjs?v=screenhit10';
 import {FrostVisuals} from './frost-visuals.mjs?v=ice2';
-import {ICE_BASIC} from './ice-basic.mjs?v=click-timing-1';
+import {ICE_BASIC} from './ice-basic.mjs?v=ring-origin-1';
 import {SpaceSkill,SPACE_SKILLS,interceptSpaceShots} from './space-skills.mjs?v=turn-rates-1';
 import {SpaceVisuals} from './space-visuals.mjs?v=turn-rates-1';
 import {CHARACTERS,characterFor,chooseCharacter,chooseSupport} from './character-loadout.mjs?v=ice-charge-2';
 import {GameAudio} from './game-audio.mjs?v=sync5';
 import {damageSummary} from './damage-display.mjs?v=ice2';
-import {Duel,STEP} from './duel.mjs?v=ice-charge-2';
-import {mountPvpUI} from './pvp-ui.mjs?v=ice-charge-2';
+import {Duel,STEP} from './duel.mjs?v=ring-origin-1';
+import {mountPvpUI} from './pvp-ui.mjs?v=ring-origin-1';
 import {OBSTACLES} from './arena-rules.mjs';
 let onlineCore=null,pvp=null,onlineResultShown=false,lastOnlineAim=0,onlineRenderAt=0,onlinePrevious=null;
 import {redLightningPlacement} from './red-lightning-spec.mjs?v=bolt17';
 import {steamPlacement} from './steam-spec.mjs?v=bolt17';
-import {BurnVisuals,applyBurnVisual} from './burn-visuals.mjs?v=turn-rates-1';
-import {castWithPresentation,renderCastPresentation} from './cast-presentation.mjs?v=ice-charge-2';
+import {BurnVisuals,applyBurnVisual} from './burn-visuals.mjs?v=ring-origin-1';
+import {castWithPresentation,renderCastPresentation} from './cast-presentation.mjs?v=ring-origin-1';
 import {CastRecoil,HitScreen,chargeSetback} from './combat-response.mjs?v=rim9';
 import {VisionShade} from './vision-shade.mjs';
 import {CastingFeedback,ChargeCamera,impactFeedback} from './casting-feedback.mjs?v=screenhit10';
@@ -35,7 +35,7 @@ let walkDirection={x:0,z:0},icePressHand='left',moveSpeedScale=1;
 const slotLabel=k=>({q:'기본',w:'좌클릭',e:'우클릭'}[k]);
 import {createWizard,animateWizard,projectWizard,setWizardCharacter} from './wizard.mjs?v=turn-rates-1';
 import {QueuedCharge} from './queued-charge.mjs?v=ice-charge-2';
-import {LiveMagic} from './live-magic.mjs?v=ice-charge-2';
+import {LiveMagic} from './live-magic.mjs?v=ring-origin-1';
 import {spellReach} from './live-spells.mjs?v=ice-charge-2';
 import {describe as describeDesign} from './combo-design.mjs?v=ice-charge-2';
 import {MeshFeedback} from './mesh-feedback.mjs';
@@ -99,7 +99,6 @@ resetHealthHUD();
 player.motion=new ForcedMotion();enemy.motion=new ForcedMotion();
 const roll=new SpaceSkill(loadout.q),enemyCharge=new OpponentCharge();let enemyLoadout=chooseLoadout(),enemyProgress=createProgress(enemyLoadout),enemyTarget=null;let fallingStrikes=[];
 const charge=new QueuedCharge(),pointer=new T.Vector2(),aim=new T.Vector3(4,0,-3);let moveTarget=null,running=false,paused=false,bot=true,finished=false,clock=0,wins=0,losses=0,shots=[],fields=[],fx=[],waves=[],wards=[],history=[],toastTimer=0;
-const aimLine=new T.Line(new T.BufferGeometry(),new T.LineBasicMaterial({color:0xe9e4cb,transparent:true,opacity:.35}));scene.add(aimLine);
 const enemyAimLine=new T.Line(new T.BufferGeometry(),new T.LineBasicMaterial({color:0xffa58a,transparent:true,opacity:.65}));scene.add(enemyAimLine);
 const attackTell=new T.Mesh(new T.BufferGeometry(),new T.MeshBasicMaterial({color:0xff9c45,side:T.DoubleSide,transparent:true,opacity:.23,depthWrite:false}));attackTell.position.y=.14;attackTell.visible=false;scene.add(attackTell);
 const tellBorder=new T.Line(new T.BufferGeometry(),new T.LineBasicMaterial({color:0xffd293,transparent:true,opacity:.95,depthTest:false}));tellBorder.position.y=.15;tellBorder.visible=false;scene.add(tellBorder);
@@ -216,13 +215,13 @@ const burnVisuals=new BurnVisuals(scene);
 function spaceSmoke(){return onlineCore?[...onlineCore.magic.fire.smokeVolumes,...onlineCore.actors.flatMap(a=>a.roll.smoke)]:[...liveMagic.fire.smokeVolumes,...roll.smoke];}
 function visibleTo(a,b){return canSee(a,b,{obstacles,walls:wards,smoke:spaceSmoke()});}
 function updateVisibility(){enemy.g.visible=visibleTo(player,enemy);shields.get(enemy).visible=enemy.g.visible;for(const m of monsters)m.g.visible=!m.dead&&visibleTo(player,m);}
-function dispatchSpell(s,caster,dir,aimPoint){if(!s.timed&&(s.iceHand||s.tap))caster.g.userData.puppet.playBasicAttack(s.iceHand||(caster===player?icePressHand:'left'));if(s.iceHand){liveMagic.cast(s,caster,dir,aimPoint);gameAudio.cast('i',caster,player);caster.castFlash=.25;return;}gameAudio.cast(s.sequence,caster,player);caster.recoil??=new CastRecoil();caster.recoil.start(dir,s.sequence.length,hasFireRecipe(s.sequence)&&fireSpec(s.sequence).op==='h'?fireSpec(s.sequence).dashDuration:0);if(caster===player)moveTarget=null;
+function dispatchSpell(s,caster,dir,aimPoint){if(!s.timed&&(s.iceHand||s.tap))caster.g.userData.puppet.playBasicAttack(s.iceHand||(caster===player?icePressHand:'left'));if(s.iceHand){liveMagic.cast(s,caster,dir,aimPoint,s.emission);gameAudio.cast('i',caster,player);caster.castFlash=.25;return;}gameAudio.cast(s.sequence,caster,player);caster.recoil??=new CastRecoil();caster.recoil.start(dir,s.sequence.length,hasFireRecipe(s.sequence)&&fireSpec(s.sequence).op==='h'?fireSpec(s.sequence).dashDuration:0);if(caster===player)moveTarget=null;
  if(s.sequence==='qh'&&caster===player)moveTarget=null;
  castWithPresentation({magic:liveMagic,wards,clearPath,collides,wallBlocks},s,caster,dir,aimPoint);
  if(caster===player){chargeCamera.fire(s.sequence.length);castOverlay.style.setProperty('--cast-color',RUNES[s.sequence[0]].color);}if(!s.timed){caster.g.userData.puppet.magic.release(s.sequence?.length||1);caster.g.userData.puppet.magic.elapsed=2/12;}
 }
 
-function cast(result,iceHand=null){if(loadout.q==='i'&&result.parts.length===1&&!iceHand)iceHand=icePressHand;if(!running||paused||finished||player.knockdown>0)return;let s={...resolveSpell(result,loadout),timed:result.timed};if(s.sequence==='ii'){s.upgradedIce=true;iceHand=null;if(player.iceLeftCool>0)return;}if(iceHand){s.iceHand=iceHand;s.cost=ICE_BASIC[iceHand].cost;s.name=ICE_BASIC[iceHand].name;}if(s.parts.some(k=>!progress.ranks[k]))return;refreshAim(s.sequence);s.mastery=mastery(progress,s.parts[0]);s.power*=s.mastery;if(iceHand&&(player[iceHand==='left'?'iceLeftCool':'iceRightCool']||0)>0){flash(ICE_BASIC[iceHand].name+' 재사용 '+player[iceHand==='left'?'iceLeftCool':'iceRightCool'].toFixed(1)+'초');return;}if(player.cool>0){flash('잠깐 기다려 주세요');return}if(bot&&player.mana<s.cost){flash('마력이 부족합니다. 잠시 쉬면 회복됩니다.');return}if(bot)player.mana-=s.cost;if(s.upgradedIce)player.iceLeftCool=1.8;if(iceHand)player[iceHand==='left'?'iceLeftCool':'iceRightCool']=ICE_BASIC[iceHand].cooldown;else player.cool=player.coolMax=s.tap?.16:.38;const seq=s.sequence,base=seq.slice(0,2),p=s.power,dir=player.dir.clone(),target=aim.clone();target.sub(new T.Vector3(player.x,0,player.z));if(!iceHand&&!hasIceRecipe(s.sequence)&&target.length()>6*(s.rangeScale||1))target.setLength(6*(s.rangeScale||1));target.add(new T.Vector3(player.x,0,player.z));const third=seq[2];
+function cast(result,iceHand=null){if(loadout.q==='i'&&result.parts.length===1&&!iceHand)iceHand=icePressHand;if(!running||paused||finished||player.knockdown>0)return;let s={...resolveSpell(result,loadout),timed:result.timed};if(s.sequence==='ii'){s.upgradedIce=true;iceHand=null;if(player.iceLeftCool>0)return;}if(iceHand){s.iceHand=iceHand;s.cost=ICE_BASIC[iceHand].cost;s.name=ICE_BASIC[iceHand].name;}if(s.parts.some(k=>!progress.ranks[k]))return;refreshAim(s.sequence);if(spellAimHeight(s.sequence)>0){const shown=castingFeedback.actors.get(player),hand=player.g.userData.puppet?.lastPositions?.[iceHand==='left'?'LeftHand':'RightHand'];const origin=shown?.group.visible?shown.group.position.clone():hand?.clone().addScaledVector(player.dir,.12);if(origin&&clearPath(player,origin)){s.emission=origin;const target=hasCursor?cursorAim(pointer,camera,origin.y):null;if(target){aim.copy(target);const direction=target.clone().sub(origin);direction.y=0;if(direction.lengthSq()>.0001)player.dir.copy(direction.normalize());}}}s.mastery=mastery(progress,s.parts[0]);s.power*=s.mastery;if(iceHand&&(player[iceHand==='left'?'iceLeftCool':'iceRightCool']||0)>0){flash(ICE_BASIC[iceHand].name+' 재사용 '+player[iceHand==='left'?'iceLeftCool':'iceRightCool'].toFixed(1)+'초');return;}if(player.cool>0){flash('잠깐 기다려 주세요');return}if(bot&&player.mana<s.cost){flash('마력이 부족합니다. 잠시 쉬면 회복됩니다.');return}if(bot)player.mana-=s.cost;if(s.upgradedIce)player.iceLeftCool=1.8;if(iceHand)player[iceHand==='left'?'iceLeftCool':'iceRightCool']=ICE_BASIC[iceHand].cooldown;else player.cool=player.coolMax=s.tap?.16:.38;const seq=s.sequence,base=seq.slice(0,2),p=s.power,dir=player.dir.clone(),target=aim.clone();target.sub(new T.Vector3(player.x,0,player.z));if(!iceHand&&!hasIceRecipe(s.sequence)&&target.length()>6*(s.rangeScale||1))target.setLength(6*(s.rangeScale||1));target.add(new T.Vector3(player.x,0,player.z));const third=seq[2];
  dispatchSpell(s,player,dir,aim);
  history.unshift({name:s.name,seq:s.keys.toUpperCase(),tier:seq.length===1?'1륜':seq.length===2?'2륜':'2륜 복합'});history=history.slice(0,4);$('spellName').textContent=s.name;
 }
@@ -341,7 +340,6 @@ function ui(){const movement=readMovement(characterFor(loadout).id);moveSpeedSca
  if(charge.queue.length){$('spellName').textContent=spellName(mapSequence(charge.queue,loadout));}
 
 
- const aimY=spellAimHeight(aimingSequence()),end=new T.Vector3(aim.x,aimY,aim.z);aimLine.geometry.dispose();aimLine.geometry=new T.BufferGeometry().setFromPoints([new T.Vector3(player.x,aimY,player.z),end]);aimLine.visible=hasCursor&&running&&!finished;
 }
 function syncLoadout(){$('playerName').textContent=characterFor(loadout).name;for(const k of KEYS){const r=RUNES[loadout[k]],node=$('key-'+k);node.style.setProperty('--key',r.color);node.querySelector('.glyph').textContent=r.icon;node.querySelector('b').textContent=r.name;node.querySelector('small').textContent=r.hint;}}
 const portraitCrops={fire:[325,35,140],ice:[305,25,145],lightning:[300,20,160],earth:[285,10,160],poison:[290,5,160],barrier:[330,35,140],field:[290,5,150],pull:[300,0,150],slash:[310,15,150],impact:[320,5,140]};

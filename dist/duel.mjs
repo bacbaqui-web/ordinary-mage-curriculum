@@ -1,7 +1,7 @@
 import {wardTouches} from './combat-hit.mjs?v=turn-rates-1';
-import {ICE_BASIC} from './ice-basic.mjs?v=click-timing-1';
+import {ICE_BASIC} from './ice-basic.mjs?v=ring-origin-1';
 import * as T from './three.module.js';
-import {LiveMagic} from './live-magic.mjs?v=ice-charge-2';
+import {LiveMagic} from './live-magic.mjs?v=ring-origin-1';
 import {QueuedCharge} from './queued-charge.mjs?v=ice-charge-2';
 import {SpaceSkill,interceptSpaceShots} from './space-skills.mjs?v=turn-rates-1';
 import {ForcedMotion} from './motion.mjs';

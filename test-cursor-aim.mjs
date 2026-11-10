@@ -18,3 +18,16 @@ for(const sequence of ['i','ii','iw','qw','qww','ww']){
 }
 for(const seq of ['it','ig','il','ie','qt','qg','ql','e','t'])assert.equal(spellAimHeight(seq),0,seq+' ground placement');
 console.log('PASS: actual ice/fire/generic projectile trajectories cross cursor across viewports and camera movement; ground spells retain ground targeting');
+
+for(const sequence of ['i','ii','iw','qw','ww']){
+ const d=new Duel([{q:'i',w:'w',e:'e'},{q:'q',w:'w',e:'e'}]),owner=d.actors[0];owner.x=0;owner.z=0;
+ const origin=new T.Vector3(.28,1.17,.43),camera=new T.PerspectiveCamera(38,16/9,.1,150);camera.position.set(12,17,15);camera.lookAt(0,0,0);camera.updateMatrixWorld();
+ const cursor=new T.Vector2(.2,-.1),target=cursorAim(cursor,camera,origin.y),dir=target.clone().sub(origin);dir.y=0;dir.normalize();
+ d.magic.cast({sequence,power:1,...(sequence==='i'?{iceHand:'left',timed:true}:{})},owner,dir,target,origin);
+ const effect=[...d.magic.ice.effects,...d.magic.iceCombos.effects,...d.magic.fire.effects,...d.magic.effects].find(e=>['shot','projectile'].includes(e.type));
+ assert.ok(effect.mesh.position.distanceTo(origin)<1e-9,sequence+' starts at actual ring center');
+ if(sequence==='i'){const ring=d.magic.ice.effects.find(e=>e.type==='iceHandRing');d.magic.ice.syncHands(owner,{lastPositions:{LeftHand:new T.Vector3(7,3,9)}});assert.ok(ring.mesh.position.distanceTo(origin)<1e-9,'emission ring does not detach from its launch point');}
+ d.magic.update(.01);assert.ok(Math.abs(effect.mesh.position.y-origin.y)<1e-9,sequence+' retains ring height');
+ const a=origin.clone().project(camera),b=effect.mesh.position.clone().project(camera);assert.ok(Math.abs((cursor.x-a.x)*(b.y-a.y)-(cursor.y-a.y)*(b.x-a.x))<1e-8,sequence+' custom origin still aims through cursor');d.dispose();
+}
+console.log('PASS: projectiles start at custom ring centers, retain height and cursor trajectory; released ice ring stays anchored');
