@@ -1,3 +1,4 @@
+import {pointsInBox,fitSelected} from './pose-selection.mjs';
 import {BAG_POINTS,BAG_LABELS,bagHandles,moveBag} from './bag-controls.mjs?v=bag-free-length-1';
 import {loopFrame} from './motion-timing.mjs';
 import {normalizeMovement,readMovement} from './character-movement.mjs?v=turn-rates-1';
@@ -27,7 +28,7 @@ const light=new T.DirectionalLight(0xffffff,2);light.position.set(-3,6,5);modelS
 let modelRenderer=null;
 function renderer(){if(!modelRenderer){modelRenderer=new T.WebGLRenderer({alpha:true,antialias:true});modelRenderer.setPixelRatio(1);modelRenderer.setClearColor(0,0);}return modelRenderer;}
 function initial(){const {root,clips}=demoMotion(),mixer=new T.AnimationMixer(root);return {version:1,compactShoulders:true,actions:clips.map((clip,i)=>{mixer.stopAllAction();mixer.clipAction(clip).play();const locomotion=['달리기','걷기'].includes(clip.name),walk=clip.name==='걷기';const samples=locomotion?[[0,0],[3,clip.duration*.25],[6,clip.duration*.5],[9,clip.duration*.75],[12,clip.duration]]:i===4?[[0,.3],[1,1],[2,1.12],[6,1.12],[10,0]]:[[0,clip.tracks[0].times[1]],[1,clip.tracks[0].times[2]],[2,clip.tracks[0].times[i===1?4:3]],[6,clip.tracks[0].times[i===1?4:3]],[10,0]];return {name:clip.name,binding:clip.name,frames:walk?19:locomotion?13:12,fps:12,keys:samples.map(([frame,time],index)=>{mixer.setTime(time);root.updateMatrixWorld(true);const pose=Object.fromEntries(JOINTS.map(n=>[n,root.getObjectByName(n).getWorldPosition(new T.Vector3()).toArray()]));return {frame:walk?Math.round(frame*1.5):frame,ease:'smooth',pose};})};})};}
-let project=initial(),index=0,frame=0,selected='LeftHand',playing=false,history=[],future=[];
+let project=initial(),index=0,frame=0,selected=null,playing=false,history=[],future=[];
 try{const raw=localStorage.getItem(storage);if(raw)project=validateProject(JSON.parse(raw));}catch{$('status').textContent='저장한 동작을 읽지 못해 기본 동작을 열었습니다.';}
 function compactShoulders(p){
  if(p.compactShoulders)return false;
@@ -53,6 +54,9 @@ function restore(s){const v=JSON.parse(s);project=v.project;index=v.index;frame=
 function syncPlayButton(){const label=playing?'일시정지':'재생';$('play').textContent=playing?'⏸':'▶';$('play').setAttribute('aria-label',label);$('play').title=label;}
 function stop(){playing=false;syncPlayButton();}
 function key(){seedBag();let k=current().keys.find(k=>k.frame===frame);if(!k){k={frame,ease:'smooth',pose:pose()};current().keys.push(k);current().keys.sort((a,b)=>a.frame-b.frame);}return k;}
+let selection=new Set();
+function selectPoints(names){selection=new Set(names);selected=names.at(-1)||null;}
+const fitPoints=(base,targets)=>fitSelected(base,targets,moveJoint,editPoint);
 let keyDrag=null;
 function finishKeyDrag(commit){
  const drag=keyDrag;if(!drag)return;keyDrag=null;
@@ -89,14 +93,14 @@ window.addEventListener('blur',()=>finishKeyDrag(false));
 function sync(){
  seedBag();
  $('timelineContent').style.setProperty('--frame-count',current().frames);$('timelineContent').style.setProperty('--timeline-width',(current().frames*48-4)+'px');
- const joints=[...editableJoints,...(rig?.accessories?.has('ice-bag')?BAG_POINTS:[])];if(!joints.includes(selected))selected='LeftHand';$('joint').replaceChildren(...joints.map(n=>new Option(jointLabel(n),n)));
+ const joints=[...editableJoints,...(rig?.accessories?.has('ice-bag')?BAG_POINTS:[])];selection=new Set([...selection].filter(n=>joints.includes(n)));if(!selection.has(selected))selected=[...selection].at(-1)||null;$('joint').replaceChildren(new Option('선택 없음',''),...joints.map(n=>new Option(jointLabel(n),n)));
  syncMovement();
  $('loopMotion').checked=!!current().loop;
  for(const side of ['Left','Right'])$('lock'+side+'Foot').checked=!!current().footLocks?.[side+'Foot'];
  const visible=actionGroups(project.actions).flatMap(g=>g.entries);if(visible.length&&!visible.some(e=>e.index===index)){index=visible[0].index;frame=0;stop();}
- $('action').replaceChildren(...actionGroups(project.actions).map(group=>{const el=document.createElement('optgroup');el.label=group.label;el.append(...group.entries.map(({action,index})=>new Option(action.name,index)));return el;}));$('action').value=index;$('frames').value=current().frames;$('fps').value=current().fps;$('joint').value=selected;
+ $('action').replaceChildren(...actionGroups(project.actions).map(group=>{const el=document.createElement('optgroup');el.label=group.label;el.append(...group.entries.map(({action,index})=>new Option(action.name,index)));return el;}));$('action').value=index;$('frames').value=current().frames;$('fps').value=current().fps;$('joint').value=selected||'';
  $('scrub').max=current().frames-1;$('scrub').value=frame;
- const p=editPoint(pose(),selected);['x','y','z'].forEach((n,i)=>$(n).value=p[i].toFixed(3));
+ const p=selected?editPoint(pose(),selected):null;['x','y','z'].forEach((n,i)=>{$(n).disabled=!p;$(n).value=p?p[i].toFixed(3):'';});
  syncPlayButton();
  $('timeline').replaceChildren(...Array.from({length:current().frames},(_,i)=>{const b=document.createElement('button');const has=current().keys.some(k=>k.frame===i);b.textContent=(has?'◆ ':'')+(i+1);b.className=(has?'key ':'')+(i===Math.floor(frame)?'selected':'');b.setAttribute('aria-label',`${i+1}프레임${has?' 키프레임':''}`);b.dataset.frame=i;b.onclick=()=>{if(loading)return;stop();frame=i;sync();};if(has&&!loopEndpoint(current(),i))bindKeyDrag(b,i);return b;}));alignScrub();
 }
@@ -113,7 +117,7 @@ const movementFields={baseMoveSpeed:'moveSpeed',headSpeed:'headSpeed',chestSpeed
 function syncMovement(){const settings=normalizeMovement(project.movementSettings);for(const [id,key] of Object.entries(movementFields)){$(id).value=settings[key];$(id+'Value').textContent=key==='moveSpeed'?settings[key].toFixed(1)+'배':settings[key]===0?'즉시':settings[key]+'°/초';}}
 for(const [id,key] of Object.entries(movementFields)){$(id).oninput=()=>{$(id+'Value').textContent=key==='moveSpeed'?Number($(id).value).toFixed(1)+'배':Number($(id).value)===0?'즉시':$(id).value+'°/초';};$(id).onchange=()=>{checkpoint();project.movementSettings=normalizeMovement({...project.movementSettings,[key]:Number($(id).value)});save('캐릭터 이동 설정 저장됨');syncMovement();};}
 $('resetMovement').onclick=()=>{checkpoint();project.movementSettings=normalizeMovement();save('이동 설정 초기화됨');syncMovement();};
-$('joint').replaceChildren(...editableJoints.map(n=>new Option(LABELS[JOINTS.indexOf(n)],n)));$('joint').onchange=()=>{selected=$('joint').value;sync();};
+$('joint').replaceChildren(...editableJoints.map(n=>new Option(LABELS[JOINTS.indexOf(n)],n)));$('joint').onchange=()=>{selectPoints($('joint').value?[$('joint').value]:[]);sync();};
 $('action').onchange=()=>{stop();index=Number($('action').value);frame=0;sync();};
 for(const [i,n] of ['x','y','z'].entries()){
  const input=$(n);let drag=null;
@@ -143,12 +147,12 @@ function syncPlayback(){
 $('scrub').oninput=()=>{stop();frame=Number($('scrub').value);sync();};
 $('play').onclick=()=>{playing=!playing;sync();};$('previous').onclick=()=>{stop();frame=current().keys.filter(k=>k.frame<frame).at(-1)?.frame??0;sync();};$('next').onclick=()=>{stop();frame=current().keys.find(k=>k.frame>frame)?.frame??current().frames-1;sync();};
 function undo(){if(!history.length)return;future.push(JSON.stringify({project,index,frame}));restore(history.pop());};function redo(){if(!future.length)return;history.push(JSON.stringify({project,index,frame}));restore(future.pop());};
-let copiedKey=null;
+let copiedKey=null,copiedPoints=null;
 const editingText=e=>e.target.matches('input,textarea,[contenteditable=true]');
-function copyKey(){if(loading)return false;const source=current().keys.find(k=>k.frame===Math.floor(frame));if(!source){$('status').textContent='복사할 키프레임을 먼저 선택하세요.';return false;}copiedKey=structuredClone(source);$('status').textContent=`${source.frame+1}프레임 자세를 복사했습니다.`;return true;}
-function pasteKey(){if(loading||!copiedKey)return;stop();frame=Math.floor(frame);checkpoint();const pasted=structuredClone(copiedKey);pasted.frame=frame;const pinned=applyFootLocks(pasted.pose,footAnchors(),{align:true});if(!pinned){$('status').textContent='고정한 발에 닿지 않는 자세입니다. 발 고정을 풀고 붙여넣으세요.';return;}pasted.pose=pinned;const existing=current().keys.findIndex(k=>k.frame===frame);if(existing>=0)current().keys[existing]=pasted;else current().keys.push(pasted);current().keys.sort((a,b)=>a.frame-b.frame);save();sync();$('status').textContent=`${frame+1}프레임에 붙여넣었습니다.`;}
+function copyKey(){if(loading)return false;if(selection.size){copiedPoints={characterId,points:Object.fromEntries([...selection].map(n=>[n,[...editPoint(pose(),n)]]))};copiedKey=null;$('status').textContent=`점 ${selection.size}개의 위치를 복사했습니다.`;return true;}copiedPoints=null;const source=current().keys.find(k=>k.frame===Math.floor(frame));if(!source){$('status').textContent='복사할 키프레임을 먼저 선택하세요.';return false;}copiedKey=structuredClone(source);$('status').textContent=`${source.frame+1}프레임 자세를 복사했습니다.`;return true;}
+function pasteKey(){if(loading)return;if(copiedPoints){if(copiedPoints.characterId!==characterId){$('status').textContent='복사한 캐릭터에서 붙여넣으세요.';return;}stop();frame=Math.floor(frame);checkpoint();const k=key();k.pose=fitPoints(k.pose,copiedPoints.points);save();sync();$('status').textContent='선택한 점의 위치를 관절이 닿는 범위 안에서 붙여넣었습니다.';return;}if(!copiedKey)return;stop();frame=Math.floor(frame);checkpoint();const pasted=structuredClone(copiedKey);pasted.frame=frame;const pinned=applyFootLocks(pasted.pose,footAnchors(),{align:true});if(!pinned){$('status').textContent='고정한 발에 닿지 않는 자세입니다. 발 고정을 풀고 붙여넣으세요.';return;}pasted.pose=pinned;const existing=current().keys.findIndex(k=>k.frame===frame);if(existing>=0)current().keys[existing]=pasted;else current().keys.push(pasted);current().keys.sort((a,b)=>a.frame-b.frame);save();sync();$('status').textContent=`${frame+1}프레임에 붙여넣었습니다.`;}
 document.addEventListener('copy',e=>{if(editingText(e)||!copyKey())return;e.preventDefault();e.clipboardData?.setData('text/plain',JSON.stringify({type:'ordinary-mage-keyframe',key:copiedKey}));});
-document.addEventListener('paste',e=>{if(editingText(e))return;if(copiedKey){e.preventDefault();pasteKey();}});
+document.addEventListener('paste',e=>{if(editingText(e))return;if(copiedKey||copiedPoints){e.preventDefault();pasteKey();}});
 $('saveMotion').onclick=()=>{
  const active=document.activeElement;if(active?.matches('input,textarea'))active.blur();
  save(`${current().name} 동작을 브라우저에 저장했습니다.`);
@@ -161,7 +165,7 @@ document.addEventListener('keydown',e=>{
  if(!(e.ctrlKey||e.metaKey)||e.altKey)return;
  const command=e.key.toLowerCase();
  if(command==='c'){e.preventDefault();copyKey();}
- else if(command==='v'){if(copiedKey){e.preventDefault();pasteKey();}}
+ else if(command==='v'){if(copiedKey||copiedPoints){e.preventDefault();pasteKey();}}
  else if(command==='z'||command==='y'){e.preventDefault();(command==='y'||e.shiftKey?redo:undo)();}
 });
 $('export').onclick=()=>{const url=URL.createObjectURL(new Blob([JSON.stringify(projectForCharacter(project,characterId),null,2)],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download=`ordinary-mage-${characterId}-motions.json`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
@@ -182,7 +186,7 @@ async function selectCharacter(id){
   // A failed model load or storage write must not replace the current editor session.
   if(!raw||profile.id!=='default')localStorage.setItem(nextKey,JSON.stringify(next));
   rig?.dispose();rig=nextRig;if(rig)modelScene.add(rig.group);
-  characterId=profile.id;storage=nextKey;project=next;index=0;frame=0;history=[];future=[];copiedKey=null;footShapes={};
+  characterId=profile.id;storage=nextKey;project=next;index=0;frame=0;history=[];future=[];copiedKey=null;copiedPoints=null;selectPoints([]);footShapes={};
   for(const n of Object.keys(feet))feet[n]=new PassiveFoot();
   try{localStorage.setItem('ordinary-mage-editor-character',characterId);}catch{}
   $('character').value=characterId;$('import').value='';
@@ -204,10 +208,29 @@ const views=[['앞',[0,0,6]],['옆',[6,0,0]],['위',[0,6,0]],['쿼터뷰',[5,4,6
  const orient=()=>{camera.position.set(radius*Math.cos(pitch)*Math.sin(yaw),1+radius*Math.sin(pitch),radius*Math.cos(pitch)*Math.cos(yaw));camera.lookAt(0,1,0);camera.updateMatrixWorld();right.set(1,0,0).applyQuaternion(camera.quaternion);up.set(0,1,0).applyQuaternion(camera.quaternion);};
  canvas.style.touchAction='none';
  canvas.addEventListener('wheel',e=>{e.preventDefault();const delta=e.deltaY*(e.deltaMode===1?16:e.deltaMode===2?canvas.clientHeight:1);v.zoom=T.MathUtils.clamp(v.zoom*Math.exp(-delta*.0015),.4,3);},{passive:false});
- if(orbit){title.textContent='쿼터뷰 · 빈 곳을 끌어 회전';const reset=document.createElement('button');reset.textContent='시점 초기화';reset.className='view-reset';reset.onclick=()=>{yaw=initialYaw;pitch=initialPitch;orient();};box.append(reset);canvas.oncontextmenu=e=>e.preventDefault();}
- canvas.onpointerdown=e=>{if(loading)return;const r=canvas.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;const nearest=Object.entries(v.points).filter(([n])=>n!=='Neck').map(([n,p])=>({n,d:Math.hypot(p.x-x,p.y-y)})).sort((a,b)=>a.d-b.d)[0];if(orbit&&(e.button===2||!$('handles').checked||!nearest||nearest.d>18)){drag={orbit:true,x:e.clientX,y:e.clientY,yaw,pitch};canvas.setPointerCapture(e.pointerId);e.preventDefault();return;}if(!$('handles').checked||!nearest||nearest.d>18)return;stop();frame=Math.floor(frame);selected=nearest.n;canvas.focus();checkpoint();const k=key();drag={x:e.clientX,y:e.clientY,start:[...editPoint(k.pose,selected)],base:structuredClone(k.pose),k};canvas.setPointerCapture(e.pointerId);sync();};
- canvas.onpointermove=e=>{if(!drag)return;if(drag.orbit){yaw=drag.yaw-(e.clientX-drag.x)*.008;pitch=T.MathUtils.clamp(drag.pitch+(e.clientY-drag.y)*.008,-1.35,1.35);orient();return;}const dx=(e.clientX-drag.x)/v.scale,dy=-(e.clientY-drag.y)/v.scale,p=new T.Vector3(...drag.start).addScaledVector(right,dx).addScaledVector(up,dy);drag.k.pose=moveJoint(BAG_POINTS.includes(selected)?drag.k.pose:drag.base,selected,p.toArray());syncLoop(current(),frame);sync();};
- canvas.onpointerup=()=>{if(drag){const changed=!drag.orbit;drag=null;if(changed)save();}};canvas.onpointercancel=()=>{const changed=drag&&!drag.orbit;drag=null;if(changed)save();};return v;
+ if(orbit){title.textContent='쿼터뷰 · 오른쪽 버튼으로 회전';const reset=document.createElement('button');reset.textContent='시점 초기화';reset.className='view-reset';reset.onclick=()=>{yaw=initialYaw;pitch=initialPitch;orient();};box.append(reset);canvas.oncontextmenu=e=>e.preventDefault();}
+ canvas.onpointerdown=e=>{
+  if(loading)return;const r=canvas.getBoundingClientRect(),pos={x:e.clientX-r.left,y:e.clientY-r.top};
+  if(orbit&&e.button===2){drag={orbit:true,x:e.clientX,y:e.clientY,yaw,pitch};canvas.setPointerCapture(e.pointerId);e.preventDefault();return;}
+  if(e.button!==0)return;
+  const nearest=Object.entries(v.points).filter(([n])=>n!=='Neck').map(([n,p])=>({n,d:Math.hypot(p.x-pos.x,p.y-pos.y),z:p.z})).filter(a=>a.d<12).sort((a,b)=>Math.abs(a.d-b.d)<3?b.z-a.z:a.d-b.d)[0];
+  canvas.focus();stop();
+  if(!$('handles').checked||!nearest){selectPoints([]);drag={box:true,start:pos,end:pos};v.marquee=drag;canvas.setPointerCapture(e.pointerId);sync();return;}
+  if(e.shiftKey){const names=new Set(selection);names.has(nearest.n)?names.delete(nearest.n):names.add(nearest.n);selectPoints([...names]);sync();return;}
+  if(!selection.has(nearest.n))selectPoints([nearest.n]);else selected=nearest.n;
+  frame=Math.floor(frame);seedBag();drag={x:e.clientX,y:e.clientY,base:structuredClone(pose()),names:[...selection],moved:false};canvas.setPointerCapture(e.pointerId);sync();
+ };
+ canvas.onpointermove=e=>{
+  if(!drag)return;
+  if(drag.orbit){yaw=drag.yaw-(e.clientX-drag.x)*.008;pitch=T.MathUtils.clamp(drag.pitch+(e.clientY-drag.y)*.008,-1.35,1.35);orient();return;}
+  if(drag.box){const r=canvas.getBoundingClientRect();drag.end={x:e.clientX-r.left,y:e.clientY-r.top};selectPoints(pointsInBox(v.points,drag.start,drag.end));sync();return;}
+  if(!drag.moved){if(Math.hypot(e.clientX-drag.x,e.clientY-drag.y)<3)return;checkpoint();drag.k=key();drag.moved=true;}
+  const delta=right.clone().multiplyScalar((e.clientX-drag.x)/v.scale).addScaledVector(up,-(e.clientY-drag.y)/v.scale);
+  const targets=Object.fromEntries(drag.names.map(n=>[n,new T.Vector3(...editPoint(drag.base,n)).add(delta).toArray()]));
+  drag.k.pose=fitPoints(drag.base,targets);syncLoop(current(),frame);sync();
+ };
+ const finish=()=>{if(!drag)return;const changed=drag.moved;drag=null;v.marquee=null;if(changed)save();};
+ canvas.onpointerup=finish;canvas.onpointercancel=finish;canvas.onlostpointercapture=finish;return v;
 });
 function draw(v,p){const {canvas,camera}=v,w=Math.round(canvas.clientWidth),h=Math.round(canvas.clientHeight);if(!w||!h)return;if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}const ctx=canvas.getContext('2d'),scale=h/3.1*v.zoom;v.scale=scale;const point=a=>{const local=new T.Vector3(...a).applyMatrix4(camera.matrixWorldInverse);return {x:w/2+local.x*scale,y:h/2-local.y*scale,z:local.z};};const controlPose=rig?rig.controlPose(p):p;v.points=Object.fromEntries([...JOINTS,...BAG_POINTS.filter(n=>controlPose[n])].map(n=>[n,point(controlPose[n])]));ctx.fillStyle='#2b3c44';ctx.fillRect(0,0,w,h);ctx.strokeStyle='#354a52';ctx.lineWidth=1;const spacing=scale*.25;for(let x=w/2%spacing;x<w;x+=spacing){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke();}for(let y=h/2%spacing;y<h;y+=spacing){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();}
  // Shared world-space floor: Y=0 in every camera.
@@ -222,8 +245,24 @@ function draw(v,p){const {canvas,camera}=v,w=Math.round(canvas.clientWidth),h=Ma
  }
  if($('handles').checked){
   const links=segments.filter(([a,b])=>a!=='Neck'&&b!=='Neck').map(([a,b])=>[a,b]);links.push(['Spine','Head']);if(v.points.BagCenter)links.push(['BagCenter','BagDirection']);
-  ctx.lineCap='round';for(const [from,to] of links){const a=v.points[from],b=v.points[to];ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.strokeStyle='#12232dcc';ctx.lineWidth=4;ctx.stroke();ctx.strokeStyle=from===selected||to===selected?'#ffd37c':'#d9eaf0';ctx.lineWidth=1.5;ctx.stroke();}
-  for(const [n,a] of Object.entries(v.points).filter(([n])=>n!=='Neck')){ctx.beginPath();ctx.arc(a.x,a.y,n===selected?7:4,0,Math.PI*2);ctx.fillStyle=n===selected?'#fff1bd':'#17282f';ctx.fill();ctx.lineWidth=1.5;ctx.strokeStyle=n===selected?'#e7aa42':'#e7eff0';ctx.stroke();}const a=v.points[selected];ctx.font='12px system-ui';ctx.fillStyle='#fff1bd';ctx.fillText(jointLabel(selected),a.x+10,a.y-10);}
+  const nodes=Object.entries(v.points).filter(([n])=>n!=='Neck'),depths=nodes.map(([,p])=>p.z),near=Math.max(...depths),far=Math.min(...depths);
+  const depth=p=>(p.z-far)/Math.max(.001,near-far),radius=(n,p)=>(selection.has(n)?5:3)+depth(p)*2.5;
+  ctx.save();ctx.lineCap='round';
+  links.sort((a,b)=>(v.points[a[0]].z+v.points[a[1]].z)-(v.points[b[0]].z+v.points[b[1]].z));
+  for(const [from,to] of links){const a=v.points[from],b=v.points[to],dx=b.x-a.x,dy=b.y-a.y,len=Math.hypot(dx,dy);if(len<1)continue;
+   const ra=radius(from,a),rb=radius(to,b);if(len<=ra+rb)continue;
+   ctx.globalAlpha=.35+.3*(depth(a)+depth(b))/2;ctx.beginPath();ctx.moveTo(a.x+dx/len*ra,a.y+dy/len*ra);ctx.lineTo(b.x-dx/len*rb,b.y-dy/len*rb);
+   ctx.strokeStyle=selection.has(from)||selection.has(to)?'#ffd37c':'#d9eaf0';ctx.lineWidth=1+depth(a)+depth(b);ctx.stroke();
+  }
+  for(const [n,a] of nodes.sort((a,b)=>a[1].z-b[1].z)){
+   const r=radius(n,a),active=selection.has(n);ctx.globalAlpha=active?.85:.45+depth(a)*.25;
+   const fill=ctx.createRadialGradient(a.x-r*.3,a.y-r*.3,.3,a.x,a.y,r);fill.addColorStop(0,active?'#fff4c7':'#cedde3');fill.addColorStop(1,active?'#b78a37':'#293e48');
+   ctx.beginPath();ctx.arc(a.x,a.y,r,0,Math.PI*2);ctx.fillStyle=fill;ctx.fill();ctx.lineWidth=1;ctx.strokeStyle=active?'#ffdc88':'#dce9ee';ctx.stroke();
+  }
+  ctx.restore();const a=v.points[selected];if(a){ctx.font='12px system-ui';ctx.fillStyle='#fff1bd';ctx.fillText(selection.size>1?`점 ${selection.size}개 선택`:jointLabel(selected),a.x+10,a.y-10);}
+ }
+ if(v.marquee){const {start,end}=v.marquee;ctx.save();ctx.fillStyle='#84c8e820';ctx.strokeStyle='#9edcff';ctx.lineWidth=1;ctx.setLineDash([5,3]);ctx.fillRect(start.x,start.y,end.x-start.x,end.y-start.y);ctx.strokeRect(start.x,start.y,end.x-start.x,end.y-start.y);ctx.restore();}
+
 }
 let last=performance.now();function tick(now){requestAnimationFrame(tick);const dt=Math.min(.05,(now-last)/1000);last=now;if(playing){frame=loopFrame(current(),frame+dt*current().fps);syncPlayback();}const p=pose();if(rig)rig.apply(p,dt);for(const n of Object.keys(feet))footShapes[n]=feet[n].update(p[n],dt);for(const v of views)draw(v,p);}sync();requestAnimationFrame(tick);
 
