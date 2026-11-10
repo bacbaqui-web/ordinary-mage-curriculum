@@ -1,5 +1,5 @@
 import {BASIC_ATTACKS,FIRST_RING_CLIPS} from './motion-catalog.mjs?v=run-walk-1';
-import {MAGIC_CLIPS} from './magic-clips.mjs?v=smooth-motion-1';
+import {MAGIC_CLIPS} from './magic-clips.mjs?v=bag-controls-1';
 const builtins=new Set(['대기','기본 걷기','베기','주먹 타격','방어','마법 시전',...MAGIC_CLIPS,...BASIC_ATTACKS,...FIRST_RING_CLIPS]);
 export const motionKey=a=>a.binding||(builtins.has(a.name)?a.name:null);
 export function uniqueMotions(actions){

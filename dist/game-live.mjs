@@ -36,7 +36,7 @@ import {bindDuelControls,mouseRecipe} from './duel-controls.mjs?v=shift-trajecto
 let walkDirection={x:0,z:0},icePressHand='left',moveSpeedScale=1;
 
 const slotLabel=k=>({q:'기본',w:'좌클릭',e:'우클릭'}[k]);
-import {createWizard,animateWizard,projectWizard,setWizardCharacter} from './wizard.mjs?v=run-walk-1';
+import {createWizard,animateWizard,projectWizard,setWizardCharacter} from './wizard.mjs?v=bag-controls-1';
 import {QueuedCharge} from './queued-charge.mjs?v=instant-first-ring-1';
 import {LiveMagic} from './live-magic.mjs?v=hand-flash-1';
 import {spellReach} from './live-spells.mjs?v=integer-damage-1';

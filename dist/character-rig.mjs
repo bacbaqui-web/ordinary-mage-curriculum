@@ -3,9 +3,9 @@ import {raisedAnkle} from './ankle-pivot.mjs?v=heel-free-1';
 import {GarmentCollision} from './garment-collision.mjs';
 import * as T from './three.module.js';
 import {GLTFLoader} from './vendor/GLTFLoader.js';
-import {JOINTS,withNeck} from './pose-data.mjs?v=smooth-motion-1';
+import {JOINTS,withNeck} from './pose-data.mjs?v=bag-controls-1';
 import {ModelFoot} from './model-foot.mjs?v=heel-free-1';
-import {BONES} from './pose-constraints.mjs?v=smooth-motion-1';
+import {BONES} from './pose-constraints.mjs?v=bag-controls-1';
 const V=a=>new T.Vector3(...a);
 const world=o=>o.getWorldPosition(new T.Vector3());
 const qworld=o=>o.getWorldQuaternion(new T.Quaternion());
@@ -152,8 +152,12 @@ export class CharacterRig{
  }
  depth(b){let n=0;while(b.parent){n++;b=b.parent;}return n;}
  positions(){this.group.updateMatrixWorld(true);return Object.fromEntries(JOINTS.map(n=>[n,world(this.bones[n]).toArray()]));}
+ bagControls(){
+  const carrier=this.accessories?.get('ice-bag')?.userData.bagMotion.carrier;if(!carrier)return {};
+  return {BagCenter:carrier.localToWorld(new T.Vector3()).toArray(),BagDirection:carrier.localToWorld(new T.Vector3(0,.4,0)).toArray()};
+ }
  controlPose(pose){
-  const controls={...withNeck(pose)};
+  const controls={...withNeck(pose),...this.bagControls()};
   for(const name of ['LeftFoot','RightFoot'])controls[name]=world(this.bones[name]).toArray();
   for(const [name,center] of Object.entries(this.handCenters))controls[name]=this.bones[name].localToWorld(center.clone()).toArray();
   return controls;
@@ -184,6 +188,13 @@ export class CharacterRig{
   this.group.updateMatrixWorld(true);this.garment?.apply();
   for(const pivot of this.accessories?.values()||[]){
    const motion=pivot.userData.bagMotion;if(!motion)continue;
+   if(pivot.name==='ice-bag'&&pose.BagCenter&&pose.BagDirection){
+    pivot.updateWorldMatrix(true,false);
+    const center=pivot.worldToLocal(V(pose.BagCenter)),tip=pivot.worldToLocal(V(pose.BagDirection));
+    motion.carrier.position.copy(center);const direction=tip.sub(center);
+    if(direction.lengthSq()>1e-10)motion.carrier.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),direction.normalize());
+    motion.swing.reset();continue;
+   }
    if(dt<=0&&!movement)motion.swing.reset();
    const state=motion.swing.update(movement?.position||pose.Hips,movement?.heading||0,dt);
    motion.carrier.rotation.set(state.angle[0],0,state.angle[1]);

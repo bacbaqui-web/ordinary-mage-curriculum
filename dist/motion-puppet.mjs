@@ -1,7 +1,7 @@
 import {firstRingClip} from './motion-catalog.mjs?v=run-walk-1';
 import {PoseTransition} from './pose-transition.mjs?v=smooth-motion-1';
-import {magicClipName} from './magic-clips.mjs?v=smooth-motion-1';
-import {savedMotion,savedPose,createMotionReader} from './live-motions.mjs?v=run-walk-1';
+import {magicClipName} from './magic-clips.mjs?v=bag-controls-1';
+import {savedMotion,savedPose,createMotionReader} from './live-motions.mjs?v=bag-controls-1';
 import * as T from './three.module.js';
 import {MagicMotion} from './magic-motion.mjs?v=charge-move-1';
 import {actionClips} from './action-clips.mjs';

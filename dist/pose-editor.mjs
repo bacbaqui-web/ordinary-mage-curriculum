@@ -1,24 +1,26 @@
+import {BAG_POINTS,BAG_LABELS,moveBag} from './bag-controls.mjs';
 import {loopFrame} from './motion-timing.mjs';
 import {normalizeMovement,readMovement} from './character-movement.mjs?v=turn-rates-1';
 import {syncLoop,resizeLoop,loopEndpoint} from './pose-loop.mjs';
 import {ensureLocomotion,ensureBasicAttacks,ensureIdle,ensureFirstRingClips,actionGroups} from './motion-catalog.mjs?v=run-walk-1';
 import {migrateAnklePivot} from './ankle-pivot.mjs?v=heel-free-1';
 import {CHARACTERS,characterProfile,motionStorageKey,projectForCharacter,assertCharacterImport} from './character-profiles.mjs?v=heel-free-1';
-import {CharacterRig,fitProjectToRig} from './character-rig.mjs?v=turn-rates-1';
-import {ensureMagicClips} from './magic-clips.mjs?v=smooth-motion-1';
+import {CharacterRig,fitProjectToRig} from './character-rig.mjs?v=bag-controls-1';
+import {ensureMagicClips} from './magic-clips.mjs?v=bag-controls-1';
 import {uniqueMotions,mergeMotions} from './pose-library.mjs?v=run-walk-1';
 import * as T from './three.module.js';
 import {footFaces} from './foot-shape.mjs';
 import {PassiveFoot} from './passive-foot.mjs';
 const feet={LeftFoot:new PassiveFoot(),RightFoot:new PassiveFoot()};
 let footShapes={};
-import {moveJoint as movePoseJoint,applyFootLocks} from './pose-constraints.mjs?v=head-free-2';
-import {demoMotion} from './motion-puppet.mjs?v=run-walk-1';
-import {JOINTS,LABELS,samplePose,validateProject} from './pose-data.mjs?v=smooth-motion-1';
+import {moveJoint as movePoseJoint,applyFootLocks} from './pose-constraints.mjs?v=bag-controls-1';
+import {demoMotion} from './motion-puppet.mjs?v=bag-controls-1';
+import {JOINTS,LABELS,samplePose,validateProject} from './pose-data.mjs?v=bag-controls-1';
 const $=id=>document.getElementById(id);
+const jointLabel=n=>BAG_LABELS[n]||LABELS[JOINTS.indexOf(n)];
 const editableJoints=JOINTS.filter(n=>n!=='Neck');
 const footAnchors=()=>Object.fromEntries(Object.keys(current().footLocks||{}).filter(n=>current().footLocks[n]).map(n=>[n,current().keys[0].pose[n]]));
-const moveJoint=(base,joint,target)=>movePoseJoint(base,joint,target,{lockedFeet:footAnchors(),footClearance:rig?Math.max(rig.restPose.LeftFoot[1],rig.restPose.RightFoot[1]):.10});
+const moveJoint=(base,joint,target)=>BAG_POINTS.includes(joint)?moveBag(base,joint,target):movePoseJoint(base,joint,target,{lockedFeet:footAnchors(),footClearance:rig?Math.max(rig.restPose.LeftFoot[1],rig.restPose.RightFoot[1]):.10});
 let characterId='default',storage=motionStorageKey(characterId),rig=null,loading=false,unsaved=false;
 const modelScene=new T.Scene();modelScene.add(new T.HemisphereLight(0xffffff,0x84919d,2.4));
 const light=new T.DirectionalLight(0xffffff,2);light.position.set(-3,6,5);modelScene.add(light);
@@ -43,6 +45,7 @@ function prepare(p){
 }
 prepare(project);
 const current=()=>project.actions[index],pose=()=>samplePose(current(),frame);
+function seedBag(){if(!rig?.accessories?.has('ice-bag'))return;for(const a of project.actions)for(const k of a.keys)if(!k.pose.BagCenter||!k.pose.BagDirection){rig.apply(k.pose);Object.assign(k.pose,rig.bagControls());}}
 function save(message='브라우저에 저장됨'){syncLoop(current(),frame);for(const action of project.actions)for(const key of action.keys)key.ease='smooth';current().updatedAt=Date.now();project.characterId=characterId;try{localStorage.setItem(storage,JSON.stringify(project));$('status').textContent=`${characterProfile(characterId).label} · ${message}`;unsaved=false;return true;}catch{unsaved=true;$('status').textContent='자동 저장 공간이 부족합니다. 파일 저장으로 보관하세요.';return false;}}
 function checkpoint(){history.push(JSON.stringify({project,index,frame}));if(history.length>60)history.shift();future=[];}
 function restore(s){const v=JSON.parse(s);project=v.project;index=v.index;frame=v.frame;playing=false;save();sync();}
@@ -83,7 +86,9 @@ function bindKeyDrag(button,source){
 document.addEventListener('keydown',e=>{if(!keyDrag)return;if(e.key==='Escape'){e.preventDefault();finishKeyDrag(false);}else if(e.ctrlKey||e.metaKey||e.key==='Delete'||e.key==='Backspace'){e.preventDefault();e.stopImmediatePropagation();}},true);
 window.addEventListener('blur',()=>finishKeyDrag(false));
 function sync(){
+ seedBag();
  $('timelineContent').style.setProperty('--frame-count',current().frames);$('timelineContent').style.setProperty('--timeline-width',(current().frames*48-4)+'px');
+ const joints=[...editableJoints,...(rig?.accessories?.has('ice-bag')?BAG_POINTS:[])];if(!joints.includes(selected))selected='LeftHand';$('joint').replaceChildren(...joints.map(n=>new Option(jointLabel(n),n)));
  syncMovement();
  $('loopMotion').checked=!!current().loop;
  for(const side of ['Left','Right'])$('lock'+side+'Foot').checked=!!current().footLocks?.[side+'Foot'];
@@ -203,7 +208,7 @@ const views=[['앞',[0,0,6]],['옆',[6,0,0]],['위',[0,6,0]],['쿼터뷰',[5,4,6
  canvas.onpointermove=e=>{if(!drag)return;if(drag.orbit){yaw=drag.yaw-(e.clientX-drag.x)*.008;pitch=T.MathUtils.clamp(drag.pitch+(e.clientY-drag.y)*.008,-1.35,1.35);orient();return;}const dx=(e.clientX-drag.x)/v.scale,dy=-(e.clientY-drag.y)/v.scale,p=new T.Vector3(...drag.start).addScaledVector(right,dx).addScaledVector(up,dy);drag.k.pose=moveJoint(drag.base,selected,p.toArray());syncLoop(current(),frame);sync();};
  canvas.onpointerup=()=>{if(drag){const changed=!drag.orbit;drag=null;if(changed)save();}};canvas.onpointercancel=()=>{const changed=drag&&!drag.orbit;drag=null;if(changed)save();};return v;
 });
-function draw(v,p){const {canvas,camera}=v,w=Math.round(canvas.clientWidth),h=Math.round(canvas.clientHeight);if(!w||!h)return;if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}const ctx=canvas.getContext('2d'),scale=h/3.1*v.zoom;v.scale=scale;const point=a=>{const local=new T.Vector3(...a).applyMatrix4(camera.matrixWorldInverse);return {x:w/2+local.x*scale,y:h/2-local.y*scale,z:local.z};};const controlPose=rig?rig.controlPose(p):p;v.points=Object.fromEntries(JOINTS.map(n=>[n,point(controlPose[n])]));ctx.fillStyle='#2b3c44';ctx.fillRect(0,0,w,h);ctx.strokeStyle='#354a52';ctx.lineWidth=1;const spacing=scale*.25;for(let x=w/2%spacing;x<w;x+=spacing){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke();}for(let y=h/2%spacing;y<h;y+=spacing){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();}
+function draw(v,p){const {canvas,camera}=v,w=Math.round(canvas.clientWidth),h=Math.round(canvas.clientHeight);if(!w||!h)return;if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}const ctx=canvas.getContext('2d'),scale=h/3.1*v.zoom;v.scale=scale;const point=a=>{const local=new T.Vector3(...a).applyMatrix4(camera.matrixWorldInverse);return {x:w/2+local.x*scale,y:h/2-local.y*scale,z:local.z};};const controlPose=rig?rig.controlPose(p):p;v.points=Object.fromEntries([...JOINTS,...BAG_POINTS.filter(n=>controlPose[n])].map(n=>[n,point(controlPose[n])]));ctx.fillStyle='#2b3c44';ctx.fillRect(0,0,w,h);ctx.strokeStyle='#354a52';ctx.lineWidth=1;const spacing=scale*.25;for(let x=w/2%spacing;x<w;x+=spacing){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke();}for(let y=h/2%spacing;y<h;y+=spacing){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();}
  // Shared world-space floor: Y=0 in every camera.
  const floor=[[-4,0,-4],[4,0,-4],[4,0,4],[-4,0,4]].map(point);
  ctx.beginPath();floor.forEach((a,i)=>i?ctx.lineTo(a.x,a.y):ctx.moveTo(a.x,a.y));ctx.closePath();ctx.fillStyle='#344b49';ctx.fill();
@@ -215,9 +220,9 @@ function draw(v,p){const {canvas,camera}=v,w=Math.round(canvas.clientWidth),h=Ma
  else {const shapes=segments.map(([a,b,width,color])=>({a:v.points[a],b:v.points[b],width:width*scale,color,z:(v.points[a].z+v.points[b].z)/2}));for(const [n,foot] of Object.entries(footShapes))for(const face of footFaces(foot)){const polygon=face.vertices.map(point),rgb=n==='LeftFoot'?[177,220,145]:[149,182,255];shapes.push({polygon,color:`rgb(${rgb.map(c=>Math.round(c*face.shade)).join(',')})`,z:polygon.reduce((sum,a)=>sum+a.z,0)/polygon.length});}shapes.push({head:true,a:v.points.Head,width:.43*scale,color:'#ffcc65',z:v.points.Head.z});shapes.sort((a,b)=>a.z-b.z);ctx.lineCap='round';for(const s of shapes){ctx.fillStyle=ctx.strokeStyle=s.color;if(s.polygon){ctx.beginPath();s.polygon.forEach((a,i)=>i?ctx.lineTo(a.x,a.y):ctx.moveTo(a.x,a.y));ctx.closePath();ctx.fill();ctx.lineWidth=.6;ctx.stroke();}else if(s.head){ctx.beginPath();ctx.arc(s.a.x,s.a.y,s.width/2,0,Math.PI*2);ctx.fill();}else{ctx.lineWidth=s.width;ctx.beginPath();ctx.moveTo(s.a.x,s.a.y);ctx.lineTo(s.b.x,s.b.y);ctx.stroke();}}
  }
  if($('handles').checked){
-  const links=segments.filter(([a,b])=>a!=='Neck'&&b!=='Neck').map(([a,b])=>[a,b]);links.push(['Spine','Head']);
+  const links=segments.filter(([a,b])=>a!=='Neck'&&b!=='Neck').map(([a,b])=>[a,b]);links.push(['Spine','Head']);if(v.points.BagCenter)links.push(['BagCenter','BagDirection']);
   ctx.lineCap='round';for(const [from,to] of links){const a=v.points[from],b=v.points[to];ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.strokeStyle='#12232dcc';ctx.lineWidth=4;ctx.stroke();ctx.strokeStyle=from===selected||to===selected?'#ffd37c':'#d9eaf0';ctx.lineWidth=1.5;ctx.stroke();}
-  for(const [n,a] of Object.entries(v.points).filter(([n])=>n!=='Neck')){ctx.beginPath();ctx.arc(a.x,a.y,n===selected?7:4,0,Math.PI*2);ctx.fillStyle=n===selected?'#fff1bd':'#17282f';ctx.fill();ctx.lineWidth=1.5;ctx.strokeStyle=n===selected?'#e7aa42':'#e7eff0';ctx.stroke();}const a=v.points[selected];ctx.font='12px system-ui';ctx.fillStyle='#fff1bd';ctx.fillText(LABELS[JOINTS.indexOf(selected)],a.x+10,a.y-10);}
+  for(const [n,a] of Object.entries(v.points).filter(([n])=>n!=='Neck')){ctx.beginPath();ctx.arc(a.x,a.y,n===selected?7:4,0,Math.PI*2);ctx.fillStyle=n===selected?'#fff1bd':'#17282f';ctx.fill();ctx.lineWidth=1.5;ctx.strokeStyle=n===selected?'#e7aa42':'#e7eff0';ctx.stroke();}const a=v.points[selected];ctx.font='12px system-ui';ctx.fillStyle='#fff1bd';ctx.fillText(jointLabel(selected),a.x+10,a.y-10);}
 }
 let last=performance.now();function tick(now){requestAnimationFrame(tick);const dt=Math.min(.05,(now-last)/1000);last=now;if(playing){frame=loopFrame(current(),frame+dt*current().fps);syncPlayback();}const p=pose();if(rig)rig.apply(p,dt);for(const n of Object.keys(feet))footShapes[n]=feet[n].update(p[n],dt);for(const v of views)draw(v,p);}sync();requestAnimationFrame(tick);
 
