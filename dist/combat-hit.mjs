@@ -2,7 +2,7 @@ import * as T from './three.module.js';
 import {hull,meshOutline,overlaps} from './screen-hit.mjs?v=bodyhit11';
 import {createWizard,animateWizard,projectWizard} from './wizard.mjs?v=no-floor-rings-1';
 // Headless server fallback. The live game and preview supply their rendered camera.
-export let combatCamera=new T.OrthographicCamera(-30,30,30,-30,.01,1000);combatCamera.position.set(120,170,150);combatCamera.lookAt(0,0,0);combatCamera.updateMatrixWorld(true);
+export let combatCamera=new T.OrthographicCamera(-30,30,30,-30,.01,1000);combatCamera.position.set(180,180,180);combatCamera.lookAt(0,0,0);combatCamera.updateMatrixWorld(true);
 export function setCombatCamera(camera){combatCamera=camera;}
 const rigs=new WeakMap();
 export function actorShapes(actor,camera=combatCamera){if(actor.monster&&actor.body){actor.g.position.set(actor.x,0,actor.z);actor.g.updateMatrixWorld(true);return (actor.g.userData.monsterParts||[actor.body]).filter(m=>m.visible).map(m=>meshOutline(m,camera));}let g=actor.g;if(!g?.userData.puppet){let rig=rigs.get(actor);if(!rig){rig=createWizard(new T.Group(),0,0);rigs.set(actor,rig);}g=rig;g.position.set(actor.x,0,actor.z);g.rotation.y=Math.atan2(actor.dir?.x||0,actor.dir?.z??1);animateWizard(g,0,{charging:actor.charge?.active||false});g.userData.puppet.icePose=actor.hitPose?[actor.hitPose]:[];projectWizard(g,combatCamera);}g.position.set(actor.x,0,actor.z);const p=g.userData.puppet;return [p.head,...p.parts.map(x=>x.mesh)].filter(m=>m.visible).map(m=>meshOutline(m,camera));}

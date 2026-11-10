@@ -9,7 +9,7 @@ const steps=(d,n)=>{for(let i=0;i<n;i++)d.step();};
 const cast=(d,id,keys,point,chargeTicks=0)=>{for(const key of keys)d.input(id,{action:'queue',key});d.input(id,{action:'begin',point});steps(d,chargeTicks);d.input(id,{action:'release',point});};
 test('server validates input, movement speed and collisions',()=>{
  const d=new Duel(loads);assert.equal(validInput({action:'move',point:{x:Infinity,z:0}}),false);assert.equal(validInput({action:'queue',key:'q',point:{x:'bad',z:0}}),false);assert.equal(d.input(0,{action:'damage',damage:9999}),false);
- const a=d.actors[0],x=a.x,z=a.z;d.input(0,{action:'move',point:{x:20,z:4}});steps(d,30);assert.ok(Math.hypot(a.x-x,a.z-z)<=4.401);assert.equal(d.actors[1].x,5);a.x=-6;a.z=-2;d.input(0,{action:'move',point:{x:0,z:-2}});steps(d,60);assert.ok(a.x<=-5.9);d.dispose();
+ const a=d.actors[0],x=a.x,z=a.z;d.input(0,{action:'move',point:{x:20,z:4}});steps(d,30);assert.ok(Math.hypot(a.x-x,a.z-z)<=4.401);assert.equal(d.actors[1].x,5);a.x=-35;a.z=32;d.input(0,{action:'move',point:{x:-47,z:32}});steps(d,60);assert.ok(a.x>=-37.55);d.dispose();
 });
 test('both fighters use identical charge, damage, mana and roll immunity',()=>{
  const d=new Duel(loads),[a,b]=d.actors;a.x=0;a.z=0;b.x=1.5;b.z=0;

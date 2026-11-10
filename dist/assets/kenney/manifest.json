@@ -1,0 +1,74 @@
+[
+  {
+    "pack": "city-kit-commercial",
+    "source": "https://kenney.nl/assets/city-kit-commercial",
+    "license": "CC0-1.0",
+    "models": [
+      "building-c",
+      "building-e",
+      "building-k",
+      "detail-awning-wide"
+    ]
+  },
+  {
+    "pack": "city-kit-industrial",
+    "source": "https://kenney.nl/assets/city-kit-industrial",
+    "license": "CC0-1.0",
+    "models": [
+      "building-k",
+      "building-s",
+      "shipping-container-a",
+      "detail-tank"
+    ]
+  },
+  {
+    "pack": "city-kit-suburban",
+    "source": "https://kenney.nl/assets/city-kit-suburban",
+    "license": "CC0-1.0",
+    "models": [
+      "building-type-a",
+      "building-type-d",
+      "building-type-g",
+      "building-type-k",
+      "building-type-p",
+      "building-type-q",
+      "building-type-t"
+    ]
+  },
+  {
+    "pack": "city-kit-roads",
+    "source": "https://kenney.nl/assets/city-kit-roads",
+    "license": "CC0-1.0",
+    "models": [
+      "electricity-pole-single",
+      "electricity-wires",
+      "light-curved",
+      "traffic-light-hanging",
+      "dumpster",
+      "road-sign-street"
+    ]
+  },
+  {
+    "pack": "car-kit",
+    "source": "https://kenney.nl/assets/car-kit",
+    "license": "CC0-1.0",
+    "models": [
+      "sedan",
+      "suv",
+      "hatchback-sports",
+      "delivery",
+      "truck"
+    ]
+  },
+  {
+    "pack": "nature-kit",
+    "source": "https://kenney.nl/assets/nature-kit",
+    "license": "CC0-1.0",
+    "models": [
+      "tree_oak",
+      "tree_default",
+      "tree_small",
+      "plant_bushLarge"
+    ]
+  }
+]
