@@ -34,7 +34,7 @@ async function init(){
   const initial=sequence[0]==='i'?'ice':sequence[0]==='l'?'thunder':sequence[0]==='q'?'meteor':'beam';preset=defaultPreset(initial);
   try{store=new EffectStore(localStorage);saved=store.read(key);preset=store.read(key,true)||saved||preset;}catch{storageError();}
   controls();
-  const {ElementalStage}=await import('./elemental-stage.mjs?v=1');stage=new ElementalStage(document.querySelector('canvas'));
+  const {ElementalStage}=await import('./elemental-stage.mjs?v=2');stage=new ElementalStage(document.querySelector('canvas'));
   stage.onError=error=>{console.error(error);status('효과를 그리지 못했습니다. 효과 파일을 내보낸 뒤 편집기를 다시 열어 주세요.',true);};
   stage.onFrame=()=>{$('time').textContent=stage.elapsed.toFixed(2)+'초';};
   stage.setPreset(preset,{restart:true});stage.paused=matchMedia('(prefers-reduced-motion: reduce)').matches;paused();$('loading').hidden=true;
@@ -44,7 +44,7 @@ async function init(){
  $('save').onclick=()=>{try{saved=store.write(key,preset);store.write(key,preset,true);status('이 마법의 효과를 이 브라우저에 저장했습니다.');parent.postMessage({type:'mage-elemental-saved',key},location.origin);}catch{storageError();}};
  $('loadSaved').onclick=()=>{try{const value=store.read(key);if(!value){status('아직 저장한 효과가 없습니다. 먼저 이 마법에 저장을 눌러 주세요.');return;}preset=value;changed({restart:true});controls();status('저장한 효과를 불러왔습니다.');}catch{storageError();}};
  $('reset').onclick=()=>{preset=defaultPreset(preset.effect);changed({restart:true});controls();status('초안을 기본값으로 되돌렸습니다. 이전에 저장한 효과는 그대로 남아 있습니다.');};
- $('export').onclick=()=>{const blob=new Blob([JSON.stringify({format:'mage-elemental-effect',spell:key,preset:validatePreset(preset)},null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`magic-effect-${key.replaceAll(':','-')}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);status('효과 파일을 내보냈습니다.');};
+ $('export').onclick=()=>{const blob=new Blob([JSON.stringify({format:'mage-elemental-effect',spell:key,preset:validatePreset(preset)},null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`magic-effect-${key.replaceAll(':','-')}.json`;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);status('효과 파일을 내보냈습니다.');};
  $('import').onclick=()=>$('file').click();$('file').onchange=async()=>{const file=$('file').files[0];if(!file)return;try{if(file.size>100000)throw Error('효과 파일이 너무 큽니다. 이 편집기에서 내보낸 JSON 파일을 선택해 주세요.');const input=JSON.parse(await file.text());if(input.format!=='mage-elemental-effect')throw Error('이 편집기에서 내보낸 JSON 파일을 선택해 주세요.');preset=validatePreset(input.preset);changed({restart:true});controls();status('효과 파일을 초안으로 불러왔습니다. 이 마법에 저장을 누르면 저장됩니다.');}catch(error){status(error instanceof SyntaxError?'JSON 파일을 읽지 못했습니다. 내보낸 효과 파일을 다시 선택해 주세요.':error.message,true);}finally{$('file').value='';}};
  $('cast').onclick=()=>{stage.cast();stage.paused=false;paused();};$('pause').onclick=()=>{stage.paused=!stage.paused;paused();};$('freeze').onclick=()=>{stage.freeze();paused();};$('step').onclick=()=>{stage.step();paused();};$('home').onclick=()=>stage.home();$('speed').onchange=()=>stage.speed=Number($('speed').value);$('repeat').onchange=()=>stage.repeat=$('repeat').checked;
  document.querySelector('main').inert=false;$('effect').disabled=false;$('save').disabled=false;

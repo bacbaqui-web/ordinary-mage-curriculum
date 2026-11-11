@@ -36,8 +36,8 @@ export class ElementalStage {
   this.resizeObserver=new ResizeObserver(()=>this.resize());this.resizeObserver.observe(canvas.parentElement);this.resize();
   this.last=performance.now();this.tick=this.tick.bind(this);this.raf=requestAnimationFrame(this.tick);
  }
- home(){this.camera.position.set(14,13,19);this.controls.target.set(0,1,0);this.controls.update();}
- resize(){const r=this.canvas.parentElement.getBoundingClientRect(),w=Math.max(2,Math.floor(r.width)),h=Math.max(2,Math.floor(r.height));this.gl.setSize(w,h,false);this.camera.aspect=w/h;this.camera.updateProjectionMatrix();this.post?.setSize(w,h,this.gl.getPixelRatio());}
+ home(){this.camera.position.set(14,13,19).multiplyScalar(Math.max(1,1.5/this.camera.aspect));this.controls.target.set(0,1,0);this.controls.update();}
+ resize(){const r=this.canvas.parentElement.getBoundingClientRect(),w=Math.max(2,Math.floor(r.width)),h=Math.max(2,Math.floor(r.height));this.gl.setSize(w,h,false);const oldFit=Math.max(1,1.5/this.camera.aspect),newFit=Math.max(1,1.5/(w/h));this.camera.position.sub(this.controls.target).multiplyScalar(newFit/oldFit).add(this.controls.target);this.camera.aspect=w/h;this.camera.updateProjectionMatrix();this.post?.setSize(w,h,this.gl.getPixelRatio());}
  setPreset(p,{restart=false}={}){const previous=this.preset?.effect;this.preset=applyPreset(p);if(restart||previous!==p.effect)this.cast();}
  clear(){this.abilities.clear();this.particles.reset();this.decals.clear();this.fissures.clear();this.bursts.clear();this.lights.reset();this.flash.reset();this.elapsed=0;this.wait=0;frame.uTime.value=0;}
  cast(){if(!this.preset)return;this.clear();const distance=this.preset.distance;this.marker.position.set(-distance/2,0,0);this.abilities.cast(new T.Vector3(-distance/2,0,0),new T.Vector3(1,0,0),distance,this.preset.effect);}
