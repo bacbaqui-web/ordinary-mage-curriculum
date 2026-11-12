@@ -1,4 +1,4 @@
-import {mountPlanEffects} from './plan-effects.mjs?v=2';
+import {mountPlanEffects} from './plan-effects.mjs?v=current-skill-1';
 import {damageNumber} from './damage-number.mjs?v=integer-damage-1';
 import {plannerRange} from './planner-range.mjs?v=filled-tells-1';
 import {plannerSpell,basicKey} from './planner-spell.mjs?v=filled-tells-1';
